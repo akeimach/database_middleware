@@ -25,7 +25,9 @@ import java.io.FileReader;
 import java.io.IOException;
  
 public class DatabaseGUI extends JPanel {
-	private JPanel tabLoad_1;
+	
+	private JPanel tabLoad;
+	private JPanel tabQuery;
 	
     public DatabaseGUI() {
     	
@@ -33,19 +35,17 @@ public class DatabaseGUI extends JPanel {
          
         JTabbedPane tabbedPane = new JTabbedPane();
         
-        JPanel tabLoad;
-        tabLoad_1 = new JPanel();
-        tabLoad_1.setLayout(null);
-        tabbedPane.addTab("Load file", null, tabLoad_1, null);
-        tabLoad_1.setPreferredSize(new Dimension(600, 400));
-        tabLoad = tabLoadContents(tabLoad_1);
-        
+        tabLoad = new JPanel();
+        tabLoad.setLayout(null);
+        tabbedPane.addTab("Load file", null, tabLoad, null);
+        tabLoad.setPreferredSize(new Dimension(600, 400));
+        tabLoadContents(tabLoad);
         
         JPanel tabQuery = new JPanel();
         tabQuery.setLayout(null);
         tabbedPane.addTab("Query data", null, tabQuery, null);
         tabQuery.setPreferredSize(new Dimension(600, 400));
-        tabQuery = tabQueryContents(tabQuery);
+        tabQueryContents(tabQuery);
         
         //Add tabbed pane to panel
         add(tabbedPane); //extends
@@ -57,37 +57,39 @@ public class DatabaseGUI extends JPanel {
     public static JPanel tabLoadContents(JPanel tabLoad) {
     	
     	
-    	final JTextArea txtrSelectDataFile = new JTextArea();
-        txtrSelectDataFile.setEditable(false);
-        txtrSelectDataFile.setForeground(Color.LIGHT_GRAY);
-        txtrSelectDataFile.setText(" Select data file to upload");
-        txtrSelectDataFile.setBounds(24, 11, 382, 16);
-        tabLoad.add(txtrSelectDataFile);
+    	final JTextArea filePath = new JTextArea();
+    	filePath.setEditable(false);
+    	filePath.setForeground(Color.LIGHT_GRAY);
+    	filePath.setText(" Select data file to upload");
+    	filePath.setBounds(24, 11, 382, 16);
+        tabLoad.add(filePath);
+        
+        JScrollPane scrollInput = new JScrollPane();
+        scrollInput.setBounds(24, 48, 535, 79);
+        //scrollPane.setBounds(24, 39, 535, 119);
+        scrollInput.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+        tabLoad.add(scrollInput);
         
         final JTextArea fileContents = new JTextArea();
-        final JScrollPane scrollPane = new JScrollPane();
-        scrollPane.setRowHeaderView(fileContents);
-        scrollPane.setBounds(24, 39, 535, 119);
-        scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-        tabLoad.add(scrollPane);
+        scrollInput.setViewportView(fileContents);
         
-        JButton btnUpload = new JButton("Browse");
-        btnUpload.addMouseListener(new MouseAdapter() {
+        JButton btnBrowse = new JButton("Browse");
+        btnBrowse.addMouseListener(new MouseAdapter() {
         	@Override
         	public void mouseClicked(MouseEvent uplaod) {
         		JFileChooser fileChooser = new JFileChooser();
         		int val = fileChooser.showOpenDialog(fileChooser);
         		if (val == JFileChooser.APPROVE_OPTION) {
         			File data = fileChooser.getSelectedFile();
-        			txtrSelectDataFile.setText(data.getAbsolutePath());
+        			filePath.setText(data.getAbsolutePath());
 					try {
 						BufferedReader readData;
 						readData = new BufferedReader(new FileReader(data));
 						String line = readData.readLine();
 						int init = 0; //first only take first rows to analyze
 						while ((line != null) && (init < 30)) {
-							System.out.println(line);
-							fileContents.append(line + "\n");
+							//System.out.println(line);
+							fileContents.append(line +"\n");
 							line = readData.readLine();
 							
 							++init;
@@ -103,9 +105,17 @@ public class DatabaseGUI extends JPanel {
         		}
         	}
         });
-        btnUpload.setBounds(442, 6, 117, 29);
-        tabLoad.add(btnUpload);
+        btnBrowse.setBounds(442, 6, 117, 29);
+        tabLoad.add(btnBrowse);
         
+        
+        JScrollPane scrollOutput = new JScrollPane();
+        scrollOutput.setBounds(24, 152, 535, 79);
+        scrollOutput.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+        tabLoad.add(scrollOutput);
+        
+        JTextArea textArea = new JTextArea();
+        scrollOutput.setViewportView(textArea);
         
         
         
@@ -114,6 +124,7 @@ public class DatabaseGUI extends JPanel {
         tabLoad.add(btnNext);
         
 		return tabLoad;
+		
     }
     
     public static JPanel tabQueryContents(JPanel tabQuery) {
@@ -131,6 +142,7 @@ public class DatabaseGUI extends JPanel {
     }
      
     private static void createAndShowGUI() {
+    	
         //Create and set up the window.
         JFrame frame = new JFrame("Dynamic Database Simulator");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -144,8 +156,8 @@ public class DatabaseGUI extends JPanel {
     }
      
     public static void main(String[] args) {
-        //Schedule a job for the event dispatch thread:
-        //creating and showing this application's GUI.
+        
+        //create and show this application's GUI
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 //Turn off metal's use of bold fonts
