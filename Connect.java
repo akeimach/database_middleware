@@ -4,25 +4,25 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
 
-public class DatabaseConnector {
+public class Connect {
 
-	private final String userName = "root";
-	private final String password = "root";
-	private final String serverName = "localhost";
-	private final int portNumber = 8889;
-	private final String dbName = "testDynamic";
-	private final String tableName = "JDBC_TEST";
+	private final static String userName = "root";
+	private final static String password = "root";
+	private final static String serverName = "localhost";
+	private final static int portNumber = 8889;
+	private final static String dbName = "testDynamic";
+	private final static String tableName = "JDBC_TEST"; //set to filename
 
 
 	//Get a new database connection
-	public Connection getConnection() throws SQLException {
+	public static Connection getConnection() throws SQLException {
 		Connection conn = null;
 		Properties connectionProps = new Properties();
-		connectionProps.put("user", this.userName);
-		connectionProps.put("password", this.password);
+		connectionProps.put("user", userName);
+		connectionProps.put("password", password);
 
 		conn = DriverManager.getConnection("jdbc:mysql://"
-				+ this.serverName + ":" + this.portNumber + "/" + this.dbName,
+				+ serverName + ":" + portNumber + "/" + dbName,
 				connectionProps);
 
 		return conn;
@@ -30,7 +30,7 @@ public class DatabaseConnector {
 
 	//Run a SQL command which does not return a recordset:
 	//CREATE/INSERT/UPDATE/DELETE/DROP/etc.
-	public boolean executeUpdate(Connection conn, String command) throws SQLException {
+	public static boolean executeUpdate(Connection conn, String command) throws SQLException {
 	    Statement stmt = null;
 	    try {
 	        stmt = conn.createStatement();
@@ -44,11 +44,11 @@ public class DatabaseConnector {
 	}
 	
 	// Connect to MySQL and do some stuff.
-	public void run() {
+	public static void runDB() {
 		// Connect to MySQL
 		Connection conn = null;
 		try {
-			conn = this.getConnection();
+			conn = getConnection();
 			System.out.println("Connected to database");
 		} catch (SQLException e) {
 			System.out.println("ERROR: Could not connect to the database");
@@ -58,17 +58,13 @@ public class DatabaseConnector {
 
 		// Create a table
 		try {
-		    String createString =
-			        "CREATE TABLE " + this.tableName + " ( " +
-			        "ID INTEGER NOT NULL, " +
-			        "NAME varchar(40) NOT NULL, " +
-			        "STREET varchar(40) NOT NULL, " +
-			        "CITY varchar(20) NOT NULL, " +
-			        "STATE char(2) NOT NULL, " +
-			        "ZIP char(5), " +
-			        "PRIMARY KEY (ID))";
-			this.executeUpdate(conn, createString);
-			System.out.println("Created a table");
+		    String createString = "CREATE TABLE " + tableName + " (";
+		    for (int i = 0; i < GUI.maxCols - 1; i++ ) {
+		    	createString += GUI.finalNames[i] + " " + GUI.finalVals[i] + " NOT NULL, ";
+		    }
+		    createString += "PRIMARY KEY (" + GUI.finalNames[0] + "))";
+			executeUpdate(conn, createString);
+			System.out.println(createString);
 	    } catch (SQLException e) {
 			System.out.println("ERROR: Could not create the table");
 			e.printStackTrace();
@@ -77,8 +73,8 @@ public class DatabaseConnector {
 		
 		// Drop the table
 		try {
-		    String dropString = "DROP TABLE " + this.tableName;
-			this.executeUpdate(conn, dropString);
+		    String dropString = "DROP TABLE " + tableName;
+			executeUpdate(conn, dropString);
 			System.out.println("Dropped the table");
 	    } catch (SQLException e) {
 			System.out.println("ERROR: Could not drop the table");

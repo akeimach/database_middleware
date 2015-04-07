@@ -3,7 +3,7 @@ import java.util.ArrayList;
 import java.util.regex.Pattern;
 import org.apache.commons.csv.CSVParser;
 
-public class DetermineSchema {
+public class Schema {
 	
 	//TINYINT, SMALLINT, MEDIUMINT, INT and DECIMAL.
 	//CHAR, VARCHAR
@@ -20,67 +20,104 @@ public class DetermineSchema {
 	static Pattern IPADDRESS = Pattern.compile("([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])");
 	static Pattern EMAIL = Pattern.compile("[_A-Za-z0-9-]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})");
 	
-   public static void getSchema(String filepath)throws IOException{
+   public static void getSchema(String filepath) throws IOException{
 
 	   File file = new File(filepath);
        file.createNewFile();
        FileReader input = new FileReader(file); 
        
        CSVParser parser = new CSVParser(input);
-       Object[] values = parser.getLine(); 
+       String[] values = parser.getLine(); 
        while (parser.getLineNumber() <= 30) {
     	   int numCols = 0;
-    	   for (Object col: values) {
+    	   for (String col: values) {
     		   numCols++; 
-    		   DatabaseGUI.fileContents.append(col + "\t"); 
+    		   GUI.sampleTuple.append(col + " | "); 
     	   }
-    	   if (DatabaseGUI.maxCols < numCols) { 
-    		   DatabaseGUI.maxCols = numCols; 
-    		   for (Object col: values) {
-    			   DatabaseGUI.defaultVals.add(col);
+    	   if (GUI.maxCols < numCols) { 
+    		   GUI.maxCols = numCols; 
+    		   for (String col: values) {
+    			   GUI.defaultVals.add(col);
+    			   GUI.defaultNames.add(col);
     		   }
     	   }
-    	   DatabaseGUI.fileContents.append("\n");
+    	   GUI.sampleTuple.append("\n");
 		   values = parser.getLine();
        }
        input.close();
+       
+       determineDtype(GUI.defaultVals);
+       finalizeSchema(); 
    }
   
+   //{"INT", "BIGINT", "FLOAT", "DOUBLE", "BIT", "CHAR", "VARCHAR", "TEXT", "DATE", "DATETIME", "TIME", "TIMESTAMP", "YEAR"}
    
-   public static void guessTitles(ArrayList<Object> defaultVals) {
+   public static void determineDtype(ArrayList<String> defaultVals) {
+	   int index = 0;
 	   for (Object header : defaultVals) {
 		   String test = (String)header;
 		   
 		   if (CHAR.matcher(test).matches()) {
-			   System.out.print(" char ");
+			   defaultVals.set(index, "CHAR");
+			   //System.out.print(" char ");
 		   }
 		   else if (DECIMAL.matcher(test).matches()) {
-			   System.out.print(" decimal ");
+			   defaultVals.set(index, "FLOAT");
+			  // System.out.print(" decimal ");
 		   }
 		   else if (INT.matcher(test).matches()) {
-			   System.out.print(" int ");
+			   defaultVals.set(index, "INT");
+			   //System.out.print(" int ");
 		   }
 		   else if (DDMMYYYY.matcher(test).matches()) {
-			   System.out.print(" ddmmyyyy ");
+			   defaultVals.set(index, "DATE");
+			  // System.out.print(" ddmmyyyy ");
 		   }
 		   else if (MMDDYYYY.matcher(test).matches()) {
-			   System.out.print(" mmddyyyy ");
+			   defaultVals.set(index, "DATE");
+			   //System.out.print(" mmddyyyy ");
 		   }
 		   else if (MMDDYY.matcher(test).matches()) {
-			   System.out.print(" mmddyy ");
+			   defaultVals.set(index, "DATE");
+			   //System.out.print(" mmddyy ");
 		   }
 		   else if (HOUR24.matcher(test).matches()) {
-			   System.out.print(" hour24 ");
+			   defaultVals.set(index, "TIME");
+			   //System.out.print(" hour24 ");
 		   }
 		   else if (HOUR12.matcher(test).matches()) {
-			   System.out.print(" hour12 ");
+			   defaultVals.set(index, "TIME");
+			   //System.out.print(" hour12 ");
 		   }
 		   else if (IPADDRESS.matcher(test).matches()) {
-			   System.out.print(" ipaddress ");
+			   defaultVals.set(index, "VARCHAR");
+			   //System.out.print(" ipaddress ");
 		   }
 		   else if (EMAIL.matcher(test).matches()) {
-			   System.out.print(" email ");
+			   defaultVals.set(index, "VARCHAR");
+			   //System.out.print(" email ");
 		   }
+		   else {
+			   defaultVals.set(index, "VARCHAR");
+		   }
+		   index++;
 	   }
    }
+   
+   public static void finalizeSchema() {
+	   int x = GUI.defaultVals.size();
+	   GUI.finalNames = new String[x];
+	   GUI.finalVals = new String[x];
+	   int i = 0;
+	   for (String col : GUI.defaultVals) {
+		   if (col == "VARCHAR") { GUI.finalVals[i] = "VARCHAR(20)"; }
+		   else if (col == "CHAR") { GUI.finalVals[i] = "CHAR(5)"; }
+		   else { GUI.finalVals[i] = col; }
+		   GUI.finalNames[i] = "a" + i;
+		   i++;
+	   }
+	   
+	   Connect.runDB();
+   }
+   
 }
