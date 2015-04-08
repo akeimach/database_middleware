@@ -128,25 +128,19 @@ public class GUI extends JPanel {
         comboBox.setToolTipText("");
         grid.add(comboBox, "6, 2, fill, default");
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
 		return tabLoad;
-		
-		
-		
-		
 		
     }
     
 	public static JPanel tabQueryContents(JPanel tabQuery) {
+		
+		
+		
+		
+		
+		
+		
+		
     	return tabQuery;
     }  
      

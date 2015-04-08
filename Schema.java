@@ -44,8 +44,8 @@ public class Schema {
     	   GUI.sampleTuple.append("\n");
 		   values = parser.getLine();
        }
-       input.close();
        
+       input.close();
        determineDtype(GUI.defaultVals);
        finalizeSchema(); 
    }
