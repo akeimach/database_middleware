@@ -30,13 +30,10 @@ public class Schema extends GUI {
 			sampleArr[i] = col; 
 			i++;
 		}
-		
 		initialSchema();
 	}
 	
 	public static void initialSchema() throws SQLException {
-		//send schema to GUI
-		//receive user edits/approval
 		GUI.schemaContents(GUI.tabLoad, tableSize, schemaVals, sampleArr, dropTypes);
 		finalSchema();
 	}
@@ -44,4 +41,5 @@ public class Schema extends GUI {
 	public static void finalSchema() throws SQLException {
 		HandleData.tableInit();
 	}
+	
 }

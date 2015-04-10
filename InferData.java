@@ -9,10 +9,6 @@ public class InferData extends GUI {
 
 	public static ArrayList<String> sampleVals;// = new ArrayList<String>();
 	public static ArrayList<String> sampleTypes = new ArrayList<String>();
-
-	//TINYINT, SMALLINT, MEDIUMINT, INT and DECIMAL.
-	//CHAR, VARCHAR
-	//DATETIME
 	static Pattern INT = Pattern.compile("[\\+\\-]?\\d+");
 	static Pattern DECIMAL = Pattern.compile("[\\+\\-]?\\d+\\.\\d+(?:[eE][\\+\\-]?\\d+)?");
 	static Pattern CHAR = Pattern.compile("[^0-9]");
@@ -36,9 +32,7 @@ public class InferData extends GUI {
 			if (maxCol < curCol) { 
 				maxCol = curCol;
 				sampleVals = new ArrayList<String>();
-				for (String val : values) { 
-					sampleVals.add(val); 
-				}
+				for (String val : values) { sampleVals.add(val); }
 			}
 			values = parser.getLine();
 		}
@@ -46,7 +40,6 @@ public class InferData extends GUI {
 		getDType();
 	}
 
-	//{"INT", "BIGINT", "FLOAT", "DOUBLE", "BIT", "CHAR", "VARCHAR", "TEXT", "DATE", "DATETIME", "TIME", "TIMESTAMP", "YEAR"
 	public static void getDType() throws SQLException {
 		for (String test : sampleVals) {
 			if (CHAR.matcher(test).matches()) { sampleTypes.add("CHAR"); }
@@ -63,4 +56,5 @@ public class InferData extends GUI {
 		}
 		Schema.getInferred();
 	}
+	
 }

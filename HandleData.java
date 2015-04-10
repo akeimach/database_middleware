@@ -16,7 +16,6 @@ public class HandleData extends Schema {
 	public static ResultSet rs = null;
 	public static Statement stmt = null;
 
-	//SQL commands without recordset (CREATE/INSERT/UPDATE/DELETE/DROP)
 	public static boolean executeUpdate(Connection conn, String command) throws SQLException {
 		try {
 			stmt = conn.createStatement();
@@ -37,7 +36,6 @@ public class HandleData extends Schema {
 			System.out.println("ERROR: Could not drop the table");
 			e.printStackTrace();
 		}
-
 		try {
 			String createString = "CREATE TABLE " + tableName + " ("; //Create new
 			for (int i = 0; i < Schema.tableSize; i++ ) {
@@ -51,7 +49,6 @@ public class HandleData extends Schema {
 			e.printStackTrace();
 			return;
 		}
-
 		loadData();
 		return;
 	}
@@ -61,11 +58,9 @@ public class HandleData extends Schema {
 			conn = Connect.getConnection();
 			FileReader file = new FileReader(path);
 			CSVReader reader = new CSVReader(file, ','); 
-
 			String insertQuery = "INSERT INTO " + tableName + " VALUES (";
 			for (int i = 0; i < Schema.tableSize - 1; i++) { insertQuery += "?, "; }
 			insertQuery += "?)";
-
 			System.out.println(insertQuery);
 			pstmt = conn.prepareStatement(insertQuery);
 			String[] line = reader.readNext();
@@ -92,10 +87,7 @@ public class HandleData extends Schema {
 			pstmt = conn.prepareStatement(query);
 			rs = pstmt.executeQuery();
 			System.out.println(query);
-			System.out.println(rs.getRow());
-			
 			GUI.receiveQuery(GUI.tabQuery, rs);
-			
 		}
 		finally {
 			if (rs != null) try { rs.close(); } catch (SQLException ignore) {}
@@ -103,4 +95,5 @@ public class HandleData extends Schema {
 			if (conn != null) try { conn.close(); } catch (SQLException ignore) {}
 		}
 	}
+	
 }

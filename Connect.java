@@ -18,4 +18,5 @@ public class Connect extends GUI {
 		catch(Exception e) { System.err.println("Exception: " + e.getMessage()); }
 		return conn;
 	}
+	
 }
