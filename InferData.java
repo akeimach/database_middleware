@@ -7,7 +7,7 @@ import org.apache.commons.csv.CSVParser;
 @SuppressWarnings("serial")
 public class InferData extends GUI {
 
-	public static ArrayList<String> sampleVals = new ArrayList<String>();
+	public static ArrayList<String> sampleVals;// = new ArrayList<String>();
 	public static ArrayList<String> sampleTypes = new ArrayList<String>();
 
 	//TINYINT, SMALLINT, MEDIUMINT, INT and DECIMAL.
@@ -34,8 +34,11 @@ public class InferData extends GUI {
 			int curCol = 0;
 			for (@SuppressWarnings("unused") String count : values) { curCol++; }
 			if (maxCol < curCol) { 
-				maxCol = curCol; 
-				for (String val : values) { sampleVals.add(val); }
+				maxCol = curCol;
+				sampleVals = new ArrayList<String>();
+				for (String val : values) { 
+					sampleVals.add(val); 
+				}
 			}
 			values = parser.getLine();
 		}
@@ -43,6 +46,7 @@ public class InferData extends GUI {
 		getDType();
 	}
 
+	//{"INT", "BIGINT", "FLOAT", "DOUBLE", "BIT", "CHAR", "VARCHAR", "TEXT", "DATE", "DATETIME", "TIME", "TIMESTAMP", "YEAR"
 	public static void getDType() throws SQLException {
 		for (String test : sampleVals) {
 			if (CHAR.matcher(test).matches()) { sampleTypes.add("CHAR"); }
@@ -55,9 +59,7 @@ public class InferData extends GUI {
 			else if (HOUR12.matcher(test).matches()) { sampleTypes.add("TIME"); }
 			else if (IPADDRESS.matcher(test).matches()) { sampleTypes.add("VARCHAR"); }
 			else if (EMAIL.matcher(test).matches()) { sampleTypes.add("VARCHAR"); }
-			else {
-				sampleTypes.add("VARCHAR");
-			}
+			else { sampleTypes.add("VARCHAR"); }
 		}
 		Schema.getInferred();
 	}

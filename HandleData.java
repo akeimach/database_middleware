@@ -11,12 +11,11 @@ public class HandleData extends Schema {
 
 	public static int tableInt = 0; //increment each new table
 	public static String tableName = "table" + tableInt;
-	public static boolean tableExists = true; //for development
 	public static Connection conn = null;
 	public static PreparedStatement pstmt = null;
 	public static ResultSet rs = null;
 	public static Statement stmt = null;
-	
+
 	//SQL commands without recordset (CREATE/INSERT/UPDATE/DELETE/DROP)
 	public static boolean executeUpdate(Connection conn, String command) throws SQLException {
 		try {
@@ -30,16 +29,15 @@ public class HandleData extends Schema {
 
 	public static void tableInit() throws SQLException {
 		conn = Connect.getConnection();
-		if (tableExists = true) {
-			try {
-				String dropString = "DROP TABLE " + tableName; //Drop table
-				executeUpdate(conn, dropString);
-			}
-			catch (SQLException e) {
-				System.out.println("ERROR: Could not drop the table");
-				e.printStackTrace();
-			}
+		try {
+			String dropString = "DROP TABLE IF EXISTS " + tableName; //Drop table
+			executeUpdate(conn, dropString);
 		}
+		catch (SQLException e) {
+			System.out.println("ERROR: Could not drop the table");
+			e.printStackTrace();
+		}
+
 		try {
 			String createString = "CREATE TABLE " + tableName + " ("; //Create new
 			for (int i = 0; i < Schema.tableSize; i++ ) {
@@ -47,7 +45,6 @@ public class HandleData extends Schema {
 			}
 			createString += "PRIMARY KEY (" + schemaVals[0] + "))";
 			executeUpdate(conn, createString);
-			tableExists = true;
 		}
 		catch (SQLException e) {
 			System.out.println("ERROR: Could not create the table");
@@ -64,11 +61,11 @@ public class HandleData extends Schema {
 			conn = Connect.getConnection();
 			FileReader file = new FileReader(path);
 			CSVReader reader = new CSVReader(file, ','); 
-			
+
 			String insertQuery = "INSERT INTO " + tableName + " VALUES (";
 			for (int i = 0; i < Schema.tableSize - 1; i++) { insertQuery += "?, "; }
 			insertQuery += "?)";
-			
+
 			System.out.println(insertQuery);
 			pstmt = conn.prepareStatement(insertQuery);
 			String[] line = reader.readNext();
@@ -96,9 +93,9 @@ public class HandleData extends Schema {
 			rs = pstmt.executeQuery();
 			System.out.println(query);
 			System.out.println(rs.getRow());
-			while (rs.next()) {
-				System.out.println(rs.getString(1));
-			}
+			
+			GUI.receiveQuery(GUI.tabQuery, rs);
+			
 		}
 		finally {
 			if (rs != null) try { rs.close(); } catch (SQLException ignore) {}
