@@ -19,6 +19,7 @@ public class GUI extends JPanel {
 	public static JScrollPane scrollOutput = new JScrollPane();
 	static File path;
 	public static JPanel tabLoad;
+	public static JPanel tabSchema;
 	public static JPanel tabQuery;
 	public static JPanel schemaTable = new JPanel();
 	public static JTextField queryIn;
@@ -39,6 +40,11 @@ public class GUI extends JPanel {
 		tabbedPane.addTab("Load file", null, tabLoad, null);
 		tabLoad.setPreferredSize(new Dimension(600, 400));
 		tabLoadContents(tabLoad);
+		tabSchema = new JPanel();
+		tabSchema.setLayout(null);
+		tabbedPane.addTab("Change schema", null, tabSchema, null);
+		tabSchema.setPreferredSize(new Dimension(600, 400));
+		//tabQueryContents(tabSchema);
 		tabQuery = new JPanel();
 		tabQuery.setLayout(null);
 		tabbedPane.addTab("Query data", null, tabQuery, null);
