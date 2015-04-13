@@ -4,7 +4,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.regex.Pattern;
 
-public class AnalyzeFile extends LoadData {
+public class AnalyzeFile extends LoadFile {
 
 	public static boolean hasTitle = true;
 	public static String[] defaultFields;
@@ -23,11 +23,11 @@ public class AnalyzeFile extends LoadData {
 	static String IPADDRESS = "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])";
 	static String EMAIL = "[_A-Za-z0-9-]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})";
 	static String INVALTITLE = "[^\\s^\\d^a-z^A-Z]";
-	
+
 	public static void getFormat(File file) throws IOException {
 		//FIRST GET THE DELIMITER
 		// Algorithm: count every ,;/ and tab, see which one is used most often
-		BufferedReader lines = new BufferedReader(new FileReader(LoadData.file));
+		BufferedReader lines = new BufferedReader(new FileReader(LoadFile.file));
 		char[] delimiters = { ',', '/', ' ', ';', '\t', '\n' };
 		int[] counters = { 0, 0, 0, 0, 0, 0 };
 		String topLine = lines.readLine(); //top line just in case has titles
@@ -78,7 +78,7 @@ public class AnalyzeFile extends LoadData {
 			defaultFields[index] = fieldinit + "_" + (index + 1);
 			defaultSize[index] = topLine.length() - start + 3;
 		}
-		
+
 		//get the max size of field
 		String randomLine = lines.readLine();
 		index = 0;
@@ -117,7 +117,7 @@ public class AnalyzeFile extends LoadData {
 			String firstChar = defaultFields[i].charAt(0) + "";
 			if (Pattern.matches(INVALTITLE, firstChar) || Pattern.matches(INT, firstChar) || Pattern.matches(FLOAT, firstChar)) { hasTitle = false; }
 		}
-		
+
 		//fix numerical titles
 		if (hasTitle == false) {
 			for (int i = 0; i < defaultFields.length; i++) { defaultFields[i] = "col_" + (i + 1); }

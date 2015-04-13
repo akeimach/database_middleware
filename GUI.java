@@ -14,7 +14,7 @@ public class GUI extends JPanel {
 	public static JPanel tabSchema;
 	public static JPanel tabQuery;
 	public static boolean pressedBegin = false;
-	
+
 	public GUI() {
 		setLayout(new BorderLayout(0, 0));
 		JTabbedPane tabbedPane = new JTabbedPane();
@@ -38,7 +38,7 @@ public class GUI extends JPanel {
 		add(tabbedPane);
 		tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
 	}
-	
+
 	public static JPanel loadTabContents(final JPanel tabLoad) {
 		//file path box
 		final JTextArea path = new JTextArea();
@@ -55,8 +55,8 @@ public class GUI extends JPanel {
 				JFileChooser fileChooser = new JFileChooser();
 				int val = fileChooser.showOpenDialog(fileChooser);
 				if (val == JFileChooser.APPROVE_OPTION) {
-					LoadData.file = fileChooser.getSelectedFile();
-					path.setText(" " + LoadData.file.getAbsolutePath());
+					LoadFile.file = fileChooser.getSelectedFile();
+					path.setText(" " + LoadFile.file.getAbsolutePath());
 				}
 			}
 		});
@@ -91,12 +91,12 @@ public class GUI extends JPanel {
 			@Override
 			public void mouseClicked(MouseEvent begin) {
 				pressedBegin = true;
-				if (getTableName.getText().equals(instructions)) { LoadData.tableName = "defaultTable"; }
-				else { LoadData.tableName = getTableName.getText(); }
-				getTableName.setText(" " + LoadData.tableName);
+				if (getTableName.getText().equals(instructions)) { LoadFile.tableName = "defaultTable"; }
+				else { LoadFile.tableName = getTableName.getText(); }
+				getTableName.setText(" " + LoadFile.tableName);
 				getTableName.setEditable(false);
 				progressBar.setVisible(true);
-				try { LoadData.initUpload(LoadData.file); }
+				try { LoadFile.initUpload(LoadFile.file); }
 				catch (SQLException e) { e.printStackTrace(); } 
 				catch (IOException e) { e.printStackTrace(); }
 			}
@@ -105,11 +105,11 @@ public class GUI extends JPanel {
 		tabLoad.add(btnBegin);
 		return tabLoad;
 	}
-	
+
 	public static JPanel schemaTabContents(final JPanel tabSchema) {
 		return tabSchema;
 	}
-	
+
 	public static JPanel queryTabContents(JPanel tabQuery) {
 		return tabQuery;
 	}   
