@@ -13,6 +13,7 @@ public class GUI extends JPanel {
 	public static JPanel tabLoad;
 	public static JPanel tabSchema;
 	public static JPanel tabQuery;
+	public static boolean pressedBegin = false;
 	
 	public GUI() {
 		setLayout(new BorderLayout(0, 0));
@@ -55,21 +56,23 @@ public class GUI extends JPanel {
 				int val = fileChooser.showOpenDialog(fileChooser);
 				if (val == JFileChooser.APPROVE_OPTION) {
 					LoadData.file = fileChooser.getSelectedFile();
-					path.setText(LoadData.file.getAbsolutePath());
+					path.setText(" " + LoadData.file.getAbsolutePath());
 				}
 			}
 		});
 		btnBrowse.setBounds(428, 31, 128, 29);
 		tabLoad.add(btnBrowse);
 		//get table name
-		final String defaultTable = " Select table name (optional)";
+		final String instructions = " Select table name (optional)";
 		final JTextArea getTableName = new JTextArea();
-		getTableName.setText(defaultTable);
+		getTableName.setText(instructions);
 		getTableName.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent clear) {
-				getTableName.setText("");
-				getTableName.setForeground(Color.BLACK);
+				if (pressedBegin == false) {
+					getTableName.setText("");
+					getTableName.setForeground(Color.BLACK);
+				}
 			}
 		});
 		getTableName.setForeground(Color.LIGHT_GRAY);
@@ -77,6 +80,8 @@ public class GUI extends JPanel {
 		tabLoad.add(getTableName);
 		//create progress bar
 		final JProgressBar progressBar = new JProgressBar();
+		//progressBar.setStringPainted(true);
+		progressBar.setIndeterminate(true);
 		progressBar.setBounds(225, 133, 146, 20);
 		progressBar.setVisible(false);
 		tabLoad.add(progressBar);
@@ -85,16 +90,15 @@ public class GUI extends JPanel {
 		btnBegin.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent begin) {
-				if (getTableName.getText().equals(defaultTable)) { LoadData.tableName = "table1"; }
+				pressedBegin = true;
+				if (getTableName.getText().equals(instructions)) { LoadData.tableName = "defaultTable"; }
 				else { LoadData.tableName = getTableName.getText(); }
-				try { 
-					//AnalyzeFile.getFormat(LoadData.file);
-					LoadData.initUpload(LoadData.file); 
-				}
+				getTableName.setText(" " + LoadData.tableName);
+				getTableName.setEditable(false);
+				progressBar.setVisible(true);
+				try { LoadData.initUpload(LoadData.file); }
 				catch (SQLException e) { e.printStackTrace(); } 
 				catch (IOException e) { e.printStackTrace(); }
-				//display upload file progress, start moving bar
-				progressBar.setVisible(true);
 			}
 		});
 		btnBegin.setBounds(240, 92, 117, 29);

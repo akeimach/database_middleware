@@ -9,14 +9,14 @@ import java.sql.Statement;
 public class LoadData {
 
 	public static File file;
-	public static String tableName;
+	public static String tableName = "defaultTable"; //default
 	public static String dbName = "testDynamic";
 	public static Connection conn;
 	public static Statement stmt;
 	public static PreparedStatement pstmt;
 	public static ResultSet rs;
 	public static char delimiter = ','; //default
-	public static char terminator = '\n'; //default
+	public static String terminator = "\\n"; //default
 	
 	public static void initUpload(File file) throws SQLException, IOException {
 		conn = Connect.getConnection();
@@ -27,16 +27,11 @@ public class LoadData {
 		startBulkLoad();
 	}
 
-	
-	
 	public static boolean executeUpdate(Connection conn, String command) throws SQLException {
-		
 			stmt = conn.createStatement();
 			stmt.executeUpdate(command);
-			System.out.println("Complete: " + command);
+			System.out.println("Executed \"" + command + "\"");
 			return true;
-		
-		//finally { if (stmt != null) stmt.close(); }
 	}
 
 	public static void tableInit() throws SQLException {
@@ -52,11 +47,11 @@ public class LoadData {
 	
 	public static void createTable() throws SQLException {
 		try {
-			String createString = "CREATE TABLE " + tableName + " ("; //Create new
-			for (int i = 0; i < AnalyzeFile.defaultFields.length; i++ ) {
+			String createString = "CREATE TABLE " + tableName + " (id INT UNSIGNED NOT NULL AUTO_INCREMENT, "; //Create new
+			for (int i = 0; i < AnalyzeFile.numCols; i++ ) {
 				createString += AnalyzeFile.defaultFields[i] + " " + AnalyzeFile.defaultTypes[i] + ", ";
 			}
-			createString += "PRIMARY KEY (" + AnalyzeFile.defaultFields[0] + "))";
+			createString += "version INT NULL, PRIMARY KEY (id))";
 			executeUpdate(conn, createString);
 		}
 		catch (SQLException e) {
@@ -66,10 +61,17 @@ public class LoadData {
 	}
 	
 	public static void startBulkLoad() throws SQLException {
-		String bulkLoad = "LOAD DATA INFILE '" + file.getPath() + "' INTO TABLE " + tableName + 
-				" FIELDS TERMINATED BY '" + delimiter + "' LINES TERMINATED BY '" + terminator + "'";
+		String bulkLoad = "LOAD DATA CONCURRENT INFILE '" + file.getAbsolutePath() + "' INTO TABLE " + tableName + " FIELDS TERMINATED BY '" + delimiter + "' OPTIONALLY ENCLOSED BY '\"' LINES TERMINATED BY '" + terminator + "'";
 		if (AnalyzeFile.hasTitle == true) { bulkLoad += " IGNORE 1 LINES"; }
+		bulkLoad += " (";
+		for (int i = 0; i < AnalyzeFile.numCols - 1; i++) {
+			bulkLoad += AnalyzeFile.defaultFields[i] + ", ";
+		}
+		bulkLoad += AnalyzeFile.defaultFields[AnalyzeFile.numCols - 1] + ") SET id = null, version = NULL";
+		System.out.println(bulkLoad);
 		stmt.executeQuery(bulkLoad);
+		//String error = "SELECT * INTO OUTFILE '" + file.getAbsolutePath() + ".out' FIELDS TERMINATED BY '" + delimiter +"' LINES TERMINATED BY '" + terminator + "' FROM " + tableName;
+		//stmt.executeQuery(error);
 		System.out.println("Uploading file");
 	}
 

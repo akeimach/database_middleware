@@ -14,7 +14,7 @@ public class AnalyzeFile extends LoadData {
 	public static int numCols;
 	static String INT = "[\\+\\-]?\\d+";
 	static String FLOAT = "[\\+\\-]?\\d+\\.\\d+(?:[eE][\\+\\-]?\\d+)?";
-	static String CHAR = "[^0-9]";
+	static String CHAR = "([a-z]|[A-Z])+";
 	static String DDMMYYYY = "(0?[1-9]|[12][0-9]|3[01])/(0?[1-9]|1[012])/((19|20)\\d\\d)";
 	static String MMDDYYYY = "(0?[1-9]|1[012])/(0?[1-9]|[12][0-9]|3[01])/((19|20)\\d\\d)";
 	static String MMDDYY = "(0?[1-9]|1[012])/(0?[1-9]|[12][0-9]|3[01])/(\\d\\d)";
@@ -22,7 +22,8 @@ public class AnalyzeFile extends LoadData {
 	static String HOUR12 = "(1[012]|[1-9]):[0-5][0-9](\\s)?(?i)(am|pm)";
 	static String IPADDRESS = "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])";
 	static String EMAIL = "[_A-Za-z0-9-]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})";
-
+	static String INVALTITLE = "[^\\s^\\d^a-z^A-Z]";
+	
 	public static void getFormat(File file) throws IOException {
 		//FIRST GET THE DELIMITER
 		// Algorithm: count every ,;/ and tab, see which one is used most often
@@ -47,7 +48,7 @@ public class AnalyzeFile extends LoadData {
 				maxindex = i; 
 			}
 		}
-		System.out.println("'" + delimiters[maxindex] + "' is the delimiter, it appeared " + max/15 + " times per line");
+		System.out.println("The delimiter is '" + delimiters[maxindex] + "' and there are " + (max / 15 + 1) + " columns");
 		delimiter = delimiters[maxindex];
 		//NEXT GET THE FIELDS
 		numCols = (max / 15) + 1;
@@ -62,7 +63,9 @@ public class AnalyzeFile extends LoadData {
 			if (topLine.charAt(i) == delimiter) {
 				end = i;
 				String fieldinit = topLine.substring(start, end);
-				defaultFields[index] = fieldinit.replace(' ', '_');
+				fieldinit = fieldinit.replace("\"", "");
+				fieldinit = fieldinit.replace(" ", "");
+				defaultFields[index] = fieldinit + "_" + (index + 1);
 				defaultSize[index] = end - start + 3;
 				start = i + 1;
 				index++;
@@ -70,9 +73,12 @@ public class AnalyzeFile extends LoadData {
 		}
 		if (index < numCols) { //get the last field because for loop exited
 			String fieldinit = topLine.substring(start, topLine.length());
-			defaultFields[index] = fieldinit.replace(' ', '_');
+			fieldinit = fieldinit.replace("\"", "");
+			fieldinit = fieldinit.replace(" ", "");
+			defaultFields[index] = fieldinit + "_" + (index + 1);
 			defaultSize[index] = topLine.length() - start + 3;
 		}
+		
 		//get the max size of field
 		String randomLine = lines.readLine();
 		index = 0;
@@ -82,6 +88,8 @@ public class AnalyzeFile extends LoadData {
 			if (randomLine.charAt(i) == delimiter) {
 				end = i;
 				String fieldinit = randomLine.substring(start, end);
+				fieldinit = fieldinit.replace("\"", "");
+				fieldinit = fieldinit.replace(" ", "");
 				sampleVals[index] = fieldinit;
 				if ((end - start) > defaultSize[index]) { defaultSize[index] = end - start + 3; }
 				start = i + 1;
@@ -90,29 +98,29 @@ public class AnalyzeFile extends LoadData {
 		}
 		if (index < numCols) { //get the last field
 			String fieldinit = randomLine.substring(start, randomLine.length());
+			fieldinit = fieldinit.replace("\"", "");
+			fieldinit = fieldinit.replace(" ", "");
 			sampleVals[index] = fieldinit;
 			if ((end - start) > defaultSize[index]) { defaultSize[index] = randomLine.length() - start + 3; }
 		}
-		
-		//print the fields
-		for (int i = 0; i < defaultFields.length; i++) { 
-			System.out.print(defaultFields[i] + " (" + defaultSize[i] + "), "); 
-		}
-		System.out.println();
 
 		for (int i = 0; i < sampleVals.length; i++) { //check 15 lines
-			if (Pattern.matches(CHAR, sampleVals[i])) { defaultTypes[i] = "CHAR(" + defaultSize[i] + ")"; }
+			if (Pattern.matches(CHAR, sampleVals[i])) { 
+				if (defaultSize[i] < 10) { defaultTypes[i] = "CHAR(" + defaultSize[i] + 5 + ")"; }
+				else { defaultTypes[i] = "VARCHAR(100)"; }
+			}
 			else if (Pattern.matches(FLOAT, sampleVals[i])) { defaultTypes[i] = "FLOAT"; }
 			else if (Pattern.matches(INT, sampleVals[i])) { defaultTypes[i] = "INT"; }
 			else if (Pattern.matches(DDMMYYYY, sampleVals[i]) || Pattern.matches(MMDDYYYY, sampleVals[i]) || Pattern.matches(MMDDYY, sampleVals[i])) { defaultTypes[i] = "DATE"; }
 			else if (Pattern.matches(HOUR24, sampleVals[i]) || Pattern.matches(HOUR12, sampleVals[i])) { defaultTypes[i] = "TIME"; }
 			else { defaultTypes[i] = "VARCHAR(100)"; }
-			if (Pattern.matches(FLOAT, defaultFields[i]) || Pattern.matches(INT, defaultFields[i])) { hasTitle = false; }
+			String firstChar = defaultFields[i].charAt(0) + "";
+			if (Pattern.matches(INVALTITLE, firstChar) || Pattern.matches(INT, firstChar) || Pattern.matches(FLOAT, firstChar)) { hasTitle = false; }
 		}
 		
 		//fix numerical titles
 		if (hasTitle == false) {
-			for (int i = 0; i < defaultFields.length; i++) { defaultFields[i] = "a" + i; }
+			for (int i = 0; i < defaultFields.length; i++) { defaultFields[i] = "col_" + (i + 1); }
 		}
 	}
 
