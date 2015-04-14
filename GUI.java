@@ -34,13 +34,13 @@ public class GUI extends JPanel {
 		tabSchema.setLayout(null);
 		tabbedPane.addTab("Change schema", null, tabSchema, null);
 		tabSchema.setPreferredSize(new Dimension(600, 400));
-		schemaTabContents(tabSchema);
+		//schemaTabContents(tabSchema);
 		//query data
 		tabQuery = new JPanel();
 		tabQuery.setLayout(null);
 		tabbedPane.addTab("Query data", null, tabQuery, null);
 		tabQuery.setPreferredSize(new Dimension(600, 400));		
-		queryTabContents(tabQuery);
+		//queryTabContents(tabQuery);
 		//add to gui pane
 		add(tabbedPane);
 		tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
@@ -76,7 +76,7 @@ public class GUI extends JPanel {
 		getTableName.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent clear) {
-				if (pressedBegin == false) {
+				if (!pressedBegin) {
 					getTableName.setText("");
 					getTableName.setForeground(Color.BLACK);
 				}
@@ -103,7 +103,11 @@ public class GUI extends JPanel {
 				getTableName.setText(" " + LoadFile.tableName);
 				getTableName.setEditable(false);
 				progressBar.setVisible(true);
-				try { LoadFile.initUpload(); }
+				try { 
+					LoadFile.initUpload(); //make the other two tabs active once data loading
+					schemaTabContents(tabSchema);
+					queryTabContents(tabQuery);
+				}
 				catch (SQLException e) { e.printStackTrace(); } 
 				catch (IOException e) { e.printStackTrace(); }
 			}
@@ -121,13 +125,12 @@ public class GUI extends JPanel {
 		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
 		tabSchema.add(scrollPane);
 
-		if (pressedBegin == true) {
 		try { ChangeSchema.getCurrSchema(); } 
 		catch (SQLException e) { e.printStackTrace(); }
 		currentSchema = new JTable();
-		currentSchema.setModel(QueryData.tableHiddenResultSet(Connect.rs));
+		currentSchema.setModel(ChangeSchema.editHiddenResultSet(Connect.defaultrs));
 		scrollPane.setViewportView(currentSchema);
-		}
+
 		return tabSchema;
 	}
 
@@ -135,23 +138,21 @@ public class GUI extends JPanel {
 
 		final String instructions = " Input SQL query";
 		final JTextArea sqlQueryIn = new JTextArea();
-		
+
 		sqlQueryIn.setText(instructions);
 		sqlQueryIn.setEnabled(false);
 		sqlQueryIn.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent clear) {
-				if (pressedBegin == true) {
-					sqlQueryIn.setEnabled(true);
-					sqlQueryIn.setText("");
-					sqlQueryIn.setForeground(Color.BLACK);
-				}
+				sqlQueryIn.setEnabled(true);
+				sqlQueryIn.setText("");
+				sqlQueryIn.setForeground(Color.BLACK);
 			}
 		});
 		sqlQueryIn.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyPressed(KeyEvent clear) {
-				if ((pressedBegin == true) && (first == true)) {
+				if (first) {
 					first = false;
 					sqlQueryIn.setEnabled(true);
 					sqlQueryIn.setText("");
@@ -173,17 +174,16 @@ public class GUI extends JPanel {
 		btnExecute.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent sendUserInput) {
-				if (pressedBegin == true) {
-					if (sqlQueryIn.getText().equals(instructions)) { return; } //do nothing if no query
-					else {  QueryData.userQuery = sqlQueryIn.getText(); }
-					try {
-						QueryData.getResultSet();
-						queryOutput = new JTable();
-						queryOutput.setModel(QueryData.tableHiddenResultSet(Connect.rs));
-						scrollPane.setViewportView(queryOutput);
-					} 
-					catch (SQLException e) { e.printStackTrace(); }
-				}
+
+				if (sqlQueryIn.getText().equals(instructions)) { return; } //do nothing if no query
+				else { QueryData.userQuery = sqlQueryIn.getText(); }
+				try {
+					QueryData.getResultSet();
+					queryOutput = new JTable();
+					queryOutput.setModel(QueryData.tableHiddenResultSet(Connect.rs));
+					scrollPane.setViewportView(queryOutput);
+				} 
+				catch (SQLException e) { e.printStackTrace(); }
 			}
 		});
 		btnExecute.setBounds(430, 15, 128, 29);

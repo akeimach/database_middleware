@@ -5,7 +5,8 @@ import java.io.IOException;
 import java.util.regex.Pattern;
 
 public class Parser extends LoadFile {
-
+	
+	public static int topFileSample = 15;
 	public static boolean hasTitle = true;
 	public static String[] defaultFields;
 	public static String[] defaultTypes;
@@ -31,7 +32,7 @@ public class Parser extends LoadFile {
 		char[] delimiters = { ',', '/', ' ', ';', '\t', '\n' };
 		int[] counters = { 0, 0, 0, 0, 0, 0 };
 		String topLine = lines.readLine(); //top line just in case has titles
-		for (int linenum = 0; linenum < 15; linenum++) {
+		for (int linenum = 0; linenum < topFileSample; linenum++) {
 			String curr = lines.readLine();
 			for (int i = 0; i < curr.length(); i++) {
 				char c = curr.charAt(i);
@@ -48,10 +49,10 @@ public class Parser extends LoadFile {
 				maxindex = i; 
 			}
 		}
-		System.out.println("The delimiter is '" + delimiters[maxindex] + "' and there are " + (max / 15 + 1) + " columns");
+		System.out.println("The delimiter is '" + delimiters[maxindex] + "' and there are " + (max / topFileSample + 1) + " columns");
 		delimiter = delimiters[maxindex];
 		//NEXT GET THE FIELDS
-		numCols = (max / 15) + 1;
+		numCols = (max / topFileSample) + 1;
 		defaultFields = new String[numCols];
 		defaultTypes = new String[numCols];
 		defaultSize = new int[numCols];

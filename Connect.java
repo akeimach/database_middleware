@@ -13,6 +13,7 @@ public class Connect {
 	public static Statement stmt;
 	public static PreparedStatement pstmt;
 	public static ResultSet rs;
+	public static ResultSet defaultrs;
 	
 	public static Connection getConnection() throws SQLException {
 		Connection conn = null;
