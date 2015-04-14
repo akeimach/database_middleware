@@ -19,17 +19,18 @@ public class QueryData extends Connect {
 	public static TableModel tableHiddenResultSet(ResultSet rs) {
 		try {
 			ResultSetMetaData metaData = rs.getMetaData();
-			int numberOfColumns = metaData.getColumnCount();
+			int numberOfColumns = metaData.getColumnCount(); 
 			Vector columnNames = new Vector();
-			// Get the column names, except first one (default for dynamic db) and last (hidden version)
-			for (int column = 1; column < numberOfColumns - 1; column++) {
+			// Get the column names
+			//remove default primary and hidden version
+			for (int column = 1; column < numberOfColumns - 1 ; column++) {
 				columnNames.addElement(metaData.getColumnLabel(column + 1));
 			}
 			// Get all rows.
 			Vector rows = new Vector();
 			while (rs.next()) {
 				Vector newRow = new Vector();
-				for (int i = 1; i <= numberOfColumns; i++) { newRow.addElement(rs.getObject(i)); }
+				for (int i = 2; i < numberOfColumns; i++) { newRow.addElement(rs.getObject(i)); }
 				rows.addElement(newRow);
 			}
 			return new DefaultTableModel(rows, columnNames);

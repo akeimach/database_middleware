@@ -6,6 +6,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 
 @SuppressWarnings("serial")
 public class GUI extends JPanel {
@@ -14,7 +16,9 @@ public class GUI extends JPanel {
 	public static JPanel tabSchema;
 	public static JPanel tabQuery;
 	public static JTable queryOutput;
+	public static JTable currentSchema;
 	public static boolean pressedBegin = false;
+	public static boolean first = true;
 
 	public GUI() {
 		setLayout(new BorderLayout(0, 0));
@@ -30,6 +34,7 @@ public class GUI extends JPanel {
 		tabSchema.setLayout(null);
 		tabbedPane.addTab("Change schema", null, tabSchema, null);
 		tabSchema.setPreferredSize(new Dimension(600, 400));
+		schemaTabContents(tabSchema);
 		//query data
 		tabQuery = new JPanel();
 		tabQuery.setLayout(null);
@@ -47,7 +52,7 @@ public class GUI extends JPanel {
 		path.setEditable(false);
 		path.setForeground(Color.LIGHT_GRAY);
 		path.setText(" Select data file to upload");
-		path.setBounds(32, 36, 374, 16);
+		path.setBounds(32, 20, 374, 20);
 		tabLoad.add(path);
 		//browse button, saves data file to File "file", sets file path
 		JButton btnBrowse = new JButton("Browse");
@@ -62,7 +67,7 @@ public class GUI extends JPanel {
 				}
 			}
 		});
-		btnBrowse.setBounds(428, 31, 128, 29);
+		btnBrowse.setBounds(428, 15, 128, 29);
 		tabLoad.add(btnBrowse);
 		//get table name
 		final String instructions = " Select table name (optional)";
@@ -78,13 +83,13 @@ public class GUI extends JPanel {
 			}
 		});
 		getTableName.setForeground(Color.LIGHT_GRAY);
-		getTableName.setBounds(32, 64, 374, 16);
+		getTableName.setBounds(32, 52, 374, 20);
 		tabLoad.add(getTableName);
 		//create progress bar
 		final JProgressBar progressBar = new JProgressBar();
 		//progressBar.setStringPainted(true);
 		progressBar.setIndeterminate(true);
-		progressBar.setBounds(225, 133, 146, 20);
+		progressBar.setBounds(177, 143, 224, 20);
 		progressBar.setVisible(false);
 		tabLoad.add(progressBar);
 		//start loading data, get input table name
@@ -103,38 +108,65 @@ public class GUI extends JPanel {
 				catch (IOException e) { e.printStackTrace(); }
 			}
 		});
-		btnBegin.setBounds(240, 92, 117, 29);
+		btnBegin.setBounds(231, 102, 117, 29);
 		tabLoad.add(btnBegin);
 		return tabLoad;
 	}
 
 	public static JPanel schemaTabContents(final JPanel tabSchema) {
+
+		final JScrollPane scrollPane = new JScrollPane();
+		scrollPane.setBounds(36, 61, 506, 254);
+		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+		tabSchema.add(scrollPane);
+
+		if (pressedBegin == true) {
+		try { ChangeSchema.getCurrSchema(); } 
+		catch (SQLException e) { e.printStackTrace(); }
+		currentSchema = new JTable();
+		currentSchema.setModel(QueryData.tableHiddenResultSet(Connect.rs));
+		scrollPane.setViewportView(currentSchema);
+		}
 		return tabSchema;
 	}
 
 	public static JPanel queryTabContents(JPanel tabQuery) {
 
-		//get table name
-		final String queryInstruct = " Input SQL query";
+		final String instructions = " Input SQL query";
 		final JTextArea sqlQueryIn = new JTextArea();
-		sqlQueryIn.setEditable(false);
-		sqlQueryIn.setText(queryInstruct);
+		
+		sqlQueryIn.setText(instructions);
+		sqlQueryIn.setEnabled(false);
 		sqlQueryIn.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent clear) {
 				if (pressedBegin == true) {
-					sqlQueryIn.setEditable(true);
+					sqlQueryIn.setEnabled(true);
+					sqlQueryIn.setText("");
+					sqlQueryIn.setForeground(Color.BLACK);
+				}
+			}
+		});
+		sqlQueryIn.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent clear) {
+				if ((pressedBegin == true) && (first == true)) {
+					first = false;
+					sqlQueryIn.setEnabled(true);
 					sqlQueryIn.setText("");
 					sqlQueryIn.setForeground(Color.BLACK);
 				}
 			}
 		});
 		sqlQueryIn.setForeground(Color.LIGHT_GRAY);
-		sqlQueryIn.setBounds(31, 36, 374, 16);
+		sqlQueryIn.setBounds(32, 20, 374, 20);
 		tabQuery.add(sqlQueryIn);
-		
+
 		final JScrollPane scrollPane = new JScrollPane();
-		scrollPane.setBounds(31, 92, 506, 223);
+		scrollPane.setBounds(36, 61, 506, 254);
+		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
 		tabQuery.add(scrollPane);
 
 		JButton btnExecute = new JButton("Execute");
@@ -142,21 +174,19 @@ public class GUI extends JPanel {
 			@Override
 			public void mouseClicked(MouseEvent sendUserInput) {
 				if (pressedBegin == true) {
-					if (sqlQueryIn.getText().equals(queryInstruct)) { return; } //do nothing if no query
+					if (sqlQueryIn.getText().equals(instructions)) { return; } //do nothing if no query
 					else {  QueryData.userQuery = sqlQueryIn.getText(); }
 					try {
 						QueryData.getResultSet();
 						queryOutput = new JTable();
 						queryOutput.setModel(QueryData.tableHiddenResultSet(Connect.rs));
 						scrollPane.setViewportView(queryOutput);
-					} catch (SQLException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+					} 
+					catch (SQLException e) { e.printStackTrace(); }
 				}
 			}
 		});
-		btnExecute.setBounds(428, 31, 128, 29);
+		btnExecute.setBounds(430, 15, 128, 29);
 		tabQuery.add(btnExecute);
 
 		return tabQuery;
