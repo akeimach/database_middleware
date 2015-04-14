@@ -1,37 +1,19 @@
 import java.io.File;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 
-public class LoadFile {
+public class LoadFile extends Connect {
 
 	public static File file;
-	public static String tableName = "defaultTable"; //default
-	public static String dbName = "testDynamic";
-	public static Connection conn;
-	public static Statement stmt;
-	public static PreparedStatement pstmt;
-	public static ResultSet rs;
 	public static char delimiter = ','; //default
 	public static String terminator = "\\n"; //default
 
-	public static void initUpload(File file) throws SQLException, IOException {
+	public static void initUpload() throws SQLException, IOException {
 		conn = Connect.getConnection();
 		tableInit();
-		//get sample data and default schema
-		AnalyzeFile.getFormat(file);
+		Parser.getFormat(file); //get sample data and default schema
 		createTable();
 		startBulkLoad();
-	}
-
-	public static boolean executeUpdate(Connection conn, String command) throws SQLException {
-		stmt = conn.createStatement();
-		stmt.executeUpdate(command);
-		System.out.println("Executed \"" + command + "\"");
-		return true;
 	}
 
 	public static void tableInit() throws SQLException {
@@ -48,8 +30,8 @@ public class LoadFile {
 	public static void createTable() throws SQLException {
 		try {
 			String createString = "CREATE TABLE " + tableName + " (id INT UNSIGNED NOT NULL AUTO_INCREMENT, "; //Create new
-			for (int i = 0; i < AnalyzeFile.numCols; i++ ) {
-				createString += AnalyzeFile.defaultFields[i] + " " + AnalyzeFile.defaultTypes[i] + ", ";
+			for (int i = 0; i < Parser.numCols; i++ ) {
+				createString += Parser.defaultFields[i] + " " + Parser.defaultTypes[i] + ", ";
 			}
 			createString += "version INT NULL, PRIMARY KEY (id))";
 			executeUpdate(conn, createString);
@@ -62,12 +44,12 @@ public class LoadFile {
 
 	public static void startBulkLoad() {
 		String bulkLoad = "LOAD DATA CONCURRENT LOCAL INFILE '" + file.getAbsolutePath() + "' INTO TABLE " + tableName + " FIELDS TERMINATED BY '" + delimiter + "' OPTIONALLY ENCLOSED BY '\"' LINES TERMINATED BY '" + terminator + "'";
-		if (AnalyzeFile.hasTitle == true) { bulkLoad += " IGNORE 1 LINES"; }
+		if (Parser.hasTitle == true) { bulkLoad += " IGNORE 1 LINES"; }
 		bulkLoad += " (";
-		for (int i = 0; i < AnalyzeFile.numCols - 1; i++) {
-			bulkLoad += AnalyzeFile.defaultFields[i] + ", ";
+		for (int i = 0; i < Parser.numCols - 1; i++) {
+			bulkLoad += Parser.defaultFields[i] + ", ";
 		}
-		bulkLoad += AnalyzeFile.defaultFields[AnalyzeFile.numCols - 1] + ") SET id = null, version = NULL";
+		bulkLoad += Parser.defaultFields[Parser.numCols - 1] + ") SET id = null, version = NULL";
 		try {
 			stmt.executeQuery(bulkLoad);
 			System.out.println("Sent query \"" + bulkLoad + "\"");

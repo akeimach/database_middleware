@@ -13,6 +13,7 @@ public class GUI extends JPanel {
 	public static JPanel tabLoad;
 	public static JPanel tabSchema;
 	public static JPanel tabQuery;
+	public static JTable queryOutput;
 	public static boolean pressedBegin = false;
 
 	public GUI() {
@@ -33,7 +34,8 @@ public class GUI extends JPanel {
 		tabQuery = new JPanel();
 		tabQuery.setLayout(null);
 		tabbedPane.addTab("Query data", null, tabQuery, null);
-		tabQuery.setPreferredSize(new Dimension(600, 400));
+		tabQuery.setPreferredSize(new Dimension(600, 400));		
+		queryTabContents(tabQuery);
 		//add to gui pane
 		add(tabbedPane);
 		tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
@@ -96,7 +98,7 @@ public class GUI extends JPanel {
 				getTableName.setText(" " + LoadFile.tableName);
 				getTableName.setEditable(false);
 				progressBar.setVisible(true);
-				try { LoadFile.initUpload(LoadFile.file); }
+				try { LoadFile.initUpload(); }
 				catch (SQLException e) { e.printStackTrace(); } 
 				catch (IOException e) { e.printStackTrace(); }
 			}
@@ -111,6 +113,52 @@ public class GUI extends JPanel {
 	}
 
 	public static JPanel queryTabContents(JPanel tabQuery) {
+
+		//get table name
+		final String queryInstruct = " Input SQL query";
+		final JTextArea sqlQueryIn = new JTextArea();
+		sqlQueryIn.setEditable(false);
+		sqlQueryIn.setText(queryInstruct);
+		sqlQueryIn.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mousePressed(MouseEvent clear) {
+				if (pressedBegin == true) {
+					sqlQueryIn.setEditable(true);
+					sqlQueryIn.setText("");
+					sqlQueryIn.setForeground(Color.BLACK);
+				}
+			}
+		});
+		sqlQueryIn.setForeground(Color.LIGHT_GRAY);
+		sqlQueryIn.setBounds(31, 36, 374, 16);
+		tabQuery.add(sqlQueryIn);
+		
+		final JScrollPane scrollPane = new JScrollPane();
+		scrollPane.setBounds(31, 92, 506, 223);
+		tabQuery.add(scrollPane);
+
+		JButton btnExecute = new JButton("Execute");
+		btnExecute.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent sendUserInput) {
+				if (pressedBegin == true) {
+					if (sqlQueryIn.getText().equals(queryInstruct)) { return; } //do nothing if no query
+					else {  QueryData.userQuery = sqlQueryIn.getText(); }
+					try {
+						QueryData.getResultSet();
+						queryOutput = new JTable();
+						queryOutput.setModel(QueryData.tableHiddenResultSet(Connect.rs));
+						scrollPane.setViewportView(queryOutput);
+					} catch (SQLException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			}
+		});
+		btnExecute.setBounds(428, 31, 128, 29);
+		tabQuery.add(btnExecute);
+
 		return tabQuery;
 	}   
 
