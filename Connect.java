@@ -7,7 +7,7 @@ import java.sql.Statement;
 
 public class Connect {
 
-	public static String tableName = "default"; //default
+	public static String tableName = "defaultTable"; //default
 	public static String dbName = "dynamicDB";
 	public static Connection conn;
 	public static Statement stmt;
@@ -19,7 +19,7 @@ public class Connect {
 		Connection conn = null;
 		try {
 			Class.forName("com.mysql.jdbc.Driver").newInstance();
-			conn = DriverManager.getConnection("jdbc:mysql://akuniversal.ciacvodjbmo9.us-west-2.rds.amazonaws.com:3306/" + dbName, "akeimach", "universe");
+			conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/" + dbName, "root", "root");
 			if(!conn.isClosed())
 				System.out.println("Successfully connected to MySQL server");
 		} 

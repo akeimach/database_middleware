@@ -2,10 +2,13 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Vector;
 import java.util.regex.Pattern;
 
 public class Parser extends LoadFile {
-	
+
+	@SuppressWarnings("rawtypes")
+	public static Vector initrows;// = new Vector();
 	public static int topFileSample = 15;
 	public static boolean hasTitle = true;
 	public static String[] defaultFields;
@@ -25,6 +28,7 @@ public class Parser extends LoadFile {
 	static String EMAIL = "[_A-Za-z0-9-]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})";
 	static String INVALTITLE = "[^\\s^\\d^a-z^A-Z]";
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static void getFormat(File file) throws IOException {
 		//FIRST GET THE DELIMITER
 		// Algorithm: count every ,;/ and tab, see which one is used most often
@@ -97,6 +101,7 @@ public class Parser extends LoadFile {
 				index++;
 			}
 		}
+
 		if (index < numCols) { //get the last field
 			String fieldinit = randomLine.substring(start, randomLine.length());
 			fieldinit = fieldinit.replace("\"", "");
@@ -123,6 +128,30 @@ public class Parser extends LoadFile {
 		if (hasTitle == false) {
 			for (int i = 0; i < defaultFields.length; i++) { defaultFields[i] = "col_" + (i + 1); }
 		}
+		
+		
+		initrows = new Vector();
+		//get 15 lines for change schema table
+		for (int l = 0; l < topFileSample; l++) {
+			Vector dataline = new Vector();
+			String getline = lines.readLine();
+			start = 0;
+			end = 0;
+			for (int i = 0; i < getline.length(); i++) {
+				if (getline.charAt(i) == delimiter) {
+					end = i;
+					String fieldinit = getline.substring(start, end);
+					fieldinit = fieldinit.replace("\"", "");
+					fieldinit = fieldinit.replace(" ", "");
+					dataline.addElement(fieldinit);
+					start = i + 1;
+					index++;
+				}
+			}
+			initrows.addElement(dataline);
+
+		}
+
 	}
 
 }

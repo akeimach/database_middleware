@@ -2,7 +2,10 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.Vector;
+
+import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableModel;
 
 public class QueryData extends Connect {
@@ -16,7 +19,7 @@ public class QueryData extends Connect {
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static TableModel tableHiddenResultSet(ResultSet rs) {
+	public static TableModel queryResultSet(ResultSet rs) {
 		try {
 			ResultSetMetaData metaData = rs.getMetaData();
 			int numberOfColumns = metaData.getColumnCount(); 
@@ -39,6 +42,15 @@ public class QueryData extends Connect {
 			e.printStackTrace();
 			return null;
 		}
+	}
+	
+	public static TableColumnModel colwidth(JTable table) {
+		TableColumnModel columnModel = table.getColumnModel();
+
+		for (int i = 0; i < table.getColumnCount(); i++) {
+			columnModel.getColumn(i).setPreferredWidth(100);
+		}
+		return columnModel;
 	}
 
 }

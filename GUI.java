@@ -16,9 +16,11 @@ public class GUI extends JPanel {
 	public static JPanel tabSchema;
 	public static JPanel tabQuery;
 	public static JTable queryOutput;
+	public static JTable initSchema;
 	public static JTable currentSchema;
 	public static boolean pressedBegin = false;
 	public static boolean first = true;
+	public static JComboBox comboType;
 
 	public GUI() {
 		setLayout(new BorderLayout(0, 0));
@@ -104,7 +106,8 @@ public class GUI extends JPanel {
 				getTableName.setEditable(false);
 				progressBar.setVisible(true);
 				try { 
-					LoadFile.initUpload(); //make the other two tabs active once data loading
+					LoadFile.initUpload(); 
+					//make the other two tabs active only after data starts loading
 					schemaTabContents(tabSchema);
 					queryTabContents(tabQuery);
 				}
@@ -120,19 +123,52 @@ public class GUI extends JPanel {
 	public static JPanel schemaTabContents(final JPanel tabSchema) {
 
 		final JScrollPane scrollPane = new JScrollPane();
-		scrollPane.setBounds(36, 61, 506, 254);
+		scrollPane.setBounds(36, 49, 506, 279);
 		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
 		tabSchema.add(scrollPane);
+		
+		initSchema = new JTable();
+		initSchema.setFillsViewportHeight(true);
+		initSchema.setCellSelectionEnabled(true);
+		try { initSchema.setModel(ChangeSchema.getInitSchemaRS()); } 
+		catch (IOException e1) { e1.printStackTrace(); }
+		initSchema.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+		initSchema.setShowGrid(true);
+		initSchema.setGridColor(Color.LIGHT_GRAY);
+		initSchema.setColumnModel(ChangeSchema.colwidth(initSchema));
 
-		try { ChangeSchema.getCurrSchema(); } 
-		catch (SQLException e) { e.printStackTrace(); }
-		currentSchema = new JTable();
-		currentSchema.setModel(ChangeSchema.editHiddenResultSet(Connect.defaultrs));
-		scrollPane.setViewportView(currentSchema);
-
+		scrollPane.setViewportView(initSchema);
+		
+		JButton btnAcceptChanges = new JButton("Accept Changes");
+		btnAcceptChanges.addMouseListener(new MouseAdapter() {
+			@SuppressWarnings("unchecked")
+			@Override
+			public void mouseClicked(MouseEvent arg0) {
+				int countChanges = 0;
+				for (int i = 0; i < ChangeSchema.topinitNames.size(); i++) {
+					if (initSchema.getValueAt(0, i) != "Enter new title?") {
+						ChangeSchema.changedName.setElementAt(initSchema.getValueAt(0, i), i);
+						countChanges++;
+					}
+					if (initSchema.getValueAt(1, i) != ChangeSchema.topinitType.get(i)) {
+						ChangeSchema.changedType.setElementAt(initSchema.getValueAt(1, i), i);
+						countChanges++;
+					}
+				}
+				if (countChanges > 0) { ChangeSchema.userChange(); }
+			}
+		});
+		btnAcceptChanges.setBounds(217, 8, 145, 29);
+		tabSchema.add(btnAcceptChanges);
+		
+		//after data has load initially
+		//try { ChangeSchema.getCurrSchema(); } 
+		
 		return tabSchema;
 	}
+
+	
 
 	public static JPanel queryTabContents(JPanel tabQuery) {
 
@@ -180,8 +216,15 @@ public class GUI extends JPanel {
 				try {
 					QueryData.getResultSet();
 					queryOutput = new JTable();
-					queryOutput.setModel(QueryData.tableHiddenResultSet(Connect.rs));
+					queryOutput.setFillsViewportHeight(true);
+					queryOutput.setCellSelectionEnabled(true);
+					queryOutput.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+					queryOutput.setShowGrid(true);
+					queryOutput.setGridColor(Color.LIGHT_GRAY);
+					queryOutput.setModel(QueryData.queryResultSet(Connect.rs));
+					queryOutput.setColumnModel(QueryData.colwidth(queryOutput));
 					scrollPane.setViewportView(queryOutput);
+					
 				} 
 				catch (SQLException e) { e.printStackTrace(); }
 			}
