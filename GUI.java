@@ -16,41 +16,44 @@ public class GUI extends JPanel {
 
 	//Load file tab
 	public static JPanel tabLoad;
-	public static boolean pressedBegin = false;
+	public static boolean begin_pressed = false;
 	
 	//Change schema tab
 	public static JPanel tabSchema;
 	public static JTable initSchema;
-	public static JTable currentSchema;
 	
 	//Query data tab
 	public static JPanel tabQuery;
-	public static boolean key_pressed = false;
 	public static JTable queryOutput;
-	
+	public static boolean key_pressed = false;
 
 	public GUI() {
-		setLayout(new BorderLayout(0, 0));
+		//setLayout(new BorderLayout(0, 0));
 		JTabbedPane tabbedPane = new JTabbedPane();
+		tabbedPane.setPreferredSize(new Dimension(800, 600));
 
 		//Only initialte load on startup--all others depend on load
 		tabLoad = new JPanel();
 		tabLoad.setLayout(null);
 		tabbedPane.addTab("Load file", null, tabLoad, null);
-		tabLoad.setPreferredSize(new Dimension(600, 400));
+		tabLoad.setPreferredSize(new Dimension(800, 600));
 		loadTabContents(tabLoad); 
 		
 		//change schema
 		tabSchema = new JPanel();
 		tabSchema.setLayout(null);
 		tabbedPane.addTab("Change schema", null, tabSchema, null);
-		tabSchema.setPreferredSize(new Dimension(600, 400));
+		tabSchema.setPreferredSize(new Dimension(800, 600));
 
 		//query data
 		tabQuery = new JPanel();
 		tabQuery.setLayout(null);
 		tabbedPane.addTab("Query data", null, tabQuery, null);
-		tabQuery.setPreferredSize(new Dimension(600, 400));		
+		tabQuery.setPreferredSize(new Dimension(800, 600));	
+		
+		//turn on for Windowbuilder editing
+		//schemaTabContents(tabSchema); 
+		//queryTabContents(tabQuery);
 
 		//add to gui pane
 		add(tabbedPane);
@@ -64,7 +67,7 @@ public class GUI extends JPanel {
 		path.setEditable(false);
 		path.setForeground(Color.LIGHT_GRAY);
 		path.setText(" Select data file to upload");
-		path.setBounds(32, 20, 374, 20);
+		path.setBounds(127, 44, 393, 20);
 		tabLoad.add(path);
 		
 		//browse button, saves data file to File "file", sets file path
@@ -80,7 +83,7 @@ public class GUI extends JPanel {
 				}
 			}
 		});
-		btnBrowse.setBounds(428, 15, 128, 29);
+		btnBrowse.setBounds(526, 39, 128, 29);
 		tabLoad.add(btnBrowse);
 		
 		//get table name
@@ -90,20 +93,20 @@ public class GUI extends JPanel {
 		getTableName.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent clear) {
-				if (!pressedBegin) {
+				if (!begin_pressed) {
 					getTableName.setText("");
 					getTableName.setForeground(Color.BLACK);
 				}
 			}
 		});
 		getTableName.setForeground(Color.LIGHT_GRAY);
-		getTableName.setBounds(32, 52, 374, 20);
+		getTableName.setBounds(127, 76, 393, 20);
 		tabLoad.add(getTableName);
 		
 		//create progress bar
 		final JProgressBar progressBar = new JProgressBar();
 		progressBar.setIndeterminate(true);
-		progressBar.setBounds(177, 143, 224, 20);
+		progressBar.setBounds(277, 160, 224, 20);
 		progressBar.setVisible(false);
 		tabLoad.add(progressBar);
 		
@@ -112,7 +115,7 @@ public class GUI extends JPanel {
 		btnBegin.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent loader) {
-				pressedBegin = true;
+				begin_pressed = true;
 				if (getTableName.getText().equals(instructions)) { LoadFile.tableName = "defaultTable"; }
 				else { LoadFile.tableName = getTableName.getText(); }
 				getTableName.setText(" " + LoadFile.tableName);
@@ -136,7 +139,7 @@ public class GUI extends JPanel {
 			}
 		});
 			
-		btnBegin.setBounds(231, 102, 117, 29);
+		btnBegin.setBounds(331, 119, 117, 29);
 		tabLoad.add(btnBegin);
 		return tabLoad;
 	}
@@ -144,7 +147,7 @@ public class GUI extends JPanel {
 	public static JPanel schemaTabContents(final JPanel tabSchema) {
 
 		final JScrollPane scrollPane = new JScrollPane();
-		scrollPane.setBounds(36, 49, 506, 279);
+		scrollPane.setBounds(40, 70, 700, 450);
 		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
 		tabSchema.add(scrollPane);
@@ -161,7 +164,7 @@ public class GUI extends JPanel {
 
 		scrollPane.setViewportView(initSchema);
 		
-		JButton btnAcceptChanges = new JButton("Accept Changes");
+		JButton btnAcceptChanges = new JButton("Submit Changes");
 		btnAcceptChanges.addMouseListener(new MouseAdapter() {
 			@SuppressWarnings("unchecked")
 			@Override
@@ -180,7 +183,7 @@ public class GUI extends JPanel {
 				if (countChanges > 0) { ChangeSchema.userChange(); }
 			}
 		});
-		btnAcceptChanges.setBounds(217, 8, 145, 29);
+		btnAcceptChanges.setBounds(317, 28, 145, 29);
 		tabSchema.add(btnAcceptChanges);
 		
 		return tabSchema;
@@ -214,11 +217,11 @@ public class GUI extends JPanel {
 			}
 		});
 		sqlQueryIn.setForeground(Color.LIGHT_GRAY);
-		sqlQueryIn.setBounds(32, 20, 374, 20);
+		sqlQueryIn.setBounds(44, 20, 554, 20);
 		tabQuery.add(sqlQueryIn);
 
 		final JScrollPane scrollPane = new JScrollPane();
-		scrollPane.setBounds(36, 61, 506, 254);
+		scrollPane.setBounds(40, 70, 700, 450);
 		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
 		tabQuery.add(scrollPane);
@@ -246,7 +249,7 @@ public class GUI extends JPanel {
 				catch (SQLException e) { e.printStackTrace(); }
 			}
 		});
-		btnExecute.setBounds(430, 15, 128, 29);
+		btnExecute.setBounds(610, 15, 128, 29);
 		tabQuery.add(btnExecute);
 
 		return tabQuery;
