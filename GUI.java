@@ -2,6 +2,8 @@ import javax.swing.*;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
@@ -12,43 +14,51 @@ import java.awt.event.KeyEvent;
 @SuppressWarnings("serial")
 public class GUI extends JPanel {
 
+	//Load file tab
 	public static JPanel tabLoad;
+	public static boolean pressedBegin = false;
+	
+	//Change schema tab
 	public static JPanel tabSchema;
-	public static JPanel tabQuery;
-	public static JTable queryOutput;
 	public static JTable initSchema;
 	public static JTable currentSchema;
-	public static boolean pressedBegin = false;
-	public static boolean first = true;
-	public static JComboBox comboType;
+	
+	//Query data tab
+	public static JPanel tabQuery;
+	public static boolean key_pressed = false;
+	public static JTable queryOutput;
+	
 
 	public GUI() {
 		setLayout(new BorderLayout(0, 0));
 		JTabbedPane tabbedPane = new JTabbedPane();
-		//load file
+
+		//Only initialte load on startup--all others depend on load
 		tabLoad = new JPanel();
 		tabLoad.setLayout(null);
 		tabbedPane.addTab("Load file", null, tabLoad, null);
 		tabLoad.setPreferredSize(new Dimension(600, 400));
-		loadTabContents(tabLoad); //only one initiated on start-up
+		loadTabContents(tabLoad); 
+		
 		//change schema
 		tabSchema = new JPanel();
 		tabSchema.setLayout(null);
 		tabbedPane.addTab("Change schema", null, tabSchema, null);
 		tabSchema.setPreferredSize(new Dimension(600, 400));
-		//schemaTabContents(tabSchema);
+
 		//query data
 		tabQuery = new JPanel();
 		tabQuery.setLayout(null);
 		tabbedPane.addTab("Query data", null, tabQuery, null);
 		tabQuery.setPreferredSize(new Dimension(600, 400));		
-		//queryTabContents(tabQuery);
+
 		//add to gui pane
 		add(tabbedPane);
 		tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
 	}
 
 	public static JPanel loadTabContents(final JPanel tabLoad) {
+		
 		//file path box
 		final JTextArea path = new JTextArea();
 		path.setEditable(false);
@@ -56,6 +66,7 @@ public class GUI extends JPanel {
 		path.setText(" Select data file to upload");
 		path.setBounds(32, 20, 374, 20);
 		tabLoad.add(path);
+		
 		//browse button, saves data file to File "file", sets file path
 		JButton btnBrowse = new JButton("Browse");
 		btnBrowse.addMouseListener(new MouseAdapter() {
@@ -71,6 +82,7 @@ public class GUI extends JPanel {
 		});
 		btnBrowse.setBounds(428, 15, 128, 29);
 		tabLoad.add(btnBrowse);
+		
 		//get table name
 		final String instructions = " Select table name (optional)";
 		final JTextArea getTableName = new JTextArea();
@@ -87,34 +99,43 @@ public class GUI extends JPanel {
 		getTableName.setForeground(Color.LIGHT_GRAY);
 		getTableName.setBounds(32, 52, 374, 20);
 		tabLoad.add(getTableName);
+		
 		//create progress bar
 		final JProgressBar progressBar = new JProgressBar();
-		//progressBar.setStringPainted(true);
 		progressBar.setIndeterminate(true);
 		progressBar.setBounds(177, 143, 224, 20);
 		progressBar.setVisible(false);
 		tabLoad.add(progressBar);
-		//start loading data, get input table name
+		
+		//begin program, make schema and query tabs active
 		JButton btnBegin = new JButton("Begin");
-		btnBegin.addMouseListener(new MouseAdapter() {
+		btnBegin.addActionListener(new ActionListener() {
 			@Override
-			public void mouseClicked(MouseEvent begin) {
+			public void actionPerformed(ActionEvent loader) {
 				pressedBegin = true;
 				if (getTableName.getText().equals(instructions)) { LoadFile.tableName = "defaultTable"; }
 				else { LoadFile.tableName = getTableName.getText(); }
 				getTableName.setText(" " + LoadFile.tableName);
 				getTableName.setEditable(false);
 				progressBar.setVisible(true);
-				try { 
-					LoadFile.initUpload(); 
-					//make the other two tabs active only after data starts loading
-					schemaTabContents(tabSchema);
-					queryTabContents(tabQuery);
-				}
+				
+				//make other tabs available
+				try { LoadFile.initUpload(); } 
 				catch (SQLException e) { e.printStackTrace(); } 
-				catch (IOException e) { e.printStackTrace(); }
+		    	catch (IOException e) { e.printStackTrace(); }
+				schemaTabContents(tabSchema);
+				queryTabContents(tabQuery);
+				
+				//start background loader thread
+			    Thread queryThread = new Thread() {
+			      public void run() {
+			    	  LoadFile.startBulkLoad();
+			      }
+			    };
+			    queryThread.start();
 			}
 		});
+			
 		btnBegin.setBounds(231, 102, 117, 29);
 		tabLoad.add(btnBegin);
 		return tabLoad;
@@ -162,13 +183,9 @@ public class GUI extends JPanel {
 		btnAcceptChanges.setBounds(217, 8, 145, 29);
 		tabSchema.add(btnAcceptChanges);
 		
-		//after data has load initially
-		//try { ChangeSchema.getCurrSchema(); } 
-		
 		return tabSchema;
 	}
 
-	
 
 	public static JPanel queryTabContents(JPanel tabQuery) {
 
@@ -188,8 +205,8 @@ public class GUI extends JPanel {
 		sqlQueryIn.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyPressed(KeyEvent clear) {
-				if (first) {
-					first = false;
+				if (!key_pressed) {
+					key_pressed = true; //only first key pressed erases the initial contents
 					sqlQueryIn.setEnabled(true);
 					sqlQueryIn.setText("");
 					sqlQueryIn.setForeground(Color.BLACK);
@@ -235,6 +252,7 @@ public class GUI extends JPanel {
 		return tabQuery;
 	}   
 
+	
 	private static void createAndShowGUI() {
 		JFrame frame = new JFrame("Dynamic Database Simulator");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -242,9 +260,14 @@ public class GUI extends JPanel {
 		frame.pack();
 		frame.setVisible(true);
 	}
-
+	
+	
 	public static void main(String[] args) {
 		UIManager.put("swing.boldMetal", Boolean.FALSE);
-		createAndShowGUI();
+		SwingUtilities.invokeLater(new Runnable() {
+		    public void run() {
+		        createAndShowGUI();
+		    }
+		});
 	}
 }
