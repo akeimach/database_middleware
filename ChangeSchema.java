@@ -11,12 +11,16 @@ import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableModel;
 
 public class ChangeSchema extends Connect {
-
-	public static String tableName = "defaultTable"; //default
 	
 	public static Vector<String> columnNames;
 	public static Vector<Integer> columnSize;
 	public static Vector<String> columnType;
+	
+	public static Vector<String> schemaTableCols;
+	public static Vector<String> fields;
+	public static Vector<Integer> schemaRow;
+	public static Vector<String> datatypes;
+	
 	//public static DefaultTableModel tbm;
 	//public static TableColumnModel cols;
 	//public static TableModelListener schemaChange;
@@ -68,9 +72,38 @@ public class ChangeSchema extends Connect {
 
 	public static boolean getCurrSchema() throws SQLException {
 		conn = Connect.getConnection();
-		String topLines = "SELECT * FROM " + tableName + " WHERE id < " + Parser.topFileSample;
+		String topLines = "SELECT * FROM " + Struct.tableName + " WHERE id < " + Parser.topFileSample;
 		defaultrs = executeQuery(conn, topLines.trim());
 		return true;
+	}
+	
+	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public static TableModel schemaTable() {
+		
+		schemaTableCols = new Vector();
+		schemaTableCols.addElement("Table");
+		schemaTableCols.addElement("Name");
+		schemaTableCols.addElement("Type");
+		schemaTableCols.addElement("Schema");
+		
+		Vector rows = new Vector();
+		Vector tableRow = new Vector();
+		tableRow.addElement(Struct.tableName);
+		tableRow.addElement(null);
+		tableRow.addElement(null);
+		tableRow.addElement(LoadFile.createTableString);
+		rows.addElement(tableRow);
+		for (int i = 0; i < Parser.defaultFields.length; i++) {
+			Vector newRow = new Vector();
+			newRow.addElement(null);
+			newRow.addElement(Parser.defaultFields[i]);
+			newRow.addElement(Parser.defaultTypes[i]);
+			newRow.addElement( "\'" + Parser.defaultFields[i] + "\' " + Parser.defaultTypes[i]);
+			rows.addElement(newRow);
+		}
+		return new DefaultTableModel(rows, schemaTableCols);
+		
 	}
 
 
@@ -124,6 +157,7 @@ public class ChangeSchema extends Connect {
 		}
 	}
 
+	
 	public static TableColumnModel colwidth(JTable table) {
 		TableColumnModel columnModel = table.getColumnModel();
 

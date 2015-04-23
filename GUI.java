@@ -11,6 +11,8 @@ import java.sql.SQLException;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
+import javax.swing.table.DefaultTableModel;
+
 
 @SuppressWarnings("serial")
 public class GUI extends JPanel {
@@ -36,9 +38,12 @@ public class GUI extends JPanel {
 	private static JButton btnExecute;
 
 	//RIGHT SIDE: Change schema
-	public static JPanel schemaPane;
-	public static JTable initSchema;
-
+	public static JTabbedPane schemaPane;
+	//containing panel
+	public static JPanel tabSchema;
+	public static JScrollPane schemaScrollPane;
+	public static JTable viewSchema;
+	private static JButton btnSubmitChanges;
 
 
 	public GUI() {
@@ -49,21 +54,21 @@ public class GUI extends JPanel {
 
 		dataPane = new JTabbedPane();
 		dataPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
-
 		tabLoad = new JPanel();
 		loadContents(tabLoad);
 		dataPane.addTab("Load file", null, tabLoad, null);
-
 		tabQuery = new JPanel();
 		queryContents(tabQuery);
 		dataPane.addTab("Query data", null, tabQuery, null);
 
-		schemaPane = new JPanel();
-		schemaContents(schemaPane);
+		schemaPane = new JTabbedPane();
+		schemaPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
+		tabSchema = new JPanel();
+		schemaContents(tabSchema);
+		schemaPane.addTab("Schema", null, tabSchema, null);
 
 		splitPane.setLeftComponent(dataPane);
 		splitPane.setRightComponent(schemaPane);
-
 		//add to gui pane
 		add(splitPane);
 
@@ -73,7 +78,7 @@ public class GUI extends JPanel {
 	public static JPanel loadContents(final JPanel tabLoad) {
 
 		GridBagLayout gbl_panel = new GridBagLayout();
-		gbl_panel.columnWidths = new int[]{18, 215, 124, 0};
+		gbl_panel.columnWidths = new int[]{18, 79, 124, 0};
 		gbl_panel.rowHeights = new int[]{25, 0, 0, 0, 0, 0};
 		gbl_panel.columnWeights = new double[]{0.0, 1.0, 0.0, Double.MIN_VALUE};
 		gbl_panel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
@@ -164,7 +169,9 @@ public class GUI extends JPanel {
 				//make other tabs available
 				try { 
 					LoadFile.initUpload(); 
-					initSchema.setModel(ChangeSchema.getInitSchemaRS());
+					Parser.getFormat(Parser.file);
+					viewSchema.setModel(ChangeSchema.schemaTable());
+					viewSchema.setColumnModel(QueryData.colwidth(viewSchema));
 				} 
 				catch (SQLException e) { e.printStackTrace(); } 
 				catch (IOException e) { e.printStackTrace(); }
@@ -188,8 +195,8 @@ public class GUI extends JPanel {
 	public static JPanel queryContents(final JPanel tabQuery) {
 
 		GridBagLayout gbl_tabQuery = new GridBagLayout();
-		gbl_tabQuery.columnWidths = new int[]{324, 0};
-		gbl_tabQuery.rowHeights = new int[]{0, 411, 0, 284, 0};
+		gbl_tabQuery.columnWidths = new int[]{71, 0};
+		gbl_tabQuery.rowHeights = new int[]{0, 380, 37, 130, 0};
 		gbl_tabQuery.columnWeights = new double[]{1.0, Double.MIN_VALUE};
 		gbl_tabQuery.rowWeights = new double[]{0.0, 1.0, 0.0, 1.0, Double.MIN_VALUE};
 		tabQuery.setLayout(gbl_tabQuery);
@@ -285,46 +292,45 @@ public class GUI extends JPanel {
 
 	public static JPanel schemaContents(final JPanel schemaPane) {
 
-		final JScrollPane scrollPane = new JScrollPane();
-		scrollPane.setBounds(40, 70, 700, 450);
-		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
-		schemaPane.add(scrollPane);
+		GridBagLayout gbl_tabSchema = new GridBagLayout();
+		gbl_tabSchema.columnWidths = new int[]{0, 93, 0};
+		gbl_tabSchema.rowHeights = new int[]{0, 559, 0, 7, 0};
+		gbl_tabSchema.columnWeights = new double[]{0.0, 1.0, Double.MIN_VALUE};
+		gbl_tabSchema.rowWeights = new double[]{0.0, 1.0, 0.0, 0.0, Double.MIN_VALUE};
+		tabSchema.setLayout(gbl_tabSchema);
 
-		initSchema = new JTable();
-		initSchema.setFillsViewportHeight(true);
-		initSchema.setCellSelectionEnabled(true);
+		schemaScrollPane = new JScrollPane();
+		schemaScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		schemaScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+		GridBagConstraints gbc_scrollPane = new GridBagConstraints();
+		gbc_scrollPane.insets = new Insets(0, 0, 5, 0);
+		gbc_scrollPane.fill = GridBagConstraints.BOTH;
+		gbc_scrollPane.gridx = 1;
+		gbc_scrollPane.gridy = 1;
+		tabSchema.add(schemaScrollPane, gbc_scrollPane);
 
-		initSchema.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-		initSchema.setShowGrid(true);
-		initSchema.setGridColor(Color.LIGHT_GRAY);
-		initSchema.setColumnModel(ChangeSchema.colwidth(initSchema));
+		btnSubmitChanges = new JButton("Submit changes");
+		GridBagConstraints gbc_btnSubmitChanges = new GridBagConstraints();
+		gbc_btnSubmitChanges.insets = new Insets(0, 0, 5, 0);
+		gbc_btnSubmitChanges.gridx = 1;
+		gbc_btnSubmitChanges.gridy = 2;
+		tabSchema.add(btnSubmitChanges, gbc_btnSubmitChanges);
 
-		scrollPane.setViewportView(initSchema);
 
-		JButton btnAcceptChanges = new JButton("Submit Changes");
-		btnAcceptChanges.addMouseListener(new MouseAdapter() {
-			@SuppressWarnings("unchecked")
-			@Override
-			public void mouseClicked(MouseEvent arg0) {
-				if (begin_pressed) {
-					int countChanges = 0;
-					for (int i = 0; i < ChangeSchema.topinitNames.size(); i++) {
-						if (initSchema.getValueAt(0, i) != "Enter new title?") {
-							ChangeSchema.changedName.setElementAt(initSchema.getValueAt(0, i), i);
-							countChanges++;
-						}
-						if (initSchema.getValueAt(1, i) != ChangeSchema.topinitType.get(i)) {
-							ChangeSchema.changedType.setElementAt(initSchema.getValueAt(1, i), i);
-							countChanges++;
-						}
-					}
-					if (countChanges > 0) { ChangeSchema.userChange(); }
-				}
+		viewSchema = new JTable();
+		viewSchema.setModel(new DefaultTableModel(
+			new Object[][] {
+			},
+			new String[] {
+				"Table", "Field", "Type", "Schema"
 			}
-		});
-		btnAcceptChanges.setBounds(317, 28, 145, 29);
-		schemaPane.add(btnAcceptChanges);
+		));
+		
+		viewSchema.setFillsViewportHeight(true);
+		viewSchema.setCellSelectionEnabled(true);
+		viewSchema.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
+		viewSchema.setGridColor(Color.LIGHT_GRAY);
+		schemaScrollPane.setViewportView(viewSchema);
 
 		return schemaPane;
 	}
@@ -345,7 +351,6 @@ public class GUI extends JPanel {
 			public void run() {
 				createAndShowGUI();
 				splitPane.setDividerLocation(700);
-				//splitPane.setDividerLocation(splitPane.getSize().width / 2);
 			}
 		});
 	}

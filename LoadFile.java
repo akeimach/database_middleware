@@ -3,10 +3,12 @@ import java.sql.SQLException;
 
 public class LoadFile extends Connect {
 
+	public static String createTableString;
 
 	public static void initUpload() throws SQLException, IOException {
 		Connect.conn = Connect.getConnection();
 		tableInit();
+		Parser.findTerminator(Parser.file);
 		Parser.getFormat(Parser.file); //get sample data and default schema
 		createTable();
 	}
@@ -24,12 +26,12 @@ public class LoadFile extends Connect {
 
 	public static void createTable() throws SQLException {
 		try {
-			String createString = "CREATE TABLE " + Struct.tableName + " (id INT UNSIGNED NOT NULL AUTO_INCREMENT, "; //Create new
+			createTableString = "CREATE TABLE " + Struct.tableName + " (id INT UNSIGNED NOT NULL AUTO_INCREMENT, "; //Create new
 			for (int i = 0; i < Parser.numCols; i++ ) {
-				createString += Parser.defaultFields[i] + " " + Parser.defaultTypes[i] + ", ";
+				createTableString += Parser.defaultFields[i] + " " + Parser.defaultTypes[i] + ", ";
 			}
-			createString += "version INT NULL, PRIMARY KEY (id))";
-			executeUpdate(conn, createString);
+			createTableString += "version INT NULL, PRIMARY KEY (id))";
+			executeUpdate(conn, createTableString);
 		}
 		catch (SQLException e) {
 			System.out.println("ERROR: Could not create the table");
@@ -38,7 +40,7 @@ public class LoadFile extends Connect {
 	}
 
 	public static void startBulkLoad() {
-		String bulkLoad = "LOAD DATA CONCURRENT LOCAL INFILE '" + Parser.file.getAbsolutePath() + "' INTO TABLE " + Struct.tableName + " FIELDS TERMINATED BY '" + Parser.delimiter + "' OPTIONALLY ENCLOSED BY '\"' LINES TERMINATED BY '" + Parser.terminator + "'";
+		String bulkLoad = "LOAD DATA CONCURRENT LOCAL INFILE '" + Parser.file.getAbsolutePath() + "' INTO TABLE " + Struct.tableName + " FIELDS TERMINATED BY '" + Parser.delimiter + "' OPTIONALLY ENCLOSED BY '\"' LINES TERMINATED BY '\"" + Parser.terminator + "'";
 		if (Parser.hasTitle == true) { bulkLoad += " IGNORE 1 LINES"; }
 		bulkLoad += " (";
 		for (int i = 0; i < Parser.numCols - 1; i++) {

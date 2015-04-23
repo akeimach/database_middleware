@@ -1,6 +1,7 @@
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.SQLWarning;
 import java.util.Vector;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
@@ -30,13 +31,16 @@ public class QueryData extends Connect {
 			}
 			// Get all rows.
 			Vector rows = new Vector();
+			int rowsReturned = 0;
 			while (rs.next()) {
 				Vector newRow = new Vector();
 				for (int i = 2; i < numberOfColumns; i++) { newRow.addElement(rs.getObject(i)); }
 				rows.addElement(newRow);
+				rowsReturned++;
 			}
-			System.out.print("Executed query \"" + userQuery + "\"");
-			GUI.dbOutput.append("Executed query \"" + userQuery + "\"");
+			SQLWarning warnings = rs.getWarnings();
+			System.out.print(rowsReturned + " rows returned from: \"" + userQuery + "\"\n" + warnings);
+			GUI.dbOutput.append(rowsReturned + " rows returned from: \"" + userQuery + "\"\n");
 			return new DefaultTableModel(rows, columnNames);
 		} 
 		catch (Exception e) {

@@ -36,7 +36,6 @@ public class Connect {
 	public static ResultSet executeQuery(Connection conn, String command) throws SQLException {
 		stmt = conn.createStatement();
 		rs = stmt.executeQuery(command);
-		//System.out.println("Executed query \"" + command + "\"");
 		return rs;
 	}
 

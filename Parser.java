@@ -1,5 +1,6 @@
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Vector;
@@ -8,7 +9,7 @@ import java.util.regex.Pattern;
 public class Parser {
 
 	public static File file;
-	
+
 	@SuppressWarnings("rawtypes")
 	public static Vector initrows;// = new Vector();
 	public static int topFileSample = 15;
@@ -19,7 +20,7 @@ public class Parser {
 	public static int[] defaultSize;
 	public static int numCols;
 	public static char delimiter = ','; //default
-	public static String terminator = "\\n"; //default
+	public static char terminator = '\n'; //default
 	static String INT = "[\\+\\-]?\\d+";
 	static String FLOAT = "[\\+\\-]?\\d+\\.\\d+(?:[eE][\\+\\-]?\\d+)?";
 	static String CHAR = "([a-z]|[A-Z])+";
@@ -32,6 +33,38 @@ public class Parser {
 	static String EMAIL = "[_A-Za-z0-9-]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})";
 	static String INVALTITLE = "[^\\s^\\d^a-z^A-Z]";
 
+
+	public static void findTerminator(File file) throws FileNotFoundException {
+		BufferedReader lines = new BufferedReader(new FileReader(file));
+		int countLines = 0;
+		int c;
+		char[] terminators = { '\r', '\n' };
+		int[] counters = { 0, 0 };
+		try {
+			while (((c = lines.read()) != -1) && (countLines < topFileSample)) {
+				char character = (char) c;
+				for (int d = 0; d < terminators.length; d++) {
+					if (character == terminators[d]) { counters[d]++; }
+					countLines++;
+				}
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		int max = 0;
+		int maxindex = 0;
+		for (int i = 0; i < counters.length; i++) {
+			if (max < counters[i]) { 
+				max = counters[i]; 
+				maxindex = i; 
+			}
+		}
+		terminator = terminators[maxindex];
+		System.out.println(terminator + "TERMINATOR");
+	}
+
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static void getFormat(File file) throws IOException {
 		//FIRST GET THE DELIMITER
@@ -40,6 +73,7 @@ public class Parser {
 		char[] delimiters = { ',', '/', ' ', ';', '\t' };
 		int[] counters = { 0, 0, 0, 0, 0 };
 		String topLine = lines.readLine(); //top line just in case has titles
+		System.out.println(System.getProperty("topLine.separator"));
 		for (int linenum = 0; linenum < topFileSample; linenum++) {
 			String curr = lines.readLine();
 			for (int i = 0; i < curr.length(); i++) {
@@ -132,8 +166,8 @@ public class Parser {
 		if (hasTitle == false) {
 			for (int i = 0; i < defaultFields.length; i++) { defaultFields[i] = "col_" + (i + 1); }
 		}
-		
-		
+
+
 		initrows = new Vector();
 		//get 15 lines for change schema table
 		for (int l = 0; l < topFileSample; l++) {
