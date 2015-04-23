@@ -6,21 +6,22 @@ import java.util.Vector;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JTable;
-import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableModel;
 
 public class ChangeSchema extends Connect {
 
+	public static String tableName = "defaultTable"; //default
+	
 	public static Vector<String> columnNames;
 	public static Vector<Integer> columnSize;
 	public static Vector<String> columnType;
-	public static DefaultTableModel tbm;
-	public static TableColumnModel cols;
-	public static TableModelListener schemaChange;
-	@SuppressWarnings("rawtypes")
-	public static Vector changedTitles;
+	//public static DefaultTableModel tbm;
+	//public static TableColumnModel cols;
+	//public static TableModelListener schemaChange;
+	//@SuppressWarnings("rawtypes")
+	//public static Vector changedTitles;
 	@SuppressWarnings("rawtypes")
 	public static Vector topinitNames;
 	@SuppressWarnings("rawtypes")
@@ -38,7 +39,6 @@ public class ChangeSchema extends Connect {
 		// Get the column names
 		topinitNames = new Vector();
 		for (String name : Parser.defaultFields) { topinitNames.addElement(name); }
-
 
 		//set top two rows: (editable) titles and size
 		Vector topinitSize = new Vector();
@@ -68,7 +68,7 @@ public class ChangeSchema extends Connect {
 
 	public static boolean getCurrSchema() throws SQLException {
 		conn = Connect.getConnection();
-		String topLines = "SELECT * FROM " + Connect.tableName + " WHERE id < " + Parser.topFileSample;
+		String topLines = "SELECT * FROM " + tableName + " WHERE id < " + Parser.topFileSample;
 		defaultrs = executeQuery(conn, topLines.trim());
 		return true;
 	}

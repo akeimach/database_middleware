@@ -1,5 +1,4 @@
 import javax.swing.*;
-
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -9,8 +8,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
@@ -28,51 +25,60 @@ public class GUI extends JPanel {
 	public static boolean begin_pressed = false;
 	//Query data
 	public static JPanel tabQuery;
+	public static JSplitPane querySplitPane;
+	private static JTextArea txtrQueryinput;
+	public static JScrollPane inputScrollPane;
 	public static JTable queryOutput;
-	public static boolean key_pressed = false;
+	public static JScrollPane outputScrollPane;
+	public static JTextArea dbOutput;
+	public static JScrollPane dbOutputScrollPane;
+	public static boolean user_typing = false;
+	private static JButton btnExecute;
 
 	//RIGHT SIDE: Change schema
 	public static JPanel schemaPane;
 	public static JTable initSchema;
-	
+
+
 
 	public GUI() {
 
 		splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, dataPane, schemaPane);
 		splitPane.setPreferredSize(new Dimension(1000, 700));
 		splitPane.setContinuousLayout(true);
-		
+
 		dataPane = new JTabbedPane();
 		dataPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
 
-		schemaPane = new JPanel();
-		
-		//Only initialte load on startup--all others depend on load
 		tabLoad = new JPanel();
+		loadContents(tabLoad);
 		dataPane.addTab("Load file", null, tabLoad, null);
-		loadTabContents(tabLoad);
-		
+
 		tabQuery = new JPanel();
-		tabQuery.setLayout(null);	
+		queryContents(tabQuery);
 		dataPane.addTab("Query data", null, tabQuery, null);
-		
+
+		schemaPane = new JPanel();
+		schemaContents(schemaPane);
+
 		splitPane.setLeftComponent(dataPane);
 		splitPane.setRightComponent(schemaPane);
-		
+
 		//add to gui pane
 		add(splitPane);
 
 	}
 
-	public static JPanel loadTabContents(final JPanel tabLoad) {
-		
+
+	public static JPanel loadContents(final JPanel tabLoad) {
+
 		GridBagLayout gbl_panel = new GridBagLayout();
 		gbl_panel.columnWidths = new int[]{18, 215, 124, 0};
 		gbl_panel.rowHeights = new int[]{25, 0, 0, 0, 0, 0};
 		gbl_panel.columnWeights = new double[]{0.0, 1.0, 0.0, Double.MIN_VALUE};
 		gbl_panel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		tabLoad.setLayout(gbl_panel);
-		
+
 		//file path box
 		final JTextArea path = new JTextArea();
 		path.setEditable(false);
@@ -85,7 +91,7 @@ public class GUI extends JPanel {
 		gbc_path.gridy = 0;
 		path.setColumns(10);
 		tabLoad.add(path, gbc_path);
-		
+
 		//browse button, saves data file to File "file", sets file path
 		JButton btnBrowse = new JButton("Browse");
 		GridBagConstraints gbc_browse = new GridBagConstraints();
@@ -98,8 +104,8 @@ public class GUI extends JPanel {
 				JFileChooser fileChooser = new JFileChooser();
 				int val = fileChooser.showOpenDialog(fileChooser);
 				if (val == JFileChooser.APPROVE_OPTION) {
-					LoadFile.file = fileChooser.getSelectedFile();
-					path.setText(" " + LoadFile.file.getAbsolutePath());
+					Parser.file = fileChooser.getSelectedFile();
+					path.setText(" " + Parser.file.getAbsolutePath());
 				}
 			}
 		});
@@ -149,18 +155,19 @@ public class GUI extends JPanel {
 			@Override
 			public void actionPerformed(ActionEvent loader) {
 				begin_pressed = true;
-				if (getTableName.getText().equals(instructions)) { LoadFile.tableName = "defaultTable"; }
-				else { LoadFile.tableName = getTableName.getText(); }
-				getTableName.setText(" " + LoadFile.tableName);
+				if (getTableName.getText().equals(instructions)) { Struct.tableName = "defaultTable"; }
+				else { Struct.tableName = getTableName.getText(); }
+				getTableName.setText(" " + Struct.tableName);
 				getTableName.setEditable(false);
 				progressBar.setVisible(true);
 
 				//make other tabs available
-				try { LoadFile.initUpload(); } 
+				try { 
+					LoadFile.initUpload(); 
+					initSchema.setModel(ChangeSchema.getInitSchemaRS());
+				} 
 				catch (SQLException e) { e.printStackTrace(); } 
 				catch (IOException e) { e.printStackTrace(); }
-				schemaContents(schemaPane);
-				queryContents(tabQuery);
 
 				//start background loader thread
 				Thread queryThread = new Thread() {
@@ -173,9 +180,108 @@ public class GUI extends JPanel {
 		});
 		btnBegin.setBounds(331, 119, 117, 29);
 		tabLoad.add(btnBegin, gbc_begin);
-	
+
 		return tabLoad;
 	}
+
+
+	public static JPanel queryContents(final JPanel tabQuery) {
+
+		GridBagLayout gbl_tabQuery = new GridBagLayout();
+		gbl_tabQuery.columnWidths = new int[]{324, 0};
+		gbl_tabQuery.rowHeights = new int[]{0, 411, 0, 284, 0};
+		gbl_tabQuery.columnWeights = new double[]{1.0, Double.MIN_VALUE};
+		gbl_tabQuery.rowWeights = new double[]{0.0, 1.0, 0.0, 1.0, Double.MIN_VALUE};
+		tabQuery.setLayout(gbl_tabQuery);
+
+		final String instructions = "Enter SQL query";
+		txtrQueryinput = new JTextArea();
+		txtrQueryinput.setText(instructions);
+		txtrQueryinput.setEditable(false);
+		txtrQueryinput.setEnabled(false);
+		txtrQueryinput.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mousePressed(MouseEvent clear) {
+				if (user_typing == false) { //only clears first time clicked
+					txtrQueryinput.setEditable(true);
+					txtrQueryinput.setEnabled(true);
+					txtrQueryinput.setText("");
+					txtrQueryinput.setForeground(Color.BLACK);
+					user_typing = true;
+				}
+			}
+		});
+		txtrQueryinput.setForeground(Color.LIGHT_GRAY);
+		inputScrollPane = new JScrollPane();
+		inputScrollPane.setEnabled(true);
+		inputScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		inputScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+		inputScrollPane.setViewportView(txtrQueryinput);
+
+		queryOutput = new JTable();
+		outputScrollPane = new JScrollPane();
+		outputScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		outputScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+		outputScrollPane.setViewportView(queryOutput);
+
+		querySplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, inputScrollPane, outputScrollPane);
+		querySplitPane.setContinuousLayout(true);
+		querySplitPane.setTopComponent(inputScrollPane);
+		querySplitPane.setBottomComponent(outputScrollPane);
+		querySplitPane.setResizeWeight(0.3);
+
+		GridBagConstraints gbc_queries = new GridBagConstraints();
+		gbc_queries.insets = new Insets(0, 0, 5, 0);
+		gbc_queries.fill = GridBagConstraints.BOTH;
+		gbc_queries.gridx = 0;
+		gbc_queries.gridy = 1;
+		tabQuery.add(querySplitPane, gbc_queries);
+
+		btnExecute = new JButton("Execute");
+		GridBagConstraints gbc_btnNewButton = new GridBagConstraints();
+		gbc_btnNewButton.anchor = GridBagConstraints.EAST;
+		gbc_btnNewButton.insets = new Insets(0, 0, 5, 0);
+		gbc_btnNewButton.gridx = 0;
+		gbc_btnNewButton.gridy = 0;
+		btnExecute.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent sendUserInput) {
+				if (txtrQueryinput.getText().equals(instructions)) { return; } //do nothing if no query
+				else { 
+					QueryData.userQuery = txtrQueryinput.getText(); 
+					user_typing = false; //user finished writing their query
+				}
+				try {
+					QueryData.getResultSet();
+					queryOutput.setFillsViewportHeight(true);
+					queryOutput.setCellSelectionEnabled(true);
+					queryOutput.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+					queryOutput.setShowGrid(true);
+					queryOutput.setGridColor(Color.LIGHT_GRAY);
+					queryOutput.setModel(QueryData.queryResultSet(Connect.rs));
+					queryOutput.setColumnModel(QueryData.colwidth(queryOutput));
+					outputScrollPane.setViewportView(queryOutput);
+				} 
+				catch (SQLException e) { e.printStackTrace(); }
+			}
+		});
+		tabQuery.add(btnExecute, gbc_btnNewButton);
+
+
+		dbOutput = new JTextArea();
+		dbOutput.setEditable(false);
+		dbOutputScrollPane = new JScrollPane();
+		dbOutputScrollPane.setViewportView(dbOutput);
+		GridBagConstraints gbc_dbOut = new GridBagConstraints();
+		gbc_dbOut.fill = GridBagConstraints.BOTH;
+		gbc_dbOut.gridx = 0;
+		gbc_dbOut.gridy = 3;
+		tabQuery.add(dbOutputScrollPane, gbc_dbOut);
+
+
+		return tabQuery;
+	} 
+
 
 	public static JPanel schemaContents(final JPanel schemaPane) {
 
@@ -188,8 +294,7 @@ public class GUI extends JPanel {
 		initSchema = new JTable();
 		initSchema.setFillsViewportHeight(true);
 		initSchema.setCellSelectionEnabled(true);
-		try { initSchema.setModel(ChangeSchema.getInitSchemaRS()); } 
-		catch (IOException e1) { e1.printStackTrace(); }
+
 		initSchema.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		initSchema.setShowGrid(true);
 		initSchema.setGridColor(Color.LIGHT_GRAY);
@@ -202,18 +307,20 @@ public class GUI extends JPanel {
 			@SuppressWarnings("unchecked")
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
-				int countChanges = 0;
-				for (int i = 0; i < ChangeSchema.topinitNames.size(); i++) {
-					if (initSchema.getValueAt(0, i) != "Enter new title?") {
-						ChangeSchema.changedName.setElementAt(initSchema.getValueAt(0, i), i);
-						countChanges++;
+				if (begin_pressed) {
+					int countChanges = 0;
+					for (int i = 0; i < ChangeSchema.topinitNames.size(); i++) {
+						if (initSchema.getValueAt(0, i) != "Enter new title?") {
+							ChangeSchema.changedName.setElementAt(initSchema.getValueAt(0, i), i);
+							countChanges++;
+						}
+						if (initSchema.getValueAt(1, i) != ChangeSchema.topinitType.get(i)) {
+							ChangeSchema.changedType.setElementAt(initSchema.getValueAt(1, i), i);
+							countChanges++;
+						}
 					}
-					if (initSchema.getValueAt(1, i) != ChangeSchema.topinitType.get(i)) {
-						ChangeSchema.changedType.setElementAt(initSchema.getValueAt(1, i), i);
-						countChanges++;
-					}
+					if (countChanges > 0) { ChangeSchema.userChange(); }
 				}
-				if (countChanges > 0) { ChangeSchema.userChange(); }
 			}
 		});
 		btnAcceptChanges.setBounds(317, 28, 145, 29);
@@ -221,72 +328,6 @@ public class GUI extends JPanel {
 
 		return schemaPane;
 	}
-
-
-	public static JPanel queryContents(JPanel tabQuery) {
-
-		final String instructions = " Input SQL query";
-		final JTextArea sqlQueryIn = new JTextArea();
-
-		sqlQueryIn.setText(instructions);
-		sqlQueryIn.setEnabled(false);
-		sqlQueryIn.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mousePressed(MouseEvent clear) {
-				sqlQueryIn.setEnabled(true);
-				sqlQueryIn.setText("");
-				sqlQueryIn.setForeground(Color.BLACK);
-			}
-		});
-		sqlQueryIn.addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyPressed(KeyEvent clear) {
-				if (!key_pressed) {
-					key_pressed = true; //only first key pressed erases the initial contents
-					sqlQueryIn.setEnabled(true);
-					sqlQueryIn.setText("");
-					sqlQueryIn.setForeground(Color.BLACK);
-				}
-			}
-		});
-		sqlQueryIn.setForeground(Color.LIGHT_GRAY);
-		sqlQueryIn.setBounds(44, 20, 554, 20);
-		tabQuery.add(sqlQueryIn);
-
-		final JScrollPane scrollPane = new JScrollPane();
-		scrollPane.setBounds(40, 70, 700, 450);
-		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
-		tabQuery.add(scrollPane);
-
-		JButton btnExecute = new JButton("Execute");
-		btnExecute.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent sendUserInput) {
-
-				if (sqlQueryIn.getText().equals(instructions)) { return; } //do nothing if no query
-				else { QueryData.userQuery = sqlQueryIn.getText(); }
-				try {
-					QueryData.getResultSet();
-					queryOutput = new JTable();
-					queryOutput.setFillsViewportHeight(true);
-					queryOutput.setCellSelectionEnabled(true);
-					queryOutput.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-					queryOutput.setShowGrid(true);
-					queryOutput.setGridColor(Color.LIGHT_GRAY);
-					queryOutput.setModel(QueryData.queryResultSet(Connect.rs));
-					queryOutput.setColumnModel(QueryData.colwidth(queryOutput));
-					scrollPane.setViewportView(queryOutput);
-
-				} 
-				catch (SQLException e) { e.printStackTrace(); }
-			}
-		});
-		btnExecute.setBounds(610, 15, 128, 29);
-		tabQuery.add(btnExecute);
-
-		return tabQuery;
-	}   
 
 
 	private static void createAndShowGUI() {
@@ -303,7 +344,8 @@ public class GUI extends JPanel {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				createAndShowGUI();
-				splitPane.setDividerLocation(splitPane.getSize().width / 2);
+				splitPane.setDividerLocation(700);
+				//splitPane.setDividerLocation(splitPane.getSize().width / 2);
 			}
 		});
 	}

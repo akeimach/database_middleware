@@ -7,7 +7,6 @@ import java.sql.Statement;
 
 public class Connect {
 
-	public static String tableName = "defaultTable"; //default
 	public static String dbName = "dynamicDB";
 	public static Connection conn;
 	public static Statement stmt;
@@ -37,7 +36,7 @@ public class Connect {
 	public static ResultSet executeQuery(Connection conn, String command) throws SQLException {
 		stmt = conn.createStatement();
 		rs = stmt.executeQuery(command);
-		System.out.println("Executed query \"" + command + "\"");
+		//System.out.println("Executed query \"" + command + "\"");
 		return rs;
 	}
 

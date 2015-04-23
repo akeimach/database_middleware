@@ -2,7 +2,6 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.Vector;
-
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumnModel;
@@ -36,6 +35,8 @@ public class QueryData extends Connect {
 				for (int i = 2; i < numberOfColumns; i++) { newRow.addElement(rs.getObject(i)); }
 				rows.addElement(newRow);
 			}
+			System.out.print("Executed query \"" + userQuery + "\"");
+			GUI.dbOutput.append("Executed query \"" + userQuery + "\"");
 			return new DefaultTableModel(rows, columnNames);
 		} 
 		catch (Exception e) {

@@ -5,8 +5,10 @@ import java.io.IOException;
 import java.util.Vector;
 import java.util.regex.Pattern;
 
-public class Parser extends LoadFile {
+public class Parser {
 
+	public static File file;
+	
 	@SuppressWarnings("rawtypes")
 	public static Vector initrows;// = new Vector();
 	public static int topFileSample = 15;
@@ -16,6 +18,8 @@ public class Parser extends LoadFile {
 	public static String[] sampleVals;
 	public static int[] defaultSize;
 	public static int numCols;
+	public static char delimiter = ','; //default
+	public static String terminator = "\\n"; //default
 	static String INT = "[\\+\\-]?\\d+";
 	static String FLOAT = "[\\+\\-]?\\d+\\.\\d+(?:[eE][\\+\\-]?\\d+)?";
 	static String CHAR = "([a-z]|[A-Z])+";
@@ -32,9 +36,9 @@ public class Parser extends LoadFile {
 	public static void getFormat(File file) throws IOException {
 		//FIRST GET THE DELIMITER
 		// Algorithm: count every ,;/ and tab, see which one is used most often
-		BufferedReader lines = new BufferedReader(new FileReader(LoadFile.file));
-		char[] delimiters = { ',', '/', ' ', ';', '\t', '\n' };
-		int[] counters = { 0, 0, 0, 0, 0, 0 };
+		BufferedReader lines = new BufferedReader(new FileReader(file));
+		char[] delimiters = { ',', '/', ' ', ';', '\t' };
+		int[] counters = { 0, 0, 0, 0, 0 };
 		String topLine = lines.readLine(); //top line just in case has titles
 		for (int linenum = 0; linenum < topFileSample; linenum++) {
 			String curr = lines.readLine();

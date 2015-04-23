@@ -1,24 +1,19 @@
-import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 
 public class LoadFile extends Connect {
 
-	public static File file;
-	public static char delimiter = ','; //default
-	public static String terminator = "\\n"; //default
 
 	public static void initUpload() throws SQLException, IOException {
-		conn = Connect.getConnection();
+		Connect.conn = Connect.getConnection();
 		tableInit();
-		Parser.getFormat(file); //get sample data and default schema
+		Parser.getFormat(Parser.file); //get sample data and default schema
 		createTable();
-		startBulkLoad();
 	}
 
 	public static void tableInit() throws SQLException {
 		try {
-			String dropString = "DROP TABLE IF EXISTS " + tableName; //Drop table
+			String dropString = "DROP TABLE IF EXISTS " + Struct.tableName; //Drop table
 			executeUpdate(conn, dropString);
 		}
 		catch (SQLException e) {
@@ -29,7 +24,7 @@ public class LoadFile extends Connect {
 
 	public static void createTable() throws SQLException {
 		try {
-			String createString = "CREATE TABLE " + tableName + " (id INT UNSIGNED NOT NULL AUTO_INCREMENT, "; //Create new
+			String createString = "CREATE TABLE " + Struct.tableName + " (id INT UNSIGNED NOT NULL AUTO_INCREMENT, "; //Create new
 			for (int i = 0; i < Parser.numCols; i++ ) {
 				createString += Parser.defaultFields[i] + " " + Parser.defaultTypes[i] + ", ";
 			}
@@ -43,7 +38,7 @@ public class LoadFile extends Connect {
 	}
 
 	public static void startBulkLoad() {
-		String bulkLoad = "LOAD DATA CONCURRENT LOCAL INFILE '" + file.getAbsolutePath() + "' INTO TABLE " + tableName + " FIELDS TERMINATED BY '" + delimiter + "' OPTIONALLY ENCLOSED BY '\"' LINES TERMINATED BY '" + terminator + "'";
+		String bulkLoad = "LOAD DATA CONCURRENT LOCAL INFILE '" + Parser.file.getAbsolutePath() + "' INTO TABLE " + Struct.tableName + " FIELDS TERMINATED BY '" + Parser.delimiter + "' OPTIONALLY ENCLOSED BY '\"' LINES TERMINATED BY '" + Parser.terminator + "'";
 		if (Parser.hasTitle == true) { bulkLoad += " IGNORE 1 LINES"; }
 		bulkLoad += " (";
 		for (int i = 0; i < Parser.numCols - 1; i++) {
@@ -53,10 +48,22 @@ public class LoadFile extends Connect {
 		try {
 			stmt.executeQuery(bulkLoad);
 			System.out.println("Sent query \"" + bulkLoad + "\"");
+			
 			System.out.println("Uploading file");
-		} 
+		
+			String collectErrors = "SHOW WARNINGS";
+			conn = Connect.getConnection();
+			rs = executeQuery(conn, collectErrors.trim());
+			int i = 0;
+			while (rs.next()) {
+				System.out.println(rs.getString(i));
+				i++;
+			}
+			
+		}
+			
 		catch (SQLException e) {
-			String error = "SELECT * INTO OUTFILE '" + file.getAbsolutePath() + ".out' FIELDS TERMINATED BY '" + delimiter +"' LINES TERMINATED BY '" + terminator + "' FROM " + tableName;
+			String error = "SELECT * INTO OUTFILE '" + Parser.file.getAbsolutePath() + ".out' FIELDS TERMINATED BY '" + Parser.delimiter + "' OPTIONALLY ENCLOSED BY '\"' LINES TERMINATED BY '" + Parser.terminator + "'";
 			try {
 				stmt.executeQuery(error);
 				System.out.println("Sent query \"" + error + "\"");
