@@ -6,187 +6,207 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.IOException;
-import java.sql.SQLException;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
+import java.io.FileNotFoundException;
+import java.sql.SQLException;
 import javax.swing.table.DefaultTableModel;
 
 
 @SuppressWarnings("serial")
 public class GUI extends JPanel {
 
-	//change schema always visible
+	//Holds everything
 	public static JSplitPane splitPane;
+	public static GridBagLayout gbl_panel;
 
-	//LEFT SIDE: Load file and execute query
+	//LEFT SIDE: Load file/execute query, RIGHT SIDE: Change schema
 	public static JTabbedPane dataPane;
+	public static JTabbedPane schemaPane;
+
 	//Load file tab
 	public static JPanel tabLoad;
 	public static boolean begin_pressed = false;
-	//Query data
+
+	//Query data tab
 	public static JPanel tabQuery;
 	public static JSplitPane querySplitPane;
-	private static JTextArea txtrQueryinput;
-	public static JScrollPane inputScrollPane;
+	private static JTextArea queryInput;
 	public static JTable queryOutput;
-	public static JScrollPane outputScrollPane;
 	public static JTextArea dbOutput;
-	public static JScrollPane dbOutputScrollPane;
 	public static boolean user_typing = false;
-	private static JButton btnExecute;
 
-	//RIGHT SIDE: Change schema
-	public static JTabbedPane schemaPane;
-	//containing panel
+	//Schema tab
 	public static JPanel tabSchema;
-	public static JScrollPane schemaScrollPane;
 	public static JTable viewSchema;
-	private static JButton btnSubmitChanges;
 
 
 	public GUI() {
 
+		//Holds everything
 		splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, dataPane, schemaPane);
 		splitPane.setPreferredSize(new Dimension(1000, 700));
 		splitPane.setContinuousLayout(true);
 
+		//LEFT SIDE: Load file/execute query, RIGHT SIDE: Change schema
 		dataPane = new JTabbedPane();
 		dataPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
+		schemaPane = new JTabbedPane();
+		schemaPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
+
+		//Load file tab
 		tabLoad = new JPanel();
 		loadContents(tabLoad);
 		dataPane.addTab("Load file", null, tabLoad, null);
+
+		//Query data tab
 		tabQuery = new JPanel();
 		queryContents(tabQuery);
 		dataPane.addTab("Query data", null, tabQuery, null);
 
-		schemaPane = new JTabbedPane();
-		schemaPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
+		//Schema tab
 		tabSchema = new JPanel();
 		schemaContents(tabSchema);
 		schemaPane.addTab("Schema", null, tabSchema, null);
 
+		//Data pane and schema pane to split pane
 		splitPane.setLeftComponent(dataPane);
 		splitPane.setRightComponent(schemaPane);
-		//add to gui pane
-		add(splitPane);
+		add(splitPane); //add GUI to pane
 
 	}
 
 
 	public static JPanel loadContents(final JPanel tabLoad) {
 
-		GridBagLayout gbl_panel = new GridBagLayout();
+		//initialize grid layout
+		gbl_panel = new GridBagLayout();
 		gbl_panel.columnWidths = new int[]{18, 79, 124, 0};
 		gbl_panel.rowHeights = new int[]{25, 0, 0, 0, 0, 0};
 		gbl_panel.columnWeights = new double[]{0.0, 1.0, 0.0, Double.MIN_VALUE};
 		gbl_panel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		tabLoad.setLayout(gbl_panel);
 
-		//file path box
-		final JTextArea path = new JTextArea();
-		path.setEditable(false);
-		path.setForeground(Color.LIGHT_GRAY);
-		path.setText(" Select data file to upload");
-		GridBagConstraints gbc_path = new GridBagConstraints();
-		gbc_path.fill = GridBagConstraints.HORIZONTAL;
-		gbc_path.insets = new Insets(0, 0, 5, 5);
-		gbc_path.gridx = 1;
-		gbc_path.gridy = 0;
-		path.setColumns(10);
-		tabLoad.add(path, gbc_path);
+		//FILE PATH text area
+		final JTextArea filePathTextArea = new JTextArea();
+		filePathTextArea.setEditable(false);
+		filePathTextArea.setForeground(Color.LIGHT_GRAY);
+		filePathTextArea.setText(" Select data file to upload");
 
-		//browse button, saves data file to File "file", sets file path
-		JButton btnBrowse = new JButton("Browse");
-		GridBagConstraints gbc_browse = new GridBagConstraints();
-		gbc_browse.insets = new Insets(0, 0, 5, 0);
-		gbc_browse.gridx = 2;
-		gbc_browse.gridy = 0;
-		btnBrowse.addMouseListener(new MouseAdapter() {
+		//file path grid format on tab
+		GridBagConstraints gbc_filePath = new GridBagConstraints();
+		gbc_filePath.fill = GridBagConstraints.HORIZONTAL;
+		gbc_filePath.insets = new Insets(0, 0, 5, 5);
+		gbc_filePath.gridx = 1;
+		gbc_filePath.gridy = 0;
+		filePathTextArea.setColumns(10);
+		tabLoad.add(filePathTextArea, gbc_filePath);
+
+
+		//BROWSE BUTTON, set file path, get File file
+		JButton browseButton = new JButton("Browse");
+
+		//browse button mouse listener
+		browseButton.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent uplaod) {
 				JFileChooser fileChooser = new JFileChooser();
 				int val = fileChooser.showOpenDialog(fileChooser);
 				if (val == JFileChooser.APPROVE_OPTION) {
-					Parser.file = fileChooser.getSelectedFile();
-					path.setText(" " + Parser.file.getAbsolutePath());
+					Struct.dataFile = fileChooser.getSelectedFile();
+					filePathTextArea.setText(" " + Struct.dataFile.getAbsolutePath());
 				}
 			}
 		});
-		btnBrowse.setBounds(526, 39, 128, 29);
-		tabLoad.add(btnBrowse, gbc_browse);
 
-		//get table name
+		//browse button format on tab
+		GridBagConstraints gbc_browse = new GridBagConstraints();
+		gbc_browse.insets = new Insets(0, 0, 5, 0);
+		gbc_browse.gridx = 2;
+		gbc_browse.gridy = 0;
+		tabLoad.add(browseButton, gbc_browse);
+
+
+		//TABLE NAME text area
+		final JTextArea tableNameTextArea = new JTextArea();
+		tableNameTextArea.setForeground(Color.LIGHT_GRAY);
 		final String instructions = " Select table name (optional)";
-		final JTextArea getTableName = new JTextArea();
-		GridBagConstraints gbc_setTable = new GridBagConstraints();
-		gbc_setTable.fill = GridBagConstraints.HORIZONTAL;
-		gbc_setTable.insets = new Insets(0, 0, 5, 5);
-		gbc_setTable.gridx = 1;
-		gbc_setTable.gridy = 1;
-		getTableName.setColumns(10);
-		getTableName.setText(instructions);
-		getTableName.addMouseListener(new MouseAdapter() {
+		tableNameTextArea.setText(instructions);
+
+		//table name listener
+		tableNameTextArea.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent clear) {
 				if (!begin_pressed) {
-					getTableName.setText("");
-					getTableName.setForeground(Color.BLACK);
+					tableNameTextArea.setText("");
+					tableNameTextArea.setForeground(Color.BLACK);
 				}
 			}
 		});
-		getTableName.setForeground(Color.LIGHT_GRAY);
-		getTableName.setBounds(127, 76, 393, 20);
-		tabLoad.add(getTableName, gbc_setTable);
 
-		//create progress bar
-		final JProgressBar progressBar = new JProgressBar();
-		progressBar.setIndeterminate(true);
+		//table name grid format on tab
+		GridBagConstraints gbc_tableName = new GridBagConstraints();
+		gbc_tableName.fill = GridBagConstraints.HORIZONTAL;
+		gbc_tableName.insets = new Insets(0, 0, 5, 5);
+		gbc_tableName.gridx = 1;
+		gbc_tableName.gridy = 1;
+		tableNameTextArea.setColumns(10);
+		tabLoad.add(tableNameTextArea, gbc_tableName);
+
+
+		//LOADING PROGRESS progress bar
+		final JProgressBar loadingProgress = new JProgressBar();
+		loadingProgress.setIndeterminate(true);
+		loadingProgress.setVisible(false);
+
+		//loading progress format on tab
 		GridBagConstraints gbc_progressBar = new GridBagConstraints();
 		gbc_progressBar.insets = new Insets(0, 0, 0, 5);
 		gbc_progressBar.gridx = 1;
 		gbc_progressBar.gridy = 4;
-		progressBar.setVisible(false);
-		tabLoad.add(progressBar, gbc_progressBar);
+		tabLoad.add(loadingProgress, gbc_progressBar);
 
-		//begin program, make schema and query tabs active
-		JButton btnBegin = new JButton("Begin");
+
+		//BEGIN button
+		JButton beginButton = new JButton("Begin");
+
+		//begin button listener
+		beginButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent loader) {
+				begin_pressed = true;
+				if (!tableNameTextArea.getText().equals(instructions)) { 
+					Struct.tableName = tableNameTextArea.getText(); 
+				}
+				tableNameTextArea.setText(" " + Struct.tableName);
+				tableNameTextArea.setEditable(false);
+				loadingProgress.setVisible(true);
+				
+				/****put into function****/
+				
+				try {
+					Parser.findTerminator(Struct.dataFile);
+					Parser.findDelimiter(Struct.dataFile);
+					Parser.findFields();
+					Parser.findTypes(Struct.dataFile);
+				} 
+				catch (FileNotFoundException e) { e.printStackTrace(); }
+				
+				try {
+					LoadFile.tableInit();
+					LoadFile.startBulkLoad();
+				} 
+				catch (SQLException e) { e.printStackTrace(); }
+			}
+		});
+
+		//begin button format on tab
 		GridBagConstraints gbc_begin = new GridBagConstraints();
 		gbc_begin.insets = new Insets(0, 0, 5, 5);
 		gbc_begin.gridx = 1;
 		gbc_begin.gridy = 3;
-		btnBegin.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent loader) {
-				begin_pressed = true;
-				if (getTableName.getText().equals(instructions)) { Struct.tableName = "defaultTable"; }
-				else { Struct.tableName = getTableName.getText(); }
-				getTableName.setText(" " + Struct.tableName);
-				getTableName.setEditable(false);
-				progressBar.setVisible(true);
-
-				//make other tabs available
-				try { 
-					LoadFile.initUpload(); 
-					Parser.getFormat(Parser.file);
-					viewSchema.setModel(ChangeSchema.schemaTable());
-					viewSchema.setColumnModel(QueryData.colwidth(viewSchema));
-				} 
-				catch (SQLException e) { e.printStackTrace(); } 
-				catch (IOException e) { e.printStackTrace(); }
-
-				//start background loader thread
-				Thread queryThread = new Thread() {
-					public void run() {
-						LoadFile.startBulkLoad();
-					}
-				};
-				queryThread.start();
-			}
-		});
-		btnBegin.setBounds(331, 119, 117, 29);
-		tabLoad.add(btnBegin, gbc_begin);
+		tabLoad.add(beginButton, gbc_begin);
 
 		return tabLoad;
 	}
@@ -194,149 +214,173 @@ public class GUI extends JPanel {
 
 	public static JPanel queryContents(final JPanel tabQuery) {
 
-		GridBagLayout gbl_tabQuery = new GridBagLayout();
-		gbl_tabQuery.columnWidths = new int[]{71, 0};
-		gbl_tabQuery.rowHeights = new int[]{0, 380, 37, 130, 0};
-		gbl_tabQuery.columnWeights = new double[]{1.0, Double.MIN_VALUE};
-		gbl_tabQuery.rowWeights = new double[]{0.0, 1.0, 0.0, 1.0, Double.MIN_VALUE};
-		tabQuery.setLayout(gbl_tabQuery);
+		//initialize grid layout
+		gbl_panel = new GridBagLayout();
+		gbl_panel.columnWidths = new int[]{71, 0};
+		gbl_panel.rowHeights = new int[]{0, 380, 37, 130, 0};
+		gbl_panel.columnWeights = new double[]{1.0, Double.MIN_VALUE};
+		gbl_panel.rowWeights = new double[]{0.0, 1.0, 0.0, 1.0, Double.MIN_VALUE};
+		tabQuery.setLayout(gbl_panel);
 
+
+		//QUERY INPUT text area
+		queryInput = new JTextArea();
 		final String instructions = "Enter SQL query";
-		txtrQueryinput = new JTextArea();
-		txtrQueryinput.setText(instructions);
-		txtrQueryinput.setEditable(false);
-		txtrQueryinput.setEnabled(false);
-		txtrQueryinput.addMouseListener(new MouseAdapter() {
+		queryInput.setText(instructions);
+		queryInput.setEditable(false);
+		queryInput.setEnabled(false);
+		queryInput.setForeground(Color.LIGHT_GRAY);
+
+		//query input mouse listener
+		queryInput.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent clear) {
 				if (user_typing == false) { //only clears first time clicked
-					txtrQueryinput.setEditable(true);
-					txtrQueryinput.setEnabled(true);
-					txtrQueryinput.setText("");
-					txtrQueryinput.setForeground(Color.BLACK);
+					queryInput.setEditable(true);
+					queryInput.setEnabled(true);
+					queryInput.setText("");
+					queryInput.setForeground(Color.BLACK);
 					user_typing = true;
 				}
 			}
 		});
-		txtrQueryinput.setForeground(Color.LIGHT_GRAY);
-		inputScrollPane = new JScrollPane();
-		inputScrollPane.setEnabled(true);
-		inputScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-		inputScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
-		inputScrollPane.setViewportView(txtrQueryinput);
 
+		//query input format on scroll pane
+		JScrollPane queryInputScrollPane = new JScrollPane();
+		queryInputScrollPane.setEnabled(true);
+		queryInputScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		queryInputScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+		queryInputScrollPane.setViewportView(queryInput);
+
+
+		//QUERY OUTPUT jtable
 		queryOutput = new JTable();
-		outputScrollPane = new JScrollPane();
-		outputScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-		outputScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
-		outputScrollPane.setViewportView(queryOutput);
 
-		querySplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, inputScrollPane, outputScrollPane);
+		//query output format on scroll pane
+		JScrollPane queryOutputScrollPane = new JScrollPane();
+		queryOutputScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		queryOutputScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+		queryOutputScrollPane.setViewportView(queryOutput);
+
+
+		//QUERY FUNCTIONS FORMAT ON VERTICAL SPLIT PANE
+		querySplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, queryInputScrollPane, queryOutputScrollPane);
 		querySplitPane.setContinuousLayout(true);
-		querySplitPane.setTopComponent(inputScrollPane);
-		querySplitPane.setBottomComponent(outputScrollPane);
+		querySplitPane.setTopComponent(queryInputScrollPane);
+		querySplitPane.setBottomComponent(queryOutputScrollPane);
 		querySplitPane.setResizeWeight(0.3);
 
-		GridBagConstraints gbc_queries = new GridBagConstraints();
-		gbc_queries.insets = new Insets(0, 0, 5, 0);
-		gbc_queries.fill = GridBagConstraints.BOTH;
-		gbc_queries.gridx = 0;
-		gbc_queries.gridy = 1;
-		tabQuery.add(querySplitPane, gbc_queries);
+		//query functions format on tab
+		GridBagConstraints gbc_queryFunctions = new GridBagConstraints();
+		gbc_queryFunctions.insets = new Insets(0, 0, 5, 0);
+		gbc_queryFunctions.fill = GridBagConstraints.BOTH;
+		gbc_queryFunctions.gridx = 0;
+		gbc_queryFunctions.gridy = 1;
+		tabQuery.add(querySplitPane, gbc_queryFunctions);
 
-		btnExecute = new JButton("Execute");
-		GridBagConstraints gbc_btnNewButton = new GridBagConstraints();
-		gbc_btnNewButton.anchor = GridBagConstraints.EAST;
-		gbc_btnNewButton.insets = new Insets(0, 0, 5, 0);
-		gbc_btnNewButton.gridx = 0;
-		gbc_btnNewButton.gridy = 0;
-		btnExecute.addMouseListener(new MouseAdapter() {
+		
+		//DB OUTPUT text area
+		dbOutput = new JTextArea();
+		dbOutput.setEditable(false);
+		
+		//db output format on scroll pane
+		JScrollPane dbOutputScrollPane = new JScrollPane();
+		dbOutputScrollPane.setViewportView(dbOutput);
+		
+		//db output format on tab
+		GridBagConstraints gbc_dbOutput = new GridBagConstraints();
+		gbc_dbOutput.fill = GridBagConstraints.BOTH;
+		gbc_dbOutput.gridx = 0;
+		gbc_dbOutput.gridy = 3;
+		tabQuery.add(dbOutputScrollPane, gbc_dbOutput);
+		
+
+		//EXECUTE QUERY button
+		JButton executeButton = new JButton("Execute");
+
+		//execute button listener
+		executeButton.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent sendUserInput) {
-				if (txtrQueryinput.getText().equals(instructions)) { return; } //do nothing if no query
-				else { 
-					QueryData.userQuery = txtrQueryinput.getText(); 
+				if (queryInput.getText() != instructions) {
+					String userQuery = queryInput.getText(); 
 					user_typing = false; //user finished writing their query
-				}
-				try {
-					QueryData.getResultSet();
 					queryOutput.setFillsViewportHeight(true);
 					queryOutput.setCellSelectionEnabled(true);
 					queryOutput.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 					queryOutput.setShowGrid(true);
 					queryOutput.setGridColor(Color.LIGHT_GRAY);
-					queryOutput.setModel(QueryData.queryResultSet(Connect.rs));
+					try { queryOutput.setModel(QueryData.queryResultSet(userQuery)); } 
+					catch (SQLException e) { e.printStackTrace(); }
 					queryOutput.setColumnModel(QueryData.colwidth(queryOutput));
-					outputScrollPane.setViewportView(queryOutput);
-				} 
-				catch (SQLException e) { e.printStackTrace(); }
+				}
 			}
 		});
-		tabQuery.add(btnExecute, gbc_btnNewButton);
 
-
-		dbOutput = new JTextArea();
-		dbOutput.setEditable(false);
-		dbOutputScrollPane = new JScrollPane();
-		dbOutputScrollPane.setViewportView(dbOutput);
-		GridBagConstraints gbc_dbOut = new GridBagConstraints();
-		gbc_dbOut.fill = GridBagConstraints.BOTH;
-		gbc_dbOut.gridx = 0;
-		gbc_dbOut.gridy = 3;
-		tabQuery.add(dbOutputScrollPane, gbc_dbOut);
-
-
+		//execute button format on pane
+		GridBagConstraints gbc_execute = new GridBagConstraints();
+		gbc_execute.anchor = GridBagConstraints.EAST;
+		gbc_execute.insets = new Insets(0, 0, 5, 0);
+		gbc_execute.gridx = 0;
+		gbc_execute.gridy = 0;
+		tabQuery.add(executeButton, gbc_execute);
+		
+		
 		return tabQuery;
 	} 
 
 
 	public static JPanel schemaContents(final JPanel schemaPane) {
 
-		GridBagLayout gbl_tabSchema = new GridBagLayout();
-		gbl_tabSchema.columnWidths = new int[]{0, 93, 0};
-		gbl_tabSchema.rowHeights = new int[]{0, 559, 0, 7, 0};
-		gbl_tabSchema.columnWeights = new double[]{0.0, 1.0, Double.MIN_VALUE};
-		gbl_tabSchema.rowWeights = new double[]{0.0, 1.0, 0.0, 0.0, Double.MIN_VALUE};
-		tabSchema.setLayout(gbl_tabSchema);
-
-		schemaScrollPane = new JScrollPane();
-		schemaScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-		schemaScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
-		GridBagConstraints gbc_scrollPane = new GridBagConstraints();
-		gbc_scrollPane.insets = new Insets(0, 0, 5, 0);
-		gbc_scrollPane.fill = GridBagConstraints.BOTH;
-		gbc_scrollPane.gridx = 1;
-		gbc_scrollPane.gridy = 1;
-		tabSchema.add(schemaScrollPane, gbc_scrollPane);
-
-		btnSubmitChanges = new JButton("Submit changes");
-		GridBagConstraints gbc_btnSubmitChanges = new GridBagConstraints();
-		gbc_btnSubmitChanges.insets = new Insets(0, 0, 5, 0);
-		gbc_btnSubmitChanges.gridx = 1;
-		gbc_btnSubmitChanges.gridy = 2;
-		tabSchema.add(btnSubmitChanges, gbc_btnSubmitChanges);
+		//initialize grid layout
+		gbl_panel = new GridBagLayout();
+		gbl_panel.columnWidths = new int[]{0, 93, 0};
+		gbl_panel.rowHeights = new int[]{0, 559, 0, 7, 0};
+		gbl_panel.columnWeights = new double[]{0.0, 1.0, Double.MIN_VALUE};
+		gbl_panel.rowWeights = new double[]{0.0, 1.0, 0.0, 0.0, Double.MIN_VALUE};
+		tabSchema.setLayout(gbl_panel);
 
 
+		//SHOW SCHEMA jtable
 		viewSchema = new JTable();
-		viewSchema.setModel(new DefaultTableModel(
-			new Object[][] {
-			},
-			new String[] {
-				"Table", "Field", "Type", "Schema"
-			}
-		));
-		
+		viewSchema.setModel(new DefaultTableModel(new Object[][] {},new String[] {"Table", "Field", "Type"}));
 		viewSchema.setFillsViewportHeight(true);
 		viewSchema.setCellSelectionEnabled(true);
 		viewSchema.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
 		viewSchema.setGridColor(Color.LIGHT_GRAY);
-		schemaScrollPane.setViewportView(viewSchema);
+		
+		//show schema format on scroll pane
+		JScrollPane showSchemaScrollPane  = new JScrollPane();
+		showSchemaScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		showSchemaScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+		showSchemaScrollPane.setViewportView(viewSchema);
+		
+		//show shema format on tab
+		GridBagConstraints gbc_schemaScrollPane = new GridBagConstraints();
+		gbc_schemaScrollPane.insets = new Insets(0, 0, 5, 0);
+		gbc_schemaScrollPane.fill = GridBagConstraints.BOTH;
+		gbc_schemaScrollPane.gridx = 1;
+		gbc_schemaScrollPane.gridy = 1;
+		tabSchema.add(showSchemaScrollPane, gbc_schemaScrollPane);
+		
+		
+		//CHANGE SCHEMA button
+		JButton submitSchemaButton = new JButton("Submit changes");
+		
+		//change schema button format on tab
+		GridBagConstraints gbc_submitSchema = new GridBagConstraints();
+		gbc_submitSchema.insets = new Insets(0, 0, 5, 0);
+		gbc_submitSchema.gridx = 1;
+		gbc_submitSchema.gridy = 2;
+		tabSchema.add(submitSchemaButton, gbc_submitSchema);
+
 
 		return schemaPane;
+		
 	}
 
 
-	private static void createAndShowGUI() {
+	static void createAndShowGUI() {
 		JFrame frame = new JFrame("Dynamic Database Simulator");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().add(new GUI(), BorderLayout.CENTER);
@@ -354,4 +398,6 @@ public class GUI extends JPanel {
 			}
 		});
 	}
+
+
 }

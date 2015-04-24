@@ -3,22 +3,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Vector;
 import java.util.regex.Pattern;
+
 
 public class Parser {
 
-	public static File file;
-
-	@SuppressWarnings("rawtypes")
-	public static Vector initrows;// = new Vector();
-	public static int topFileSample = 15;
-	public static boolean hasTitle = true;
-	public static String[] defaultFields;
-	public static String[] defaultTypes;
-	public static String[] sampleVals;
-	public static int[] defaultSize;
-	public static int numCols;
 	public static char delimiter = ','; //default
 	public static char terminator = '\n'; //default
 	static String INT = "[\\+\\-]?\\d+";
@@ -41,18 +30,18 @@ public class Parser {
 		char[] terminators = { '\r', '\n' };
 		int[] counters = { 0, 0 };
 		try {
-			while (((c = lines.read()) != -1) && (countLines < topFileSample)) {
+			while (((c = lines.read()) != -1) && (countLines < Struct.sampleLines)) {
 				char character = (char) c;
 				for (int d = 0; d < terminators.length; d++) {
-					if (character == terminators[d]) { counters[d]++; }
-					countLines++;
+					if (character == terminators[d]) { 
+						counters[d]++; 
+						countLines++;
+					}
 				}
 			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
+		} 
+		catch (IOException e) { e.printStackTrace(); }
+
 		int max = 0;
 		int maxindex = 0;
 		for (int i = 0; i < counters.length; i++) {
@@ -62,27 +51,30 @@ public class Parser {
 			}
 		}
 		terminator = terminators[maxindex];
-		System.out.println(terminator + "TERMINATOR");
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public static void getFormat(File file) throws IOException {
-		//FIRST GET THE DELIMITER
-		// Algorithm: count every ,;/ and tab, see which one is used most often
+	public static void findDelimiter(File file) throws FileNotFoundException {
+
+		// Count every ,;/ and tab, see which one is used most often
 		BufferedReader lines = new BufferedReader(new FileReader(file));
+		int countLines = 0;
 		char[] delimiters = { ',', '/', ' ', ';', '\t' };
 		int[] counters = { 0, 0, 0, 0, 0 };
-		String topLine = lines.readLine(); //top line just in case has titles
-		System.out.println(System.getProperty("topLine.separator"));
-		for (int linenum = 0; linenum < topFileSample; linenum++) {
-			String curr = lines.readLine();
-			for (int i = 0; i < curr.length(); i++) {
-				char c = curr.charAt(i);
-				for (int d = 0; d < delimiters.length; d++) {
-					if (c == delimiters[d]) { counters[d]++; }
+		try {
+			while (countLines < Struct.sampleLines) {
+				String tuple = lines.readLine();
+				if (countLines == 0) { Struct.titleRow = tuple; } //top line might be titles
+				for (int i = 0; i < tuple.length(); i++) {
+					char c = tuple.charAt(i);
+					for (int d = 0; d < delimiters.length; d++) {
+						if (c == delimiters[d]) { counters[d]++; }
+					}
 				}
+				countLines++;
 			}
-		}
+		} 
+		catch (IOException e) { e.printStackTrace(); }
+
 		int max = 0;
 		int maxindex = 0;
 		for (int i = 0; i < counters.length; i++) {
@@ -91,105 +83,99 @@ public class Parser {
 				maxindex = i; 
 			}
 		}
-		System.out.println("The delimiter is '" + delimiters[maxindex] + "' and there are " + (max / topFileSample + 1) + " columns");
+
 		delimiter = delimiters[maxindex];
-		//NEXT GET THE FIELDS
-		numCols = (max / topFileSample) + 1;
-		defaultFields = new String[numCols];
-		defaultTypes = new String[numCols];
-		defaultSize = new int[numCols];
-		sampleVals = new String[numCols];
-		int index = 0;
-		int start = 0;
-		int end = 0;
-		for (int i = 0; i < topLine.length(); i++) {
-			if (topLine.charAt(i) == delimiter) {
-				end = i;
-				String fieldinit = topLine.substring(start, end);
-				fieldinit = fieldinit.replace("\"", "");
-				fieldinit = fieldinit.replace(" ", "");
-				defaultFields[index] = fieldinit + "_" + (index + 1);
-				defaultSize[index] = end - start + 3;
-				start = i + 1;
-				index++;
-			}
-		}
-		if (index < numCols) { //get the last field because for loop exited
-			String fieldinit = topLine.substring(start, topLine.length());
-			fieldinit = fieldinit.replace("\"", "");
-			fieldinit = fieldinit.replace(" ", "");
-			defaultFields[index] = fieldinit + "_" + (index + 1);
-			defaultSize[index] = topLine.length() - start + 3;
-		}
-
-		//get the max size of field
-		String randomLine = lines.readLine();
-		index = 0;
-		start = 0;
-		end = 0;
-		for (int i = 0; i < randomLine.length(); i++) {
-			if (randomLine.charAt(i) == delimiter) {
-				end = i;
-				String fieldinit = randomLine.substring(start, end);
-				fieldinit = fieldinit.replace("\"", "");
-				fieldinit = fieldinit.replace(" ", "");
-				sampleVals[index] = fieldinit;
-				if ((end - start) > defaultSize[index]) { defaultSize[index] = end - start + 3; }
-				start = i + 1;
-				index++;
-			}
-		}
-
-		if (index < numCols) { //get the last field
-			String fieldinit = randomLine.substring(start, randomLine.length());
-			fieldinit = fieldinit.replace("\"", "");
-			fieldinit = fieldinit.replace(" ", "");
-			sampleVals[index] = fieldinit;
-			if ((end - start) > defaultSize[index]) { defaultSize[index] = randomLine.length() - start + 3; }
-		}
-
-		for (int i = 0; i < sampleVals.length; i++) { //check 15 lines
-			if (Pattern.matches(CHAR, sampleVals[i])) { 
-				if (defaultSize[i] < 10) { defaultTypes[i] = "CHAR(" + defaultSize[i] + 5 + ")"; }
-				else { defaultTypes[i] = "VARCHAR(100)"; }
-			}
-			else if (Pattern.matches(FLOAT, sampleVals[i])) { defaultTypes[i] = "FLOAT"; }
-			else if (Pattern.matches(INT, sampleVals[i])) { defaultTypes[i] = "INT"; }
-			else if (Pattern.matches(DDMMYYYY, sampleVals[i]) || Pattern.matches(MMDDYYYY, sampleVals[i]) || Pattern.matches(MMDDYY, sampleVals[i])) { defaultTypes[i] = "DATE"; }
-			else if (Pattern.matches(HOUR24, sampleVals[i]) || Pattern.matches(HOUR12, sampleVals[i])) { defaultTypes[i] = "TIME"; }
-			else { defaultTypes[i] = "VARCHAR(100)"; }
-			String firstChar = defaultFields[i].charAt(0) + "";
-			if (Pattern.matches(INVALTITLE, firstChar) || Pattern.matches(INT, firstChar) || Pattern.matches(FLOAT, firstChar)) { hasTitle = false; }
-		}
-
-		//fix numerical titles
-		if (hasTitle == false) {
-			for (int i = 0; i < defaultFields.length; i++) { defaultFields[i] = "col_" + (i + 1); }
-		}
-
-
-		initrows = new Vector();
-		//get 15 lines for change schema table
-		for (int l = 0; l < topFileSample; l++) {
-			Vector dataline = new Vector();
-			String getline = lines.readLine();
-			start = 0;
-			end = 0;
-			for (int i = 0; i < getline.length(); i++) {
-				if (getline.charAt(i) == delimiter) {
-					end = i;
-					String fieldinit = getline.substring(start, end);
-					fieldinit = fieldinit.replace("\"", "");
-					fieldinit = fieldinit.replace(" ", "");
-					dataline.addElement(fieldinit);
-					start = i + 1;
-					index++;
-				}
-			}
-			initrows.addElement(dataline);
-
-		}
+		System.out.println("Delimiter: '" + delimiters[maxindex] + "'");
+		Struct.numCols = (max / Struct.sampleLines) + 1;
 
 	}
 
+	public static void findFields() {
+
+		//NEXT GET THE FIELDS
+		Struct.initFields = new String[Struct.numCols];
+		Struct.initTypes = new String[Struct.numCols];
+		Struct.initSize = new int[Struct.numCols];
+
+		int index = 0;
+		int start = 0;
+		int end = 0;
+		for (int i = 0; i < Struct.titleRow.length(); i++) {
+			if (Struct.titleRow.charAt(i) == delimiter) {
+				end = i;
+				String fieldinit = Struct.titleRow.substring(start, end);
+				fieldinit = fieldinit.replace("\"", "");
+				fieldinit = fieldinit.replace(" ", "");
+				Struct.initFields[index] = fieldinit + "_" + (index + 1);
+				Struct.initSize[index] = end - start + 3;
+				start = i + 1;
+				index++;
+			}
+		}
+		if (index < Struct.numCols) { //get the last field because for loop exited
+			String fieldinit = Struct.titleRow.substring(start, Struct.titleRow.length());
+			fieldinit = fieldinit.replace("\"", "");
+			fieldinit = fieldinit.replace(" ", "");
+			Struct.initFields[index] = "col" + fieldinit + "_" + (index + 1);
+			Struct.initSize[index] = Struct.titleRow.length() - start + 3;
+		}
+	}
+
+	public static void findTypes(File file) throws FileNotFoundException {
+
+		// Count every ,;/ and tab, see which one is used most often
+		BufferedReader lines = new BufferedReader(new FileReader(file));
+		int countLines = 0;
+		try {
+			while (countLines < Struct.sampleLines) {
+				int index = 0;
+				int start = 0;
+				int end = 0;
+				String tuple = lines.readLine();
+				for (int i = 0; i < tuple.length(); i++) {
+					if (tuple.charAt(i) == delimiter) {
+						end = i;
+						String fieldinit = tuple.substring(start, end);
+						patternMatcher(fieldinit, index);
+						start = i + 1;
+						index++;
+					}
+				}
+
+				if (index < Struct.numCols) { //get the last field because for loop exited
+					String fieldinit = tuple.substring(start, tuple.length());
+					patternMatcher(fieldinit, index);
+				}
+				countLines++;
+			}
+		}
+		catch (IOException e) { e.printStackTrace(); }
+	}
+
+	public static void patternMatcher(String value, int i) {
+
+		if (Pattern.matches(CHAR, value)) { 
+			if (Struct.initSize[i] < 10) { Struct.initTypes[i] = "CHAR(" + Struct.initSize[i] + 5 + ")"; }
+			else { Struct.initTypes[i] = "VARCHAR(100)"; }
+		}
+		else if (Pattern.matches(FLOAT, value)) { Struct.initTypes[i] = "FLOAT"; }
+		else if (Pattern.matches(INT, value)) { Struct.initTypes[i] = "INT"; }
+		else if (Pattern.matches(DDMMYYYY, value) || Pattern.matches(MMDDYYYY, value) || Pattern.matches(MMDDYY, value)) { Struct.initTypes[i] = "DATE"; }
+		else if (Pattern.matches(HOUR24, value) || Pattern.matches(HOUR12, value)) { Struct.initTypes[i] = "TIME"; }
+		else { Struct.initTypes[i] = "VARCHAR(100)"; }
+	}
+	
+	/*
+	public static void main(String args[]) {
+
+		findTerminator(File file)
+		findDelimiter(File file)
+		findFields()
+		findTypes(File file)
+
+	} 
+	*/
+
+
 }
+

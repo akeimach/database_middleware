@@ -1,4 +1,3 @@
-import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
@@ -10,16 +9,13 @@ import javax.swing.table.TableModel;
 
 public class QueryData extends Connect {
 
-	public static String userQuery;
-
-	public static boolean getResultSet() throws SQLException {
-		conn = Connect.getConnection();
-		rs = executeQuery(conn, userQuery.trim());
-		return true;
-	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static TableModel queryResultSet(ResultSet rs) {
+	public static TableModel queryResultSet(String userQuery) throws SQLException {
+		
+		conn = Connect.getConnection();
+		rs = executeQuery(conn, userQuery.trim());
+		
 		try {
 			ResultSetMetaData metaData = rs.getMetaData();
 			int numberOfColumns = metaData.getColumnCount(); 
@@ -48,14 +44,15 @@ public class QueryData extends Connect {
 			return null;
 		}
 	}
-	
+
 	public static TableColumnModel colwidth(JTable table) {
 		TableColumnModel columnModel = table.getColumnModel();
-
 		for (int i = 0; i < table.getColumnCount(); i++) {
 			columnModel.getColumn(i).setPreferredWidth(100);
+			columnModel.getColumn(i).setMinWidth(70);
 		}
 		return columnModel;
 	}
+
 
 }
