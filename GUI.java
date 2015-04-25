@@ -10,6 +10,7 @@ import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
 import java.io.FileNotFoundException;
+import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import javax.swing.table.DefaultTableModel;
 
@@ -73,6 +74,7 @@ public class GUI extends JPanel {
 		//Data pane and schema pane to split pane
 		splitPane.setLeftComponent(dataPane);
 		splitPane.setRightComponent(schemaPane);
+		splitPane.setDividerLocation(700);
 		add(splitPane); //add GUI to pane
 
 	}
@@ -110,7 +112,7 @@ public class GUI extends JPanel {
 		//browse button mouse listener
 		browseButton.addMouseListener(new MouseAdapter() {
 			@Override
-			public void mouseClicked(MouseEvent uplaod) {
+			public void mouseClicked(MouseEvent getFile) {
 				JFileChooser fileChooser = new JFileChooser();
 				int val = fileChooser.showOpenDialog(fileChooser);
 				if (val == JFileChooser.APPROVE_OPTION) {
@@ -137,7 +139,7 @@ public class GUI extends JPanel {
 		//table name listener
 		tableNameTextArea.addMouseListener(new MouseAdapter() {
 			@Override
-			public void mousePressed(MouseEvent clear) {
+			public void mousePressed(MouseEvent getTable) {
 				if (!begin_pressed) {
 					tableNameTextArea.setText("");
 					tableNameTextArea.setForeground(Color.BLACK);
@@ -173,8 +175,11 @@ public class GUI extends JPanel {
 
 		//begin button listener
 		beginButton.addActionListener(new ActionListener() {
+			
+
 			@Override
-			public void actionPerformed(ActionEvent loader) {
+			public void actionPerformed(ActionEvent e) {
+				
 				begin_pressed = true;
 				if (!tableNameTextArea.getText().equals(instructions)) { 
 					Struct.tableName = tableNameTextArea.getText(); 
@@ -182,23 +187,10 @@ public class GUI extends JPanel {
 				tableNameTextArea.setText(" " + Struct.tableName);
 				tableNameTextArea.setEditable(false);
 				loadingProgress.setVisible(true);
-				
-				/****put into function****/
-				
-				try {
-					Parser.findTerminator(Struct.dataFile);
-					Parser.findDelimiter(Struct.dataFile);
-					Parser.findFields();
-					Parser.findTypes(Struct.dataFile);
-				} 
-				catch (FileNotFoundException e) { e.printStackTrace(); }
-				
-				try {
-					LoadFile.tableInit();
-					LoadFile.startBulkLoad();
-				} 
-				catch (SQLException e) { e.printStackTrace(); }
+				// TODO Auto-generated method stub
+				start();
 			}
+			
 		});
 
 		//begin button format on tab
@@ -210,6 +202,8 @@ public class GUI extends JPanel {
 
 		return tabLoad;
 	}
+	
+	
 
 
 	public static JPanel queryContents(final JPanel tabQuery) {
@@ -310,7 +304,7 @@ public class GUI extends JPanel {
 					queryOutput.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 					queryOutput.setShowGrid(true);
 					queryOutput.setGridColor(Color.LIGHT_GRAY);
-					try { queryOutput.setModel(QueryData.queryResultSet(userQuery)); } 
+					try { queryOutput.setModel(QueryData.queryTable(userQuery)); } 
 					catch (SQLException e) { e.printStackTrace(); }
 					queryOutput.setColumnModel(QueryData.colwidth(queryOutput));
 				}
@@ -386,18 +380,33 @@ public class GUI extends JPanel {
 		frame.getContentPane().add(new GUI(), BorderLayout.CENTER);
 		frame.pack();
 		frame.setVisible(true);
+		
 	}
 
-
-	public static void main(String[] args) {
+	public static void start() {
+		
+		try { Parser.mainParser(); } 
+		catch (FileNotFoundException e1) { e1.printStackTrace(); }
+		catch (InterruptedException e1) { e1.printStackTrace(); } 
+		catch (InvocationTargetException e1) { e1.printStackTrace(); }
+		
+		try { LoadFile.mainLoader(); } 
+		catch (SQLException e1) { e1.printStackTrace(); }
+		
+		viewSchema.setModel(ChangeSchema.schemaTable());
+		
+	}
+	
+	
+	public static void main(String args[]) throws InterruptedException, InvocationTargetException {
 		UIManager.put("swing.boldMetal", Boolean.FALSE);
-		SwingUtilities.invokeLater(new Runnable() {
+		SwingUtilities.invokeAndWait(new Runnable() {
 			public void run() {
 				createAndShowGUI();
 				splitPane.setDividerLocation(700);
 			}
 		});
 	}
-
+	
 
 }

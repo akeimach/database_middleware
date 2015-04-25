@@ -11,8 +11,8 @@ public class QueryData extends Connect {
 
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static TableModel queryResultSet(String userQuery) throws SQLException {
-		
+	public static TableModel queryTable(final String userQuery) throws SQLException {
+
 		conn = Connect.getConnection();
 		rs = executeQuery(conn, userQuery.trim());
 		
@@ -53,6 +53,18 @@ public class QueryData extends Connect {
 		}
 		return columnModel;
 	}
-
+	
+	public static void mainQuery(final String userQuery) {
+		Thread queryThread = new Thread() {
+			public void run() {
+				try {
+					conn = Connect.getConnection();
+					rs = executeQuery(conn, userQuery.trim());
+				} 
+				catch (SQLException e) { e.printStackTrace(); }	
+			}
+		};
+		queryThread.start();
+	}
 
 }

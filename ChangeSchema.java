@@ -30,4 +30,5 @@ public class ChangeSchema extends Struct {
 		return new DefaultTableModel(rows, schemaTableCols);
 	}
 	
+	
 }

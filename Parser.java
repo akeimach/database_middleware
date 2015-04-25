@@ -3,6 +3,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.regex.Pattern;
 
 
@@ -55,6 +56,7 @@ public class Parser {
 
 	public static void findDelimiter(File file) throws FileNotFoundException {
 
+		Struct.titleRow = new String();
 		// Count every ,;/ and tab, see which one is used most often
 		BufferedReader lines = new BufferedReader(new FileReader(file));
 		int countLines = 0;
@@ -63,7 +65,8 @@ public class Parser {
 		try {
 			while (countLines < Struct.sampleLines) {
 				String tuple = lines.readLine();
-				if (countLines == 0) { Struct.titleRow = tuple; } //top line might be titles
+				//set initial titles for schema viewer
+				if (countLines == 0) { Struct.titleRow = tuple; } 
 				for (int i = 0; i < tuple.length(); i++) {
 					char c = tuple.charAt(i);
 					for (int d = 0; d < delimiters.length; d++) {
@@ -90,11 +93,11 @@ public class Parser {
 
 	}
 
+	//initFields and initSize set
 	public static void findFields() {
 
 		//NEXT GET THE FIELDS
 		Struct.initFields = new String[Struct.numCols];
-		Struct.initTypes = new String[Struct.numCols];
 		Struct.initSize = new int[Struct.numCols];
 
 		int index = 0;
@@ -106,7 +109,7 @@ public class Parser {
 				String fieldinit = Struct.titleRow.substring(start, end);
 				fieldinit = fieldinit.replace("\"", "");
 				fieldinit = fieldinit.replace(" ", "");
-				Struct.initFields[index] = fieldinit + "_" + (index + 1);
+				Struct.initFields[index] = fieldinit;
 				Struct.initSize[index] = end - start + 3;
 				start = i + 1;
 				index++;
@@ -116,12 +119,15 @@ public class Parser {
 			String fieldinit = Struct.titleRow.substring(start, Struct.titleRow.length());
 			fieldinit = fieldinit.replace("\"", "");
 			fieldinit = fieldinit.replace(" ", "");
-			Struct.initFields[index] = "col" + fieldinit + "_" + (index + 1);
+			Struct.initFields[index] = fieldinit;
 			Struct.initSize[index] = Struct.titleRow.length() - start + 3;
 		}
 	}
 
+	//initTypes set
 	public static void findTypes(File file) throws FileNotFoundException {
+
+		Struct.initTypes = new String[Struct.numCols];
 
 		// Count every ,;/ and tab, see which one is used most often
 		BufferedReader lines = new BufferedReader(new FileReader(file));
@@ -152,6 +158,7 @@ public class Parser {
 		catch (IOException e) { e.printStackTrace(); }
 	}
 
+	//redo init types with regex
 	public static void patternMatcher(String value, int i) {
 
 		if (Pattern.matches(CHAR, value)) { 
@@ -163,19 +170,47 @@ public class Parser {
 		else if (Pattern.matches(DDMMYYYY, value) || Pattern.matches(MMDDYYYY, value) || Pattern.matches(MMDDYY, value)) { Struct.initTypes[i] = "DATE"; }
 		else if (Pattern.matches(HOUR24, value) || Pattern.matches(HOUR12, value)) { Struct.initTypes[i] = "TIME"; }
 		else { Struct.initTypes[i] = "VARCHAR(100)"; }
-	}
-	
-	/*
-	public static void main(String args[]) {
 
-		findTerminator(File file)
-		findDelimiter(File file)
-		findFields()
-		findTypes(File file)
+
+	}
+
+	//dynamic fields and types for loadFile part, use initTypes for dynamicTypes
+	public static void baseCols() {
+
+		Struct.dynamicNumCols = Struct.numCols + 2;
+
+		Struct.dynamicFields = new String[Struct.dynamicNumCols]; 
+		Struct.dynamicFields[0] = "id_0";
+		Struct.dynamicFields[Struct.dynamicNumCols - 1] = "version_" + (Struct.dynamicNumCols - 1);
+		int col_id = 1;
+		for (int i = 1; i < Struct.numCols + 1; i++) {
+			Struct.dynamicFields[i] = "col_" + col_id;
+			col_id++;
+		}
+
+		Struct.dynamicTypes = new String[Struct.dynamicNumCols];
+		Struct.dynamicTypes[0] = "INT";
+		Struct.dynamicTypes[Struct.dynamicNumCols - 1] = "INT";
+		int type_id = 0;
+		for (int i = 1; i < Struct.numCols + 1; i++) {
+			Struct.dynamicTypes[i] = Struct.initTypes[type_id];
+			type_id++;
+		}
+
+	}
+
+	public static void mainParser() throws FileNotFoundException, InterruptedException, InvocationTargetException {
+		try {
+			findTerminator(Struct.dataFile);
+			findDelimiter(Struct.dataFile);
+			findFields();
+			findTypes(Struct.dataFile);
+			baseCols();
+		} 
+		catch (FileNotFoundException e) { e.printStackTrace(); }
 
 	} 
-	*/
-
-
 }
+
+
 
