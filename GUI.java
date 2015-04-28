@@ -29,6 +29,7 @@ public class GUI extends JPanel {
 	//Load file tab
 	public static JPanel tabLoad;
 	public static boolean begin_pressed = false;
+	public static boolean titleRow = true;
 
 	//Query data tab
 	public static JPanel tabQuery;
@@ -74,7 +75,7 @@ public class GUI extends JPanel {
 		//Data pane and schema pane to split pane
 		splitPane.setLeftComponent(dataPane);
 		splitPane.setRightComponent(schemaPane);
-		splitPane.setDividerLocation(700);
+		splitPane.setDividerLocation(600);
 		add(splitPane); //add GUI to pane
 
 	}
@@ -85,9 +86,9 @@ public class GUI extends JPanel {
 		//initialize grid layout
 		gbl_panel = new GridBagLayout();
 		gbl_panel.columnWidths = new int[]{18, 79, 124, 0};
-		gbl_panel.rowHeights = new int[]{25, 0, 0, 0, 0, 0};
+		gbl_panel.rowHeights = new int[]{0, 36, 34, 30, 78, 0, 0};
 		gbl_panel.columnWeights = new double[]{0.0, 1.0, 0.0, Double.MIN_VALUE};
-		gbl_panel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_panel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		tabLoad.setLayout(gbl_panel);
 
 		//FILE PATH text area
@@ -101,7 +102,7 @@ public class GUI extends JPanel {
 		gbc_filePath.fill = GridBagConstraints.HORIZONTAL;
 		gbc_filePath.insets = new Insets(0, 0, 5, 5);
 		gbc_filePath.gridx = 1;
-		gbc_filePath.gridy = 0;
+		gbc_filePath.gridy = 1;
 		filePathTextArea.setColumns(10);
 		tabLoad.add(filePathTextArea, gbc_filePath);
 
@@ -126,7 +127,7 @@ public class GUI extends JPanel {
 		GridBagConstraints gbc_browse = new GridBagConstraints();
 		gbc_browse.insets = new Insets(0, 0, 5, 0);
 		gbc_browse.gridx = 2;
-		gbc_browse.gridy = 0;
+		gbc_browse.gridy = 1;
 		tabLoad.add(browseButton, gbc_browse);
 
 
@@ -152,21 +153,43 @@ public class GUI extends JPanel {
 		gbc_tableName.fill = GridBagConstraints.HORIZONTAL;
 		gbc_tableName.insets = new Insets(0, 0, 5, 5);
 		gbc_tableName.gridx = 1;
-		gbc_tableName.gridy = 1;
+		gbc_tableName.gridy = 2;
 		tableNameTextArea.setColumns(10);
 		tabLoad.add(tableNameTextArea, gbc_tableName);
+		
+		
+		//title row check box
+		final JCheckBox titleRowCheckBox = new JCheckBox("Use first row for attribute names");
+		titleRowCheckBox.setSelected(true);
+		titleRowCheckBox.setForeground(Color.DARK_GRAY);
+		
+		//title row check box listener
+		titleRowCheckBox.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent useTopRow) {
+				if (titleRowCheckBox.isSelected()) { titleRow = true; }
+				if (!titleRowCheckBox.isSelected()) { titleRow = false; }
+			}
+		});
+		
+		//check box format on tab
+		GridBagConstraints gbc_titleRow = new GridBagConstraints();
+		gbc_titleRow.anchor = GridBagConstraints.WEST;
+		gbc_titleRow.insets = new Insets(0, 0, 5, 5);
+		gbc_titleRow.gridx = 1;
+		gbc_titleRow.gridy = 3;
+		tabLoad.add(titleRowCheckBox, gbc_titleRow);
 
 
 		//LOADING PROGRESS progress bar
 		final JProgressBar loadingProgress = new JProgressBar();
 		loadingProgress.setIndeterminate(true);
 		loadingProgress.setVisible(false);
-
+		
 		//loading progress format on tab
 		GridBagConstraints gbc_progressBar = new GridBagConstraints();
 		gbc_progressBar.insets = new Insets(0, 0, 0, 5);
 		gbc_progressBar.gridx = 1;
-		gbc_progressBar.gridy = 4;
+		gbc_progressBar.gridy = 5;
 		tabLoad.add(loadingProgress, gbc_progressBar);
 
 
@@ -175,11 +198,8 @@ public class GUI extends JPanel {
 
 		//begin button listener
 		beginButton.addActionListener(new ActionListener() {
-			
-
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				
 				begin_pressed = true;
 				if (!tableNameTextArea.getText().equals(instructions)) { 
 					Struct.tableName = tableNameTextArea.getText(); 
@@ -187,7 +207,6 @@ public class GUI extends JPanel {
 				tableNameTextArea.setText(" " + Struct.tableName);
 				tableNameTextArea.setEditable(false);
 				loadingProgress.setVisible(true);
-				// TODO Auto-generated method stub
 				start();
 			}
 			
@@ -195,9 +214,10 @@ public class GUI extends JPanel {
 
 		//begin button format on tab
 		GridBagConstraints gbc_begin = new GridBagConstraints();
+		gbc_begin.anchor = GridBagConstraints.SOUTH;
 		gbc_begin.insets = new Insets(0, 0, 5, 5);
 		gbc_begin.gridx = 1;
-		gbc_begin.gridy = 3;
+		gbc_begin.gridy = 4;
 		tabLoad.add(beginButton, gbc_begin);
 
 		return tabLoad;
@@ -296,17 +316,16 @@ public class GUI extends JPanel {
 		executeButton.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent sendUserInput) {
-				if (queryInput.getText() != instructions) {
-					String userQuery = queryInput.getText(); 
+				if (queryInput.getText() != instructions) { 
 					user_typing = false; //user finished writing their query
 					queryOutput.setFillsViewportHeight(true);
 					queryOutput.setCellSelectionEnabled(true);
 					queryOutput.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 					queryOutput.setShowGrid(true);
 					queryOutput.setGridColor(Color.LIGHT_GRAY);
-					try { queryOutput.setModel(QueryData.queryTable(userQuery)); } 
+					String userQuery = queryInput.getText();
+					try { QueryData.mainQuery(userQuery); } 
 					catch (SQLException e) { e.printStackTrace(); }
-					queryOutput.setColumnModel(QueryData.colwidth(queryOutput));
 				}
 			}
 		});
@@ -403,7 +422,7 @@ public class GUI extends JPanel {
 		SwingUtilities.invokeAndWait(new Runnable() {
 			public void run() {
 				createAndShowGUI();
-				splitPane.setDividerLocation(700);
+				splitPane.setDividerLocation(600);
 			}
 		});
 	}

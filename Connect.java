@@ -7,15 +7,16 @@ import java.sql.Statement;
 
 public class Connect {
 
-	public static Connection conn = null;
-	public static Statement stmt;
-	public static ResultSet rs;
+	//public static Connection conn = null;
+	//public static Statement stmt;
+	//public static ResultSet rs;
 	public static String server = "jdbc:mysql://localhost:3306/dynamicDB";
 	public static String user = "root";
 	public static String password = "root";
 	
 	
 	public static Connection getConnection() throws SQLException {
+		Connection conn = null;
 		try {
 			Class.forName("com.mysql.jdbc.Driver").newInstance();
 			conn = DriverManager.getConnection(server, user, password);
@@ -25,18 +26,22 @@ public class Connect {
 		return conn;
 	}
 	
-	public static boolean executeUpdate(Connection conn, String command) throws SQLException {
-		stmt = conn.createStatement();
+	public static void executeUpdate(String command) throws SQLException {
+		Connection conn = null;
+		conn = getConnection();
+		Statement stmt = conn.createStatement();
 		stmt.executeUpdate(command);
 		System.out.println("Executed: \"" + command + "\"");
-		return true;
+		return;
 	}
 	
-	public static ResultSet executeQuery(Connection conn, String command) throws SQLException {
-		stmt = conn.createStatement();
-		rs = stmt.executeQuery(command);
+	public static ResultSet executeQuery(String command) throws SQLException {
+		Connection conn = null;
+		conn = getConnection();
+		Statement stmt = conn.createStatement();
+		//rs = stmt.executeQuery(command);
 		System.out.println("Executed: \"" + command + "\"");
-		return rs;
+		return stmt.executeQuery(command);
 	}
 
 	

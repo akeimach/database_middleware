@@ -17,7 +17,7 @@ public class Struct {
 	
 	//Parser and ChangeSchema
 	public static int numCols = 0;
-	public static String titleRow;
+	public static String[] columnTitles;
 	public static int[] initSize;
 	public static String[] initFields;
 	public static String[] initTypes;
@@ -31,8 +31,6 @@ public class Struct {
 	public static Vector<Integer> schemaRow;
 	public static Vector<String> datatypes;
 	*/
-	
-	
 	
 	
 	

@@ -22,19 +22,18 @@ public class Parser {
 	static String IPADDRESS = "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])";
 	static String EMAIL = "[_A-Za-z0-9-]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})";
 	static String INVALTITLE = "[^\\s^\\d^a-z^A-Z]";
-
-
+	
+	
 	public static void findTerminator(File file) throws FileNotFoundException {
 		BufferedReader lines = new BufferedReader(new FileReader(file));
 		int countLines = 0;
 		int c;
-		char[] terminators = { '\r', '\n' };
-		int[] counters = { 0, 0 };
+		int[] terminators = { 0x0A, 0x0D, 0x0D0A }; //\n, \r, \r\n
+		int[] counters = { 0, 0, 0 };
 		try {
 			while (((c = lines.read()) != -1) && (countLines < Struct.sampleLines)) {
-				char character = (char) c;
 				for (int d = 0; d < terminators.length; d++) {
-					if (character == terminators[d]) { 
+					if (c == terminators[d]) { 
 						counters[d]++; 
 						countLines++;
 					}
@@ -51,12 +50,12 @@ public class Parser {
 				maxindex = i; 
 			}
 		}
-		terminator = terminators[maxindex];
+		terminator = (char)terminators[maxindex];
+		System.out.println("Terminator: '" + terminators[maxindex] + "'");
 	}
 
 	public static void findDelimiter(File file) throws FileNotFoundException {
 
-		Struct.titleRow = new String();
 		// Count every ,;/ and tab, see which one is used most often
 		BufferedReader lines = new BufferedReader(new FileReader(file));
 		int countLines = 0;
@@ -65,8 +64,6 @@ public class Parser {
 		try {
 			while (countLines < Struct.sampleLines) {
 				String tuple = lines.readLine();
-				//set initial titles for schema viewer
-				if (countLines == 0) { Struct.titleRow = tuple; } 
 				for (int i = 0; i < tuple.length(); i++) {
 					char c = tuple.charAt(i);
 					for (int d = 0; d < delimiters.length; d++) {
@@ -90,38 +87,78 @@ public class Parser {
 		delimiter = delimiters[maxindex];
 		System.out.println("Delimiter: '" + delimiters[maxindex] + "'");
 		Struct.numCols = (max / Struct.sampleLines) + 1;
-
 	}
+	
 
 	//initFields and initSize set
-	public static void findFields() {
+	public static void findFields(File file) throws IOException {
 
 		//NEXT GET THE FIELDS
 		Struct.initFields = new String[Struct.numCols];
 		Struct.initSize = new int[Struct.numCols];
-
-		int index = 0;
-		int start = 0;
-		int end = 0;
-		for (int i = 0; i < Struct.titleRow.length(); i++) {
-			if (Struct.titleRow.charAt(i) == delimiter) {
-				end = i;
-				String fieldinit = Struct.titleRow.substring(start, end);
+		Struct.columnTitles = new String[Struct.numCols];
+		
+		BufferedReader lines = new BufferedReader(new FileReader(file));
+		
+		//throw away title line for data stuff, parse here
+		if (GUI.titleRow) { 
+			String titles = lines.readLine(); 
+			int index = 0;
+			int start = 0;
+			int end = 0;
+			for (int i = 0; i < titles.length(); i++) {
+				if (titles.charAt(i) == delimiter) {
+					end = i;
+					String titleinit = titles.substring(start, end);
+					titleinit = titleinit.replace("\"", "");
+					titleinit = titleinit.replace(" ", "");
+					Struct.columnTitles[index] = titleinit;
+					start = i + 1;
+					index++;
+				}
+			}
+			if (index < Struct.numCols) { 
+				String titleinit = titles.substring(start, titles.length());
+				titleinit = titleinit.replace("\"", "");
+				titleinit = titleinit.replace(" ", "");
+				Struct.columnTitles[index] = titleinit;
+			}
+			
+		} 
+		
+		int countLines = 0;
+		while (countLines < Struct.sampleLines) {	
+			String tuple = lines.readLine();
+			int index = 0;
+			int start = 0;
+			int end = 0;
+			for (int i = 0; i < tuple.length(); i++) {
+				if (tuple.charAt(i) == delimiter) {
+					end = i;
+					String fieldinit = tuple.substring(start, end);
+					fieldinit = fieldinit.replace("\"", "");
+					fieldinit = fieldinit.replace(" ", "");
+					if (Struct.initSize[index] < (end - start + 3)) {
+						Struct.initFields[index] = fieldinit;
+						Struct.initSize[index] = end - start + 3;
+					}
+					start = i + 1;
+					index++;
+				}
+			}
+			if (index < Struct.numCols) { //get the last field because for loop exited
+				String fieldinit = tuple.substring(start, tuple.length());
 				fieldinit = fieldinit.replace("\"", "");
 				fieldinit = fieldinit.replace(" ", "");
-				Struct.initFields[index] = fieldinit;
-				Struct.initSize[index] = end - start + 3;
-				start = i + 1;
-				index++;
+				if (Struct.initSize[index] < (tuple.length() - start + 3)) {
+					Struct.initFields[index] = fieldinit;
+					Struct.initSize[index] = tuple.length() - start + 3;
+				}
 			}
+			countLines++;
 		}
-		if (index < Struct.numCols) { //get the last field because for loop exited
-			String fieldinit = Struct.titleRow.substring(start, Struct.titleRow.length());
-			fieldinit = fieldinit.replace("\"", "");
-			fieldinit = fieldinit.replace(" ", "");
-			Struct.initFields[index] = fieldinit;
-			Struct.initSize[index] = Struct.titleRow.length() - start + 3;
-		}
+
+		
 	}
 
 	//initTypes set
@@ -203,12 +240,12 @@ public class Parser {
 		try {
 			findTerminator(Struct.dataFile);
 			findDelimiter(Struct.dataFile);
-			findFields();
+			findFields(Struct.dataFile);
 			findTypes(Struct.dataFile);
 			baseCols();
 		} 
 		catch (FileNotFoundException e) { e.printStackTrace(); }
-
+		catch (IOException e) { e.printStackTrace(); }
 	} 
 }
 

@@ -1,6 +1,6 @@
+import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.SQLWarning;
 import java.util.Vector;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
@@ -9,12 +9,11 @@ import javax.swing.table.TableModel;
 
 public class QueryData extends Connect {
 
+	static ResultSet queryRS = null;
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static TableModel queryTable(final String userQuery) throws SQLException {
+	public static TableModel resultTable(ResultSet rs) throws SQLException {
 
-		conn = Connect.getConnection();
-		rs = executeQuery(conn, userQuery.trim());
 		
 		try {
 			ResultSetMetaData metaData = rs.getMetaData();
@@ -30,13 +29,13 @@ public class QueryData extends Connect {
 			int rowsReturned = 0;
 			while (rs.next()) {
 				Vector newRow = new Vector();
-				for (int i = 2; i < numberOfColumns; i++) { newRow.addElement(rs.getObject(i)); }
+				for (int i = 2; i < numberOfColumns; i++) { 
+					newRow.addElement(rs.getObject(i)); 
+				}
 				rows.addElement(newRow);
 				rowsReturned++;
 			}
-			SQLWarning warnings = rs.getWarnings();
-			System.out.print(rowsReturned + " rows returned from: \"" + userQuery + "\"\n" + warnings);
-			GUI.dbOutput.append(rowsReturned + " rows returned from: \"" + userQuery + "\"\n");
+			GUI.dbOutput.append(rowsReturned + " rows returned\n");
 			return new DefaultTableModel(rows, columnNames);
 		} 
 		catch (Exception e) {
@@ -45,6 +44,7 @@ public class QueryData extends Connect {
 		}
 	}
 
+	
 	public static TableColumnModel colwidth(JTable table) {
 		TableColumnModel columnModel = table.getColumnModel();
 		for (int i = 0; i < table.getColumnCount(); i++) {
@@ -54,17 +54,25 @@ public class QueryData extends Connect {
 		return columnModel;
 	}
 	
-	public static void mainQuery(final String userQuery) {
+	
+	public static void mainQuery(final String userQuery) throws SQLException {
+		//final ResultSet queryRS;
 		Thread queryThread = new Thread() {
 			public void run() {
 				try {
-					conn = Connect.getConnection();
-					rs = executeQuery(conn, userQuery.trim());
+					//Connection conn = Connect.getConnection();
+					queryRS = executeQuery(userQuery.trim());
+					GUI.queryOutput.setModel(QueryData.resultTable(queryRS)); 
+					GUI.queryOutput.setColumnModel(QueryData.colwidth(GUI.queryOutput));
 				} 
 				catch (SQLException e) { e.printStackTrace(); }	
 			}
 		};
 		queryThread.start();
+		
+		
+		
+		return;
 	}
 
 }
