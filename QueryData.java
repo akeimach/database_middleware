@@ -70,7 +70,7 @@ public class QueryData extends Connect {
 		};
 		queryThread.start();
 		
-		
+		//queryRS.close();
 		
 		return;
 	}

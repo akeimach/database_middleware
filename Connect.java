@@ -20,6 +20,7 @@ public class Connect {
 		try {
 			Class.forName("com.mysql.jdbc.Driver").newInstance();
 			conn = DriverManager.getConnection(server, user, password);
+			conn.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
 			if (!conn.isClosed()) { System.out.println("Connected to MySQL"); }
 		} 
 		catch (Exception e) { System.err.println("ERROR: " + e.getMessage()); }
@@ -29,6 +30,7 @@ public class Connect {
 	public static void executeUpdate(String command) throws SQLException {
 		Connection conn = null;
 		conn = getConnection();
+		conn.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
 		Statement stmt = conn.createStatement();
 		stmt.executeUpdate(command);
 		System.out.println("Executed: \"" + command + "\"");
@@ -38,6 +40,7 @@ public class Connect {
 	public static ResultSet executeQuery(String command) throws SQLException {
 		Connection conn = null;
 		conn = getConnection();
+		//conn.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
 		Statement stmt = conn.createStatement();
 		//rs = stmt.executeQuery(command);
 		System.out.println("Executed: \"" + command + "\"");
