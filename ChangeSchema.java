@@ -20,11 +20,11 @@ public class ChangeSchema extends Struct {
 		tableRow.addElement(null);
 		rows.addElement(tableRow);
 		
-		if (!GUI.titleRow) { Struct.columnTitles = Struct.initFields; }
 		for (int i = 0; i < Struct.columnTitles.length; i++) {
 			Vector newRow = new Vector();
 			newRow.addElement(null);
-			newRow.addElement(Struct.columnTitles[i]);
+			if (GUI.titleRow) { newRow.addElement(Struct.columnTitles[i]); }
+			else if (!GUI.titleRow) { newRow.addElement(Struct.dynamicFields[i + 1]); }	
 			newRow.addElement(Struct.initTypes[i]);
 			rows.addElement(newRow);
 		}

@@ -18,11 +18,21 @@ public class LoadFile extends Connect {
 		}
 
 		try {
-			String createTableString = "CREATE TABLE " + Struct.tableName + " (" + Struct.dynamicFields[0] + " " + Struct.dynamicTypes[Struct.dynamicNumCols - 1] + " UNSIGNED NOT NULL AUTO_INCREMENT, "; //Create new
-			for (int i = 1; i < Struct.dynamicNumCols - 1; i++ ) {
-				createTableString += Struct.dynamicFields[i] + " " + Struct.dynamicTypes[i] + ", ";
+			String createTableString = "CREATE TABLE " + Struct.tableName + " (" + Struct.dynamicFields[0] + " " + Struct.dynamicTypes[0] + " UNSIGNED NOT NULL AUTO_INCREMENT, "; //Create new
+			int title = 0;
+			for (int i = 1; i < Struct.dynamicNumCols - 1; i++) {
+				if (!GUI.titleRow) { createTableString += Struct.dynamicFields[i] + " "; } 
+				else if (GUI.titleRow) { 
+					createTableString += Struct.columnTitles[title] + " "; 
+					title++;
+				}
+				createTableString +=  Struct.dynamicTypes[i] + ", ";
 			}
+			
 			createTableString += Struct.dynamicFields[Struct.dynamicNumCols - 1] + " " + Struct.dynamicTypes[Struct.dynamicNumCols - 1] + " NULL, PRIMARY KEY (" + Struct.dynamicFields[0] + "))";
+			
+			System.out.println(createTableString);
+			
 			executeUpdate(createTableString);
 		}
 		catch (SQLException e) {
@@ -35,10 +45,19 @@ public class LoadFile extends Connect {
 	public static void startBulkLoad() throws SQLException {
 
 		String bulkLoad = "LOAD DATA CONCURRENT LOCAL INFILE '" + Struct.dataFile.getAbsolutePath() + "' INTO TABLE " + Struct.tableName + " FIELDS TERMINATED BY '" + Parser.delimiter + "' OPTIONALLY ENCLOSED BY '\"' LINES TERMINATED BY '" + Parser.terminator + "'";
-		if (GUI.titleRow) { bulkLoad += " IGNORE 1 LINES"; }
- 		bulkLoad += " (";
-		for (int i = 1; i < Struct.numCols; i++) { bulkLoad += Struct.dynamicFields[i] + ", "; }
-		bulkLoad += Struct.dynamicFields[Struct.numCols] + ") SET " + Struct.dynamicFields[0] + " = NULL, " + Struct.dynamicFields[Struct.dynamicNumCols - 1] + " = NULL";
+		if (GUI.titleRow) { 
+			bulkLoad += " IGNORE 1 LINES ("; 
+			for (int i = 0; i < Struct.numCols - 1; i++) { bulkLoad += Struct.columnTitles[i] + ", "; }
+			bulkLoad += Struct.columnTitles[Struct.numCols - 1] + ") ";
+		}
+		
+		else if (!GUI.titleRow) {
+			bulkLoad += " (";
+			for (int i = 1; i < Struct.numCols; i++) { bulkLoad += Struct.dynamicFields[i] + ", "; }
+			bulkLoad += Struct.dynamicFields[Struct.numCols] + ") ";
+		}
+ 		
+		bulkLoad += " SET " + Struct.dynamicFields[0] + " = NULL, " + Struct.dynamicFields[Struct.dynamicNumCols - 1] + " = NULL";
 
 		try {
 			//conn = Connect.getConnection();

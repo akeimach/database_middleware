@@ -380,6 +380,15 @@ public class GUI extends JPanel {
 		//CHANGE SCHEMA button
 		JButton submitSchemaButton = new JButton("Submit changes");
 		
+		
+		//change schema submit changes to db
+		submitSchemaButton.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent arg0) {
+			
+			}
+		});
+		
 		//change schema button format on tab
 		GridBagConstraints gbc_submitSchema = new GridBagConstraints();
 		gbc_submitSchema.insets = new Insets(0, 0, 5, 0);
