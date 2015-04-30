@@ -248,7 +248,7 @@ public class GUI extends JPanel {
 		//query input mouse listener
 		queryInput.addMouseListener(new MouseAdapter() {
 			@Override
-			public void mousePressed(MouseEvent clear) {
+			public void mouseReleased(MouseEvent clear) {
 				if (user_typing == false) { //only clears first time clicked
 					queryInput.setEditable(true);
 					queryInput.setEnabled(true);
@@ -385,7 +385,14 @@ public class GUI extends JPanel {
 		submitSchemaButton.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
-			
+				for (int c = 0; c < viewSchema.getColumnCount(); c++) {
+					for (int r = 0; r < viewSchema.getRowCount(); r++) {
+						if (viewSchema.getValueAt(r, c) != ChangeSchema.schemaTable()) {
+							System.out.println("CHANGE");
+						}
+						
+					}
+				}
 			}
 		});
 		
