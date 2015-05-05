@@ -12,6 +12,8 @@ import java.awt.Insets;
 import java.io.FileNotFoundException;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
+import java.util.Vector;
+
 import javax.swing.table.DefaultTableModel;
 
 
@@ -156,13 +158,13 @@ public class GUI extends JPanel {
 		gbc_tableName.gridy = 2;
 		tableNameTextArea.setColumns(10);
 		tabLoad.add(tableNameTextArea, gbc_tableName);
-		
-		
+
+
 		//title row check box
 		final JCheckBox titleRowCheckBox = new JCheckBox("Use first row for attribute names");
 		titleRowCheckBox.setSelected(true);
 		titleRowCheckBox.setForeground(Color.DARK_GRAY);
-		
+
 		//title row check box listener
 		titleRowCheckBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent useTopRow) {
@@ -170,7 +172,7 @@ public class GUI extends JPanel {
 				if (!titleRowCheckBox.isSelected()) { titleRow = false; }
 			}
 		});
-		
+
 		//check box format on tab
 		GridBagConstraints gbc_titleRow = new GridBagConstraints();
 		gbc_titleRow.anchor = GridBagConstraints.WEST;
@@ -184,7 +186,7 @@ public class GUI extends JPanel {
 		final JProgressBar loadingProgress = new JProgressBar();
 		loadingProgress.setIndeterminate(true);
 		loadingProgress.setVisible(false);
-		
+
 		//loading progress format on tab
 		GridBagConstraints gbc_progressBar = new GridBagConstraints();
 		gbc_progressBar.insets = new Insets(0, 0, 0, 5);
@@ -209,7 +211,7 @@ public class GUI extends JPanel {
 				loadingProgress.setVisible(true);
 				start();
 			}
-			
+
 		});
 
 		//begin button format on tab
@@ -222,8 +224,6 @@ public class GUI extends JPanel {
 
 		return tabLoad;
 	}
-	
-	
 
 
 	public static JPanel queryContents(final JPanel tabQuery) {
@@ -292,22 +292,22 @@ public class GUI extends JPanel {
 		gbc_queryFunctions.gridy = 1;
 		tabQuery.add(querySplitPane, gbc_queryFunctions);
 
-		
+
 		//DB OUTPUT text area
 		dbOutput = new JTextArea();
 		dbOutput.setEditable(false);
-		
+
 		//db output format on scroll pane
 		JScrollPane dbOutputScrollPane = new JScrollPane();
 		dbOutputScrollPane.setViewportView(dbOutput);
-		
+
 		//db output format on tab
 		GridBagConstraints gbc_dbOutput = new GridBagConstraints();
 		gbc_dbOutput.fill = GridBagConstraints.BOTH;
 		gbc_dbOutput.gridx = 0;
 		gbc_dbOutput.gridy = 3;
 		tabQuery.add(dbOutputScrollPane, gbc_dbOutput);
-		
+
 
 		//EXECUTE QUERY button
 		JButton executeButton = new JButton("Execute");
@@ -337,8 +337,8 @@ public class GUI extends JPanel {
 		gbc_execute.gridx = 0;
 		gbc_execute.gridy = 0;
 		tabQuery.add(executeButton, gbc_execute);
-		
-		
+
+
 		return tabQuery;
 	} 
 
@@ -348,9 +348,9 @@ public class GUI extends JPanel {
 		//initialize grid layout
 		gbl_panel = new GridBagLayout();
 		gbl_panel.columnWidths = new int[]{0, 93, 0};
-		gbl_panel.rowHeights = new int[]{0, 559, 0, 7, 0};
+		gbl_panel.rowHeights = new int[]{0, 559, 47, 0, 0, 7, 0};
 		gbl_panel.columnWeights = new double[]{0.0, 1.0, Double.MIN_VALUE};
-		gbl_panel.rowWeights = new double[]{0.0, 1.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_panel.rowWeights = new double[]{0.0, 1.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		tabSchema.setLayout(gbl_panel);
 
 
@@ -361,13 +361,13 @@ public class GUI extends JPanel {
 		viewSchema.setCellSelectionEnabled(true);
 		viewSchema.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
 		viewSchema.setGridColor(Color.LIGHT_GRAY);
-		
+
 		//show schema format on scroll pane
 		JScrollPane showSchemaScrollPane  = new JScrollPane();
 		showSchemaScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		showSchemaScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
 		showSchemaScrollPane.setViewportView(viewSchema);
-		
+
 		//show shema format on tab
 		GridBagConstraints gbc_schemaScrollPane = new GridBagConstraints();
 		gbc_schemaScrollPane.insets = new Insets(0, 0, 5, 0);
@@ -375,37 +375,73 @@ public class GUI extends JPanel {
 		gbc_schemaScrollPane.gridx = 1;
 		gbc_schemaScrollPane.gridy = 1;
 		tabSchema.add(showSchemaScrollPane, gbc_schemaScrollPane);
-		
-		
+
+
+		//ERROR MESSAGE jtextpane
+		final JTextPane errorMessageTextPane = new JTextPane();
+		errorMessageTextPane.setVisible(false);
+		errorMessageTextPane.setBackground(UIManager.getColor("TabbedPane.background"));
+		errorMessageTextPane.setForeground(Color.DARK_GRAY);
+		errorMessageTextPane.setText("There is an error in your schema. Please make sure the titles and data types match.");
+
+		//error message format on tab
+		GridBagConstraints gbc_errorMessage = new GridBagConstraints();
+		gbc_errorMessage.insets = new Insets(0, 0, 5, 0);
+		gbc_errorMessage.fill = GridBagConstraints.BOTH;
+		gbc_errorMessage.gridx = 1;
+		gbc_errorMessage.gridy = 2;
+		tabSchema.add(errorMessageTextPane, gbc_errorMessage);
+
+		//ERROR BUTTON jbutton
+		final JButton errorFixedButton = new JButton("Error fixed");
+		errorFixedButton.setVisible(false);
+		errorFixedButton.setEnabled(false);
+
+		//error button format on tab
+		GridBagConstraints gbc_errorFixed = new GridBagConstraints();
+		gbc_errorFixed.insets = new Insets(0, 0, 5, 0);
+		gbc_errorFixed.gridx = 1;
+		gbc_errorFixed.gridy = 3;
+		tabSchema.add(errorFixedButton, gbc_errorFixed);
+
+
 		//CHANGE SCHEMA button
 		JButton submitSchemaButton = new JButton("Submit changes");
-		
-		
+
+
 		//change schema submit changes to db
 		submitSchemaButton.addMouseListener(new MouseAdapter() {
+			@SuppressWarnings({ "rawtypes", "unchecked" })
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
-				for (int c = 0; c < viewSchema.getColumnCount(); c++) {
-					for (int r = 0; r < viewSchema.getRowCount(); r++) {
-						if (viewSchema.getValueAt(r, c) != ChangeSchema.schemaTable()) {
-							System.out.println("CHANGE");
-						}
-						
-					}
+				//wont work if user has cell selected
+				Vector changedTitles = new Vector();
+				Vector changedTypes = new Vector();
+				for (int r = 1; r < viewSchema.getRowCount(); r++) { changedTitles.addElement(viewSchema.getValueAt(r, 1)); }
+				for (int r = 1; r < viewSchema.getRowCount(); r++) { changedTypes.addElement(viewSchema.getValueAt(r, 2)); }
+				if (changedTitles.size() != changedTypes.size()) {
+					errorFixedButton.setVisible(true);
+					errorFixedButton.setEnabled(true);
+					errorMessageTextPane.setVisible(true);
 				}
+				ChangeSchema.verifyChanges(changedTitles, changedTypes);
 			}
 		});
-		
+
 		//change schema button format on tab
 		GridBagConstraints gbc_submitSchema = new GridBagConstraints();
 		gbc_submitSchema.insets = new Insets(0, 0, 5, 0);
 		gbc_submitSchema.gridx = 1;
-		gbc_submitSchema.gridy = 2;
+		gbc_submitSchema.gridy = 4;
 		tabSchema.add(submitSchemaButton, gbc_submitSchema);
 
 
+
+
+
+
 		return schemaPane;
-		
+
 	}
 
 
@@ -415,24 +451,25 @@ public class GUI extends JPanel {
 		frame.getContentPane().add(new GUI(), BorderLayout.CENTER);
 		frame.pack();
 		frame.setVisible(true);
-		
+
 	}
 
+
 	public static void start() {
-		
+
 		try { Parser.mainParser(); } 
 		catch (FileNotFoundException e1) { e1.printStackTrace(); }
 		catch (InterruptedException e1) { e1.printStackTrace(); } 
 		catch (InvocationTargetException e1) { e1.printStackTrace(); }
-		
+
 		try { LoadFile.mainLoader(); } 
 		catch (SQLException e1) { e1.printStackTrace(); }
-		
-		viewSchema.setModel(ChangeSchema.schemaTable());
-		
+
+		viewSchema.setModel(TableForm.schemaTable());
+
 	}
-	
-	
+
+
 	public static void main(String args[]) throws InterruptedException, InvocationTargetException {
 		UIManager.put("swing.boldMetal", Boolean.FALSE);
 		SwingUtilities.invokeAndWait(new Runnable() {
@@ -442,6 +479,6 @@ public class GUI extends JPanel {
 			}
 		});
 	}
-	
+
 
 }

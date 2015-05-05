@@ -7,7 +7,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.regex.Pattern;
 
 
-public class Parser {
+public class Parser extends Struct {
 
 	public static char delimiter = ','; //default
 	public static char terminator = '\n'; //default
@@ -19,6 +19,7 @@ public class Parser {
 	static String MMDDYY = "(0?[1-9]|1[012])/(0?[1-9]|[12][0-9]|3[01])/(\\d\\d)";
 	static String HOUR24 = "([01]?[0-9]|2[0-3]):[0-5][0-9]";
 	static String HOUR12 = "(1[012]|[1-9]):[0-5][0-9](\\s)?(?i)(am|pm)";
+	static String TIMESTAMP = MMDDYYYY + " " + HOUR24;
 	static String IPADDRESS = "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])";
 	static String EMAIL = "[_A-Za-z0-9-]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})";
 	static String INVALTITLE = "[^\\s^\\d^a-z^A-Z]";
@@ -31,7 +32,7 @@ public class Parser {
 		int[] terminators = { 0x0A, 0x0D, 0x0D0A }; //\n, \r, \r\n
 		int[] counters = { 0, 0, 0 };
 		try {
-			while (((c = lines.read()) != -1) && (countLines < Struct.sampleLines)) {
+			while (((c = lines.read()) != -1) && (countLines < infer_sample_size)) {
 				for (int d = 0; d < terminators.length; d++) {
 					if (c == terminators[d]) { 
 						counters[d]++; 
@@ -62,7 +63,7 @@ public class Parser {
 		char[] delimiters = { ',', '/', ' ', ';', '\t' };
 		int[] counters = { 0, 0, 0, 0, 0 };
 		try {
-			while (countLines < Struct.sampleLines) {
+			while (countLines < infer_sample_size) {
 				String tuple = lines.readLine();
 				for (int i = 0; i < tuple.length(); i++) {
 					char c = tuple.charAt(i);
@@ -86,7 +87,7 @@ public class Parser {
 
 		delimiter = delimiters[maxindex];
 		System.out.println("Delimiter: '" + delimiters[maxindex] + "'");
-		Struct.numCols = (max / Struct.sampleLines) + 1;
+		initNumCols = (max / infer_sample_size) + 1;
 	}
 	
 
@@ -94,9 +95,10 @@ public class Parser {
 	public static void findFields(File file) throws IOException {
 
 		//NEXT GET THE FIELDS
-		Struct.initFields = new String[Struct.numCols];
-		Struct.initSize = new int[Struct.numCols];
-		Struct.columnTitles = new String[Struct.numCols];
+		initFields = new String[initNumCols];
+		parseFields = new String[initNumCols];
+		parseSizes = new int[initNumCols];
+		
 		
 		BufferedReader lines = new BufferedReader(new FileReader(file));
 		
@@ -110,24 +112,30 @@ public class Parser {
 				if (titles.charAt(i) == delimiter) {
 					end = i;
 					String titleinit = titles.substring(start, end);
-					titleinit = titleinit.replace("\"", "");
-					titleinit = titleinit.replace(" ", "");
-					Struct.columnTitles[index] = titleinit;
+					for (int j = 0; j < titleinit.length(); j++) {
+						if (!Character.isLetterOrDigit(titleinit.charAt(j))) {
+							titleinit = titleinit.replace(titleinit.charAt(j), '_');
+						}
+					}
+					initFields[index] = titleinit;
 					start = i + 1;
 					index++;
 				}
 			}
-			if (index < Struct.numCols) { 
+			if (index < initNumCols) { 
 				String titleinit = titles.substring(start, titles.length());
-				titleinit = titleinit.replace("\"", "");
-				titleinit = titleinit.replace(" ", "");
-				Struct.columnTitles[index] = titleinit;
+				for (int j = 0; j < titleinit.length(); j++) {
+					if (!Character.isLetterOrDigit(titleinit.charAt(j))) {
+						titleinit = titleinit.replace(titleinit.charAt(j), '_');
+					}
+				}
+				initFields[index] = titleinit;
 			}
 			
 		} 
 		
 		int countLines = 0;
-		while (countLines < Struct.sampleLines) {	
+		while (countLines < infer_sample_size) {	
 			String tuple = lines.readLine();
 			int index = 0;
 			int start = 0;
@@ -136,23 +144,19 @@ public class Parser {
 				if (tuple.charAt(i) == delimiter) {
 					end = i;
 					String fieldinit = tuple.substring(start, end);
-					fieldinit = fieldinit.replace("\"", "");
-					fieldinit = fieldinit.replace(" ", "");
-					if (Struct.initSize[index] < (end - start + 3)) {
-						Struct.initFields[index] = fieldinit;
-						Struct.initSize[index] = end - start + 3;
+					if (parseSizes[index] < (end - start + 3)) {
+						parseFields[index] = fieldinit;
+						parseSizes[index] = end - start + 3;
 					}
 					start = i + 1;
 					index++;
 				}
 			}
-			if (index < Struct.numCols) { //get the last field because for loop exited
+			if (index < initNumCols) { //get the last field because for loop exited
 				String fieldinit = tuple.substring(start, tuple.length());
-				fieldinit = fieldinit.replace("\"", "");
-				fieldinit = fieldinit.replace(" ", "");
-				if (Struct.initSize[index] < (tuple.length() - start + 3)) {
-					Struct.initFields[index] = fieldinit;
-					Struct.initSize[index] = tuple.length() - start + 3;
+				if (parseSizes[index] < (tuple.length() - start + 3)) {
+					parseFields[index] = fieldinit;
+					parseSizes[index] = tuple.length() - start + 3;
 				}
 			}
 			countLines++;
@@ -164,13 +168,13 @@ public class Parser {
 	//initTypes set
 	public static void findTypes(File file) throws FileNotFoundException {
 
-		Struct.initTypes = new String[Struct.numCols];
+		parseTypes = new String[initNumCols];
 
 		// Count every ,;/ and tab, see which one is used most often
 		BufferedReader lines = new BufferedReader(new FileReader(file));
 		int countLines = 0;
 		try {
-			while (countLines < Struct.sampleLines) {
+			while (countLines < infer_sample_size) {
 				int index = 0;
 				int start = 0;
 				int end = 0;
@@ -185,7 +189,7 @@ public class Parser {
 					}
 				}
 
-				if (index < Struct.numCols) { //get the last field because for loop exited
+				if (index < initNumCols) { //get the last field because for loop exited
 					String fieldinit = tuple.substring(start, tuple.length());
 					patternMatcher(fieldinit, index);
 				}
@@ -199,50 +203,26 @@ public class Parser {
 	public static void patternMatcher(String value, int i) {
 
 		if (Pattern.matches(CHAR, value)) { 
-			if (Struct.initSize[i] < 10) { Struct.initTypes[i] = "CHAR(" + Struct.initSize[i] + 5 + ")"; }
-			else { Struct.initTypes[i] = "VARCHAR(100)"; }
+			if (parseSizes[i] < 10) { parseTypes[i] = "CHAR(" + parseSizes[i] + 5 + ")"; }
+			else { parseTypes[i] = "VARCHAR(100)"; }
 		}
-		else if (Pattern.matches(FLOAT, value)) { Struct.initTypes[i] = "FLOAT"; }
-		else if (Pattern.matches(INT, value)) { Struct.initTypes[i] = "INT"; }
-		else if (Pattern.matches(DDMMYYYY, value) || Pattern.matches(MMDDYYYY, value) || Pattern.matches(MMDDYY, value)) { Struct.initTypes[i] = "DATE"; }
-		else if (Pattern.matches(HOUR24, value) || Pattern.matches(HOUR12, value)) { Struct.initTypes[i] = "TIME"; }
-		else { Struct.initTypes[i] = "VARCHAR(100)"; }
-
-
-	}
-
-	//dynamic fields and types for loadFile part, use initTypes for dynamicTypes
-	public static void baseCols() {
-
-		Struct.dynamicNumCols = Struct.numCols + 2;
-
-		Struct.dynamicFields = new String[Struct.dynamicNumCols]; 
-		Struct.dynamicFields[0] = "id_0";
-		Struct.dynamicFields[Struct.dynamicNumCols - 1] = "version_" + (Struct.dynamicNumCols - 1);
-		int col_id = 1;
-		for (int i = 1; i < Struct.numCols + 1; i++) {
-			Struct.dynamicFields[i] = "col_" + col_id;
-			col_id++;
-		}
-
-		Struct.dynamicTypes = new String[Struct.dynamicNumCols];
-		Struct.dynamicTypes[0] = "INT";
-		Struct.dynamicTypes[Struct.dynamicNumCols - 1] = "INT";
-		int type_id = 0;
-		for (int i = 1; i < Struct.numCols + 1; i++) {
-			Struct.dynamicTypes[i] = Struct.initTypes[type_id];
-			type_id++;
-		}
+		else if (Pattern.matches(FLOAT, value)) { parseTypes[i] = "FLOAT"; }
+		else if (Pattern.matches(INT, value)) { parseTypes[i] = "DOUBLE"; }
+		else if (Pattern.matches(DDMMYYYY, value) || Pattern.matches(MMDDYYYY, value) || Pattern.matches(MMDDYY, value)) { parseTypes[i] = "DATE"; }
+		else if (Pattern.matches(HOUR24, value) || Pattern.matches(HOUR12, value)) { parseTypes[i] = "TIME"; }
+		//else if (Pattern.matches(TIMESTAMP, value)) { initTypes[i] = "TIMESTAMP"; }
+		else { parseTypes[i] = "VARCHAR(100)"; }
 
 	}
 
 	public static void mainParser() throws FileNotFoundException, InterruptedException, InvocationTargetException {
 		try {
-			findTerminator(Struct.dataFile);
-			findDelimiter(Struct.dataFile);
-			findFields(Struct.dataFile);
-			findTypes(Struct.dataFile);
-			baseCols();
+			findTerminator(dataFile);
+			findDelimiter(dataFile);
+			findFields(dataFile);
+			findTypes(dataFile);
+			dbColumns(numDummyCols);
+			userColumns();
 		} 
 		catch (FileNotFoundException e) { e.printStackTrace(); }
 		catch (IOException e) { e.printStackTrace(); }

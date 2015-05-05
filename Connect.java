@@ -7,9 +7,6 @@ import java.sql.Statement;
 
 public class Connect {
 
-	//public static Connection conn = null;
-	//public static Statement stmt;
-	//public static ResultSet rs;
 	public static String server = "jdbc:mysql://localhost:3306/dynamicDB";
 	public static String user = "root";
 	public static String password = "root";
@@ -40,9 +37,7 @@ public class Connect {
 	public static ResultSet executeQuery(String command) throws SQLException {
 		Connection conn = null;
 		conn = getConnection();
-		//conn.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
 		Statement stmt = conn.createStatement();
-		//rs = stmt.executeQuery(command);
 		System.out.println("Executed: \"" + command + "\"");
 		return stmt.executeQuery(command);
 	}
