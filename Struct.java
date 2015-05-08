@@ -11,7 +11,6 @@ public class Struct {
 	public static File dataFile;
 	
 	//Parser view
-
 	public static String[] initFields;
 	public static int[] parseSizes;
 	public static String[] parseFields;
@@ -24,11 +23,9 @@ public class Struct {
 	public static String[] dbFields;
 	public static String[] dbTypes;
 
-
 	//User interaction view for change and query
 	public static String[] userFields;
 	public static String[] userTypes;
-
 
 	//parserFields -> dbFields (for loadFile)
 	public static void dbColumns(int numDummy) {

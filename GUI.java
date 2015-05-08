@@ -424,7 +424,12 @@ public class GUI extends JPanel {
 					errorFixedButton.setEnabled(true);
 					errorMessageTextPane.setVisible(true);
 				}
-				ChangeSchema.verifyChanges(changedTitles, changedTypes);
+				try {
+					ChangeSchema.mainSchema(changedTitles, changedTypes);
+				} catch (SQLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		});
 
@@ -434,10 +439,6 @@ public class GUI extends JPanel {
 		gbc_submitSchema.gridx = 1;
 		gbc_submitSchema.gridy = 4;
 		tabSchema.add(submitSchemaButton, gbc_submitSchema);
-
-
-
-
 
 
 		return schemaPane;
