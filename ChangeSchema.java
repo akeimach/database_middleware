@@ -62,7 +62,8 @@ public class ChangeSchema extends Connect {
 		stats = tableStats(Struct.tableName);
 		
 		while (stats.next()) {
-			System.out.println(stats.getInt(1));
+			Struct.table_size = stats.getLong(1);
+			System.out.println("CURRENT TABLE SIZE: " + Struct.table_size);
 		}
 
 		if (tableSize > 45000) {

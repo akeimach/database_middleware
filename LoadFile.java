@@ -66,6 +66,7 @@ public class LoadFile extends Connect {
 		};
 		loaderThread.setName("loaderThread");
 		loaderThread.start();
+		
 	}
 
 

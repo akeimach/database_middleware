@@ -6,6 +6,7 @@ public class Struct {
 	//default
 	public static String tableName = "table1"; 
 	public static int infer_sample_size = 15;
+	public static long table_size = 0;
 
 	//Set in GUI.java
 	public static File dataFile;

@@ -9,6 +9,7 @@ import java.awt.event.MouseEvent;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
+import java.beans.PropertyChangeEvent;
 import java.io.FileNotFoundException;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
@@ -30,6 +31,7 @@ public class GUI extends JPanel {
 
 	//Load file tab
 	public static JPanel tabLoad;
+	public static JProgressBar loadingProgress;
 	public static boolean begin_pressed = false;
 	public static boolean titleRow = true;
 
@@ -183,7 +185,7 @@ public class GUI extends JPanel {
 
 
 		//LOADING PROGRESS progress bar
-		final JProgressBar loadingProgress = new JProgressBar();
+		loadingProgress = new JProgressBar();
 		loadingProgress.setIndeterminate(true);
 		loadingProgress.setVisible(false);
 
@@ -209,6 +211,8 @@ public class GUI extends JPanel {
 				tableNameTextArea.setText(" " + Struct.tableName);
 				tableNameTextArea.setEditable(false);
 				loadingProgress.setVisible(true);
+				//loadingProgress.setValue(0);
+				System.out.println("SIZE OF FILE: " + Struct.dataFile.length());
 				start();
 			}
 
@@ -224,7 +228,7 @@ public class GUI extends JPanel {
 
 		return tabLoad;
 	}
-
+	
 
 	public static JPanel queryContents(final JPanel tabQuery) {
 
@@ -452,7 +456,7 @@ public class GUI extends JPanel {
 		frame.getContentPane().add(new GUI(), BorderLayout.CENTER);
 		frame.pack();
 		frame.setVisible(true);
-
+		
 	}
 
 

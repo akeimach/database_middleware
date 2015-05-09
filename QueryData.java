@@ -20,6 +20,10 @@ public class QueryData extends Connect {
 		queryThread.setName("queryThread");
 		queryThread.start();
 		
+		
+		GUI.loadingProgress.setIndeterminate(false);
+		GUI.loadingProgress.setValue(100);
+		
 		return;
 	}
 
