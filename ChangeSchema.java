@@ -1,3 +1,4 @@
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
@@ -53,6 +54,26 @@ public class ChangeSchema extends Connect {
 			executeUpdate(changeType);
 		}
 	}
+	
+	
+	public static int decisionTree() throws SQLException {
+		int tableSize = 0;
+		ResultSet stats = null;
+		stats = tableStats(Struct.tableName);
+		
+		while (stats.next()) {
+			System.out.println(stats.getInt(1));
+		}
+
+		if (tableSize > 45000) {
+			
+			
+		}
+		
+		return 1; //alter method/default
+	}
+	
+	
 
 
 	@SuppressWarnings("rawtypes")
@@ -72,6 +93,9 @@ public class ChangeSchema extends Connect {
 		changeColThread.setName("changeColThread");
 		changeColThread.start();
 
+		
+		decisionTree();
+		
 	}
 
 
