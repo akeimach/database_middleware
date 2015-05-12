@@ -9,8 +9,8 @@ import java.awt.event.MouseEvent;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
-import java.beans.PropertyChangeEvent;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.util.Vector;
@@ -46,6 +46,8 @@ public class GUI extends JPanel {
 	//Schema tab
 	public static JPanel tabSchema;
 	public static JTable viewSchema;
+	private static JButton btnAddColumn;
+	private static JButton btnDeleteColumn;
 
 
 	public GUI() {
@@ -212,8 +214,10 @@ public class GUI extends JPanel {
 				tableNameTextArea.setEditable(false);
 				loadingProgress.setVisible(true);
 				//loadingProgress.setValue(0);
-				System.out.println("SIZE OF FILE: " + Struct.dataFile.length());
-				start();
+				//System.out.println("SIZE OF FILE: " + Struct.dataFile.length());
+				try { start(); } 
+				catch (IOException e1) { e1.printStackTrace(); } 
+				catch (InterruptedException e2) { e2.printStackTrace(); }
 			}
 
 		});
@@ -352,7 +356,7 @@ public class GUI extends JPanel {
 		//initialize grid layout
 		gbl_panel = new GridBagLayout();
 		gbl_panel.columnWidths = new int[]{0, 93, 0};
-		gbl_panel.rowHeights = new int[]{0, 559, 47, 0, 0, 7, 0};
+		gbl_panel.rowHeights = new int[]{0, 559, 31, 0, 0, 7, 0};
 		gbl_panel.columnWeights = new double[]{0.0, 1.0, Double.MIN_VALUE};
 		gbl_panel.rowWeights = new double[]{0.0, 1.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		tabSchema.setLayout(gbl_panel);
@@ -380,34 +384,27 @@ public class GUI extends JPanel {
 		gbc_schemaScrollPane.gridy = 1;
 		tabSchema.add(showSchemaScrollPane, gbc_schemaScrollPane);
 
-
-		//ERROR MESSAGE jtextpane
-		final JTextPane errorMessageTextPane = new JTextPane();
-		errorMessageTextPane.setVisible(false);
-		errorMessageTextPane.setBackground(UIManager.getColor("TabbedPane.background"));
-		errorMessageTextPane.setForeground(Color.DARK_GRAY);
-		errorMessageTextPane.setText("There is an error in your schema. Please make sure the titles and data types match.");
-
-		//error message format on tab
-		GridBagConstraints gbc_errorMessage = new GridBagConstraints();
-		gbc_errorMessage.insets = new Insets(0, 0, 5, 0);
-		gbc_errorMessage.fill = GridBagConstraints.BOTH;
-		gbc_errorMessage.gridx = 1;
-		gbc_errorMessage.gridy = 2;
-		tabSchema.add(errorMessageTextPane, gbc_errorMessage);
-
-		//ERROR BUTTON jbutton
-		final JButton errorFixedButton = new JButton("Error fixed");
-		errorFixedButton.setVisible(false);
-		errorFixedButton.setEnabled(false);
-
-		//error button format on tab
-		GridBagConstraints gbc_errorFixed = new GridBagConstraints();
-		gbc_errorFixed.insets = new Insets(0, 0, 5, 0);
-		gbc_errorFixed.gridx = 1;
-		gbc_errorFixed.gridy = 3;
-		tabSchema.add(errorFixedButton, gbc_errorFixed);
-
+		
+		//ADD COLUMN button
+		btnAddColumn = new JButton("Add column");
+		
+		//add column action listener
+		btnAddColumn.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent arg0) {
+				Struct.future_user_table_size++;
+				viewSchema.setModel(TableForm.schemaTable());
+			}
+		});
+		
+		//add button format on panel
+		GridBagConstraints gbc_btnAddColumn = new GridBagConstraints();
+		gbc_btnAddColumn.anchor = GridBagConstraints.WEST;
+		gbc_btnAddColumn.insets = new Insets(0, 0, 5, 0);
+		gbc_btnAddColumn.gridx = 1;
+		gbc_btnAddColumn.gridy = 2;
+		tabSchema.add(btnAddColumn, gbc_btnAddColumn);
+		
 
 		//CHANGE SCHEMA button
 		JButton submitSchemaButton = new JButton("Submit changes");
@@ -421,22 +418,15 @@ public class GUI extends JPanel {
 				//wont work if user has cell selected
 				Vector changedTitles = new Vector();
 				Vector changedTypes = new Vector();
+				//Vector addedCols = new Vector();
 				for (int r = 1; r < viewSchema.getRowCount(); r++) { changedTitles.addElement(viewSchema.getValueAt(r, 1)); }
 				for (int r = 1; r < viewSchema.getRowCount(); r++) { changedTypes.addElement(viewSchema.getValueAt(r, 2)); }
-				if (changedTitles.size() != changedTypes.size()) {
-					errorFixedButton.setVisible(true);
-					errorFixedButton.setEnabled(true);
-					errorMessageTextPane.setVisible(true);
-				}
-				try {
-					ChangeSchema.mainSchema(changedTitles, changedTypes);
-				} catch (SQLException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				try { ChangeSchema.UserChange.mainUserChange(changedTitles, changedTypes); } 
+				catch (SQLException e) { e.printStackTrace(); }
 			}
 		});
-
+		
+		
 		//change schema button format on tab
 		GridBagConstraints gbc_submitSchema = new GridBagConstraints();
 		gbc_submitSchema.insets = new Insets(0, 0, 5, 0);
@@ -460,13 +450,15 @@ public class GUI extends JPanel {
 	}
 
 
-	public static void start() {
-
+	public static void start() throws IOException, InterruptedException {
+	 
 		try { Parser.mainParser(); } 
 		catch (FileNotFoundException e1) { e1.printStackTrace(); }
 		catch (InterruptedException e1) { e1.printStackTrace(); } 
 		catch (InvocationTargetException e1) { e1.printStackTrace(); }
 
+		Struct.mainStructurer();
+		
 		try { LoadFile.mainLoader(); } 
 		catch (SQLException e1) { e1.printStackTrace(); }
 
