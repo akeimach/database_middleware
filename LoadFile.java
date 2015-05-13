@@ -1,6 +1,6 @@
 import java.sql.SQLException;
 
-
+//USES DB_TABLE_SIZE, NUM_DUMMY_COLS
 public class LoadFile extends Connect {
 
 	public static void tableInit() throws SQLException {
@@ -19,7 +19,8 @@ public class LoadFile extends Connect {
 			for (int i = 1; i < Struct.dbFields.length; i++) {
 				createTableString += Struct.dbFields[i] + " " + Struct.dbTypes[i] + ", ";
 			}
-			createTableString += " PRIMARY KEY (" + Struct.dbFields[0] + "))";
+			createTableString += "PRIMARY KEY (" + Struct.dbFields[0] + "))";
+			System.out.println(createTableString);
 			executeUpdate(createTableString);
 		}
 		catch (SQLException e) {
@@ -34,12 +35,12 @@ public class LoadFile extends Connect {
 		String bulkLoad = "LOAD DATA CONCURRENT LOCAL INFILE '" + Struct.dataFile.getAbsolutePath() + "' INTO TABLE " + Struct.tableName + " FIELDS TERMINATED BY '" + Parser.delimiter + "' OPTIONALLY ENCLOSED BY '\"' LINES TERMINATED BY '" + Parser.terminator + "'";
 		if (GUI.titleRow) { bulkLoad += " IGNORE 1 LINES "; }
 		bulkLoad += " (";
-		for (int i = 1; i < Struct.initNumCols; i++) { bulkLoad += Struct.dbFields[i] + ", "; }
-		bulkLoad += Struct.dbFields[Struct.initNumCols] + ") SET " + Struct.dbFields[0] + " = NULL, ";
-		for (int i = 1; i < (Struct.numDummyCols - 1); i++) {
-			bulkLoad += Struct.dbFields[Struct.initNumCols + i] + " = NULL, ";
+		for (int i = 1; i < Struct.db_table_size; i++) { bulkLoad += Struct.dbFields[i] + ", "; }
+		bulkLoad += Struct.dbFields[Struct.db_table_size - 1] + ") SET " + Struct.dbFields[0] + " = NULL, ";
+		for (int i = Struct.db_table_size - Struct.num_dummy_cols; i < Struct.db_table_size; i++) {
+			bulkLoad += Struct.dbFields[i] + " = NULL, ";
 		}
-		bulkLoad += Struct.dbFields[Struct.initNumCols + Struct.numDummyCols - 1] + " = NULL";
+		bulkLoad += Struct.dbFields[Struct.db_table_size - 1] + " = NULL";
 
 		try {
 			executeQuery(bulkLoad);
