@@ -25,6 +25,7 @@ public class Parser extends Struct {
 	static String INVALTITLE = "[^\\s^\\d^a-z^A-Z]";
 	
 	
+	
 	public static void findTerminator(File file) throws FileNotFoundException {
 		BufferedReader lines = new BufferedReader(new FileReader(file));
 		int countLines = 0;
@@ -87,7 +88,7 @@ public class Parser extends Struct {
 
 		delimiter = delimiters[maxindex];
 		System.out.println("Delimiter: '" + delimiters[maxindex] + "'");
-		initNumCols = (max / infer_sample_size) + 1;
+		init_table_size = (max / infer_sample_size) + 1;
 	}
 	
 
@@ -95,9 +96,9 @@ public class Parser extends Struct {
 	public static void findFields(File file) throws IOException {
 
 		//NEXT GET THE FIELDS
-		initFields = new String[initNumCols];
-		parseFields = new String[initNumCols];
-		parseSizes = new int[initNumCols];
+		initFields = new String[init_table_size];
+		parseFields = new String[init_table_size];
+		initSizes = new int[init_table_size];
 		
 		
 		BufferedReader lines = new BufferedReader(new FileReader(file));
@@ -122,7 +123,7 @@ public class Parser extends Struct {
 					index++;
 				}
 			}
-			if (index < initNumCols) { 
+			if (index < init_table_size) { 
 				String titleinit = titles.substring(start, titles.length());
 				for (int j = 0; j < titleinit.length(); j++) {
 					if (!Character.isLetterOrDigit(titleinit.charAt(j))) {
@@ -144,19 +145,19 @@ public class Parser extends Struct {
 				if (tuple.charAt(i) == delimiter) {
 					end = i;
 					String fieldinit = tuple.substring(start, end);
-					if (parseSizes[index] < (end - start + 3)) {
+					if (initSizes[index] < (end - start + 3)) {
 						parseFields[index] = fieldinit;
-						parseSizes[index] = end - start + 3;
+						initSizes[index] = end - start + 3;
 					}
 					start = i + 1;
 					index++;
 				}
 			}
-			if (index < initNumCols) { //get the last field because for loop exited
+			if (index < init_table_size) { //get the last field because for loop exited
 				String fieldinit = tuple.substring(start, tuple.length());
-				if (parseSizes[index] < (tuple.length() - start + 3)) {
+				if (initSizes[index] < (tuple.length() - start + 3)) {
 					parseFields[index] = fieldinit;
-					parseSizes[index] = tuple.length() - start + 3;
+					initSizes[index] = tuple.length() - start + 3;
 				}
 			}
 			countLines++;
@@ -168,7 +169,7 @@ public class Parser extends Struct {
 	//initTypes set
 	public static void findTypes(File file) throws FileNotFoundException {
 
-		parseTypes = new String[initNumCols];
+		parseTypes = new String[init_table_size];
 
 		// Count every ,;/ and tab, see which one is used most often
 		BufferedReader lines = new BufferedReader(new FileReader(file));
@@ -189,7 +190,7 @@ public class Parser extends Struct {
 					}
 				}
 
-				if (index < initNumCols) { //get the last field because for loop exited
+				if (index < init_table_size) { //get the last field because for loop exited
 					String fieldinit = tuple.substring(start, tuple.length());
 					patternMatcher(fieldinit, index);
 				}
@@ -203,7 +204,7 @@ public class Parser extends Struct {
 	public static void patternMatcher(String value, int i) {
 
 		if (Pattern.matches(CHAR, value)) { 
-			if (parseSizes[i] < 10) { parseTypes[i] = "CHAR(" + parseSizes[i] + 5 + ")"; }
+			if (initSizes[i] < 10) { parseTypes[i] = "CHAR(" + initSizes[i] + 5 + ")"; }
 			else { parseTypes[i] = "VARCHAR(100)"; }
 		}
 		else if (Pattern.matches(FLOAT, value)) { parseTypes[i] = "FLOAT"; }
@@ -221,8 +222,8 @@ public class Parser extends Struct {
 			findDelimiter(dataFile);
 			findFields(dataFile);
 			findTypes(dataFile);
-			dbColumns(numDummyCols);
-			userColumns();
+			//dbColumns(dummy_cols_size);
+			//userColumns();
 		} 
 		catch (FileNotFoundException e) { e.printStackTrace(); }
 		catch (IOException e) { e.printStackTrace(); }
