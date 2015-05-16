@@ -24,7 +24,6 @@ public class TableForm extends Struct {
 		tableRow.addElement(null);
 		rows.addElement(tableRow);
 		
-		
 		for (int i = 0; i < userFields.length; i++) {
 			Vector newRow = new Vector();
 			newRow.addElement(null);
@@ -32,6 +31,12 @@ public class TableForm extends Struct {
 			newRow.addElement(userTypes[i]);
 			rows.addElement(newRow);
 		}
+		
+		for (int i = userFields.length; i < Struct.future_user_table_size; i++) {
+			Vector newRow = new Vector();
+			rows.addElement(newRow);
+		}
+
 		return new DefaultTableModel(rows, schemaTableCols);
 	}
 	
@@ -45,8 +50,8 @@ public class TableForm extends Struct {
 			
 			for (int col = 1; col <= numberOfColumns; col++) {
 				for (int usercol = 0; usercol < userFields.length; usercol++) {
-					if (metaData.getColumnLabel(col).equals(userFields[usercol])) {
-						columnNames.addElement(metaData.getColumnLabel(col));
+					if (metaData.getColumnLabel(col).equalsIgnoreCase(userFields[usercol])) {
+						columnNames.addElement(userFields[usercol]); //use header w/ original correct case
 					}
 				}
 			}
@@ -58,7 +63,7 @@ public class TableForm extends Struct {
 				Vector newRow = new Vector();
 				for (int i = 1; i <= numberOfColumns; i++) { 
 					for (int usercol = 0; usercol < userFields.length; usercol++) {
-						if (metaData.getColumnLabel(i).equals(userFields[usercol])) {
+						if (metaData.getColumnLabel(i).equalsIgnoreCase(userFields[usercol])) {
 							newRow.addElement(rs.getObject(i));
 						}
 					}
@@ -66,7 +71,6 @@ public class TableForm extends Struct {
 				rows.addElement(newRow);
 				rowsReturned++;
 			}
-
 
 			GUI.dbOutput.append(rowsReturned + " rows returned\n");
 			return new DefaultTableModel(rows, columnNames);
@@ -85,4 +89,5 @@ public class TableForm extends Struct {
 		}
 		return columnModel;
 	}
+	
 }
