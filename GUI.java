@@ -47,7 +47,6 @@ public class GUI extends JPanel {
 	public static JPanel tabSchema;
 	public static JTable viewSchema;
 	private static JButton btnAddColumn;
-	private static JButton btnDeleteColumn;
 
 
 	public GUI() {
