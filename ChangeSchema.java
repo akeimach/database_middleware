@@ -112,6 +112,7 @@ public class ChangeSchema extends Connect {
 			long num_tuples = dec.countRows();
 			//Dummy method
 			boolean high_read_volume = true; //TODO: for testing
+			//ask the user?
 			//View method
 			boolean few_reads = false; //TODO: for testing
 
