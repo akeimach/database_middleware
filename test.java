@@ -1,13 +1,30 @@
 import java.lang.Runtime;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.InputStream;
-import java.io.OutputStreamWriter;
-import java.io.BufferedWriter;
-import java.io.IOException;
+import java.io.*;
+import java.util.*;
 
 
 public class test {
+
+	public static void main(String[]args) throws InterruptedException, IOException {
+		//String command="ping ‐c 3 www.google.com";
+		//String command = "gshuf AK_wrangler_test.csv";
+		//String command = "ls";
+		//String command = "gshuf airlines.dat > airlines_shuf.csv";
+		String command = "/Users/alyssakeimach/Eclipse/DBconnector/shuf.exe";
+		Process proc = Runtime.getRuntime().exec(command);
+		//Readtheoutput
+		
+		BufferedReader reader= new BufferedReader(new InputStreamReader(proc.getInputStream()));
+		String line=""; 
+		while((line=reader.readLine())!=null) {
+			System.out.print(line+"\n"); 
+		}
+		
+		proc.waitFor();
+	}
+}
+
+
 	/*
 	//PING EXAMPLE
 	private String test(String command) { 
@@ -69,4 +86,4 @@ public class test {
 		catch (IOException e) { System.out.println("FROMCATCH "+ e.toString()); }
 	}
 	*/
-}
+
