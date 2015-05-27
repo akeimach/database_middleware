@@ -6,6 +6,8 @@ import java.util.*;
 public class test {
 
 	public static void main(String[]args) throws InterruptedException, IOException {
+		
+		/*
 		//String command="ping ‐c 3 www.google.com";
 		//String command = "gshuf AK_wrangler_test.csv";
 		//String command = "ls";
@@ -14,6 +16,7 @@ public class test {
 		Process proc = Runtime.getRuntime().exec(command);
 		//Readtheoutput
 		
+		BufferedReader outs = new BufferedReader(new InputStreamReader(proc.getOutputStream()));
 		BufferedReader reader= new BufferedReader(new InputStreamReader(proc.getInputStream()));
 		String line=""; 
 		while((line=reader.readLine())!=null) {
@@ -21,6 +24,17 @@ public class test {
 		}
 		
 		proc.waitFor();
+		
+		*/
+		String command = "/Users/alyssakeimach/Eclipse/DBconnector/shuf.exe";
+		ProcessBuilder pb = new ProcessBuilder(command);
+		pb.inheritIO();
+		
+		
+		
+		
+		
+		
 	}
 }
 
