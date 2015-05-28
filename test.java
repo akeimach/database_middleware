@@ -6,13 +6,28 @@ import java.lang.*;
 public class test {
 
 	public static void main(String[]args) throws InterruptedException, IOException {
+
+
+
+		ProcessBuilder dirProcess = new ProcessBuilder("/Users/alyssakeimach/Eclipse/DBconnector/shuf.exe");
+		File dirOut = new File("/Users/alyssakeimach/Eclipse/DBconnector/shuf_out.csv");
+		dirProcess.redirectOutput(dirOut);
+		dirProcess.start();
+
+	}
+}
 		
+		/*
 		ProcessBuilder processBuilder = new ProcessBuilder("/Users/alyssakeimach/Eclipse/DBconnector/shuf.exe");        
 		Process process = processBuilder.start();
-		InputStream stream = process.getInputStream();
+		OutputStream stream = process.getOutputStream();
+		System.out.println(stream);
+		
+		/*
 		BufferedReader output = new BufferedReader(new InputStreamReader(stream));
 		String line = "";
 		while ((line = output.readLine()) != null) { System.out.print(line + "\n"); }
+	
 		process.waitFor();
 		
 		
@@ -40,10 +55,6 @@ public class test {
 		
 		
 		
-		
-		
-	}
-}
 
 
 	/*

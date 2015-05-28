@@ -1,4 +1,4 @@
-gshuf airlines.dat > shuffle_airlines.dat
-ls
+export PATH=/Users/alyssakeimach/anaconda/bin/
+gshuf airlines.dat
 
-
+echo $PATH
