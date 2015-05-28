@@ -7,13 +7,62 @@ public class test {
 
 	public static void main(String[]args) throws InterruptedException, IOException {
 
+		
+		ProcessBuilder pb = new ProcessBuilder("/Users/alyssakeimach/Eclipse/DBconnector/shuf.exe");
+		/*
+		Map<String, String> env = pb.environment();
+		System.out.println(env.get("PATH"));
+		env.put("PATH", "/Users/alyssakeimach/anaconda/bin/");
+		System.out.println(env.get("PATH"));
+		*/
+		
+		File output = new File("/Users/alyssakeimach/Eclipse/DBconnector/shuf_out.csv");
+		pb.redirectOutput(output);
+		pb.redirectOutput();
+		
+		Process p = pb.start();
+		BufferedReader out = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		String line = "";
+		while ((line = out.readLine()) != null) { System.out.print(line + "\n"); }
+		p.waitFor();
+		
+		/*
+		
+		
+		ProcessBuilder pb = new ProcessBuilder("/Users/alyssakeimach/Eclipse/DBconnector/shuf.exe");  
+		
+		
+		
+		Map<String, String> env = pb.environment();
+		System.out.println(env.get("PATH"));
+		env.put("PATH", "/Users/alyssakeimach/anaconda/bin/");
+		System.out.println(env.get("PATH"));
+		
+		
+		Process process = pb.start();
+		InputStream stream = process.getInputStream();
 
-
+		
+		BufferedReader output = new BufferedReader(new InputStreamReader(stream));
+		String line = "";
+		while ((line = output.readLine()) != null) { System.out.print(line + "\n"); }
+	
+		process.waitFor();
+		
+		/*
 		ProcessBuilder dirProcess = new ProcessBuilder("/Users/alyssakeimach/Eclipse/DBconnector/shuf.exe");
+		Map<String, String> env = dirProcess.environment();
+		System.out.println(System.getenv());
+	
+		dirProcess.environment().put("PATH", "/Users/alyssakeimach/anaconda/bin/");
+		//env.get("PATH") = "/Users/alyssakeimach/anaconda/bin/";
+		System.out.println(System.getenv());
+		//env.put("", "PATH");
 		File dirOut = new File("/Users/alyssakeimach/Eclipse/DBconnector/shuf_out.csv");
 		dirProcess.redirectOutput(dirOut);
 		dirProcess.start();
-
+		
+*/
 	}
 }
 		
