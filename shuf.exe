@@ -1,3 +1,4 @@
-cd
+gshuf airlines.dat > shuffle_airlines.dat
 ls
-gshuf airlines.dat
+
+

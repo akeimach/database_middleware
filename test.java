@@ -1,13 +1,24 @@
-import java.lang.Runtime;
+
 import java.io.*;
 import java.util.*;
-
+import java.lang.*;
 
 public class test {
 
 	public static void main(String[]args) throws InterruptedException, IOException {
 		
+		ProcessBuilder processBuilder = new ProcessBuilder("/Users/alyssakeimach/Eclipse/DBconnector/shuf.exe");        
+		Process process = processBuilder.start();
+		InputStream stream = process.getInputStream();
+		BufferedReader output = new BufferedReader(new InputStreamReader(stream));
+		String line = "";
+		while ((line = output.readLine()) != null) { System.out.print(line + "\n"); }
+		process.waitFor();
+		
+		
 		/*
+	
+
 		//String command="ping ‐c 3 www.google.com";
 		//String command = "gshuf AK_wrangler_test.csv";
 		//String command = "ls";
@@ -15,20 +26,16 @@ public class test {
 		String command = "/Users/alyssakeimach/Eclipse/DBconnector/shuf.exe";
 		Process proc = Runtime.getRuntime().exec(command);
 		//Readtheoutput
+		proc.waitFor();
 		
-		BufferedReader outs = new BufferedReader(new InputStreamReader(proc.getOutputStream()));
+		//BufferedReader outs = new BufferedReader(OutputStream(proc.getOutputStream()));
 		BufferedReader reader= new BufferedReader(new InputStreamReader(proc.getInputStream()));
 		String line=""; 
 		while((line=reader.readLine())!=null) {
 			System.out.print(line+"\n"); 
 		}
 		
-		proc.waitFor();
-		
 		*/
-		String command = "/Users/alyssakeimach/Eclipse/DBconnector/shuf.exe";
-		ProcessBuilder pb = new ProcessBuilder(command);
-		pb.inheritIO();
 		
 		
 		
