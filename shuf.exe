@@ -1,3 +1,4 @@
 source ~/.bashrc
-gshuf airlines.dat > test.txt
+gshuf airlines.dat
+split airlines.dat
 ls
