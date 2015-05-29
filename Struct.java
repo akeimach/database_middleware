@@ -91,7 +91,6 @@ public class Struct {
 	public static void updateDBstrings() {
 		
 		db_table_size = curr_user_table_size + num_dummy_cols;
-		System.out.println(dbFields.length + " " + db_table_size);
 		
 		dbFields = new String[db_table_size]; 
 		dbFields[0] = "id_0";
@@ -112,12 +111,6 @@ public class Struct {
 			dbTypes[i] = parseTypes[type_id];
 			type_id++;
 		}
-
-		
-		for (String entry: dbFields) { System.out.print(entry + " "); }
-		System.out.println();
-		for (String entry : dbTypes) { System.out.print(entry + " "); }
-		System.out.println();
 
 	}
 }

@@ -18,7 +18,7 @@ public class Connect {
 			Class.forName("com.mysql.jdbc.Driver").newInstance();
 			conn = DriverManager.getConnection(server + Struct.dbName, user, password);
 			conn.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
-			if (!conn.isClosed()) { System.out.println("Connected to MySQL"); }
+			//if (!conn.isClosed()) { System.out.println("Connected to MySQL"); }
 		} 
 		catch (Exception e) { System.err.println("ERROR: " + e.getMessage()); }
 		return conn;

@@ -14,13 +14,15 @@ public class ChangeSchema extends Connect {
 
 		//number of existing tuples
 		public long countRows() throws SQLException {
+			System.out.println("Getting table stats...");
 			String orig = Struct.dbName;
 			Struct.dbName = "information_schema";
 			String command = "SELECT TABLE_ROWS FROM TABLES WHERE TABLE_NAME = \'" + Struct.tableName + "\'";
+			
 			ResultSet stats = executeQuery(command);
 			Struct.dbName = orig;
 			while (stats.next()) { Struct.table_size = stats.getLong(1); }
-			System.out.println("CURRENT TABLE SIZE: " + Struct.table_size);
+			System.out.println("Current table size: " + Struct.table_size);
 			return Struct.table_size;
 		}
 	}
@@ -91,7 +93,6 @@ public class ChangeSchema extends Connect {
 				for (int j = Struct.future_user_table_size; j > Struct.curr_user_table_size; j--) {
 					Struct.userFields[j-1] = (String)changedTitles.elementAt(j-1);
 					Struct.userTypes[j-1] = (String)changedTypes.elementAt(j-1);
-					System.out.println(Struct.userFields[j-1] + " " + (String)changedTitles.elementAt(j-1));
 				}
 				executeUpdate(changeType);
 			}

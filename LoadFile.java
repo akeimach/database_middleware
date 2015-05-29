@@ -20,7 +20,7 @@ public class LoadFile extends Connect {
 				createTableString += Struct.dbFields[i] + " " + Struct.dbTypes[i] + ", ";
 			}
 			createTableString += "PRIMARY KEY (" + Struct.dbFields[0] + "))";
-			System.out.println(createTableString);
+			//System.out.println(createTableString);
 			executeUpdate(createTableString);
 		}
 		catch (SQLException e) {
