@@ -1,4 +1,0 @@
-source ~/.bashrc
-gshuf airlines.dat
-split airlines.dat
-ls
