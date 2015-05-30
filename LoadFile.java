@@ -1,4 +1,10 @@
+import java.io.File;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Random;
 
 //USES DB_TABLE_SIZE, NUM_DUMMY_COLS
 public class LoadFile extends Connect {
@@ -20,7 +26,6 @@ public class LoadFile extends Connect {
 				createTableString += Struct.dbFields[i] + " " + Struct.dbTypes[i] + ", ";
 			}
 			createTableString += "PRIMARY KEY (" + Struct.dbFields[0] + "))";
-			//System.out.println(createTableString);
 			executeUpdate(createTableString);
 		}
 		catch (SQLException e) {
@@ -29,11 +34,41 @@ public class LoadFile extends Connect {
 		}
 	}
 
-	public static void startInitLoad() throws SQLException {
-		
-		String location = "/Users/alyssakeimach/Eclipse/DBconnector/";
 
-		String initLoad = "LOAD DATA CONCURRENT LOCAL INFILE '" + location + "' INTO TABLE " + Struct.tableName + " FIELDS TERMINATED BY '" + Parser.delimiter + "' OPTIONALLY ENCLOSED BY '\"' LINES TERMINATED BY '" + Parser.terminator + "'";
+	private static Random r = new Random();
+
+	public static File getRandFile(File f) {
+
+		File[] subs = f.listFiles();
+		if (f.isFile() || f.list().length == 0) { return f; }
+
+		List<File> subDirs = new ArrayList<File>(Arrays.asList(subs));
+		Iterator<File> files = subDirs.iterator();
+		while (files.hasNext()) {
+			if (!files.next().isDirectory()) { files.remove(); }
+		}
+
+		while (!subDirs.isEmpty()) {
+			File rndSubDir = subDirs.get(r.nextInt(subDirs.size()));
+			File rndSubFile = getRandFile(rndSubDir);
+			if (rndSubFile != null) {
+				System.out.println(rndSubFile.getAbsolutePath() + 2);
+				return rndSubFile;
+			}
+			subDirs.remove(rndSubDir);
+		}
+
+		return f;
+	}
+
+	public static void startInitLoad() throws SQLException {
+
+		File folder = new File("/Users/alyssakeimach/Eclipse/DBconnector/splits/");
+		File[] roots = folder.listFiles();
+		File rndFile = getRandFile(roots[r.nextInt(roots.length)]);
+		System.out.println(rndFile);
+
+		String initLoad = "LOAD DATA CONCURRENT LOCAL INFILE '" + rndFile + "' INTO TABLE " + Struct.tableName + " FIELDS TERMINATED BY '" + Parser.delimiter + "' OPTIONALLY ENCLOSED BY '\"' LINES TERMINATED BY '" + Parser.terminator + "'";
 		if (GUI.titleRow) { initLoad += " IGNORE 1 LINES "; }
 		initLoad += " (";
 		for (int i = 1; i < Struct.db_table_size; i++) { initLoad += Struct.dbFields[i] + ", "; }
@@ -83,18 +118,19 @@ public class LoadFile extends Connect {
 		}
 	}
 
-	
+
 	public static void mainLoader() throws SQLException {
 		tableInit();
 		Thread loaderThread = new Thread() {
 			public void run() {
-				try { startBulkLoad(); }
+				try { startInitLoad(); }
+				//try { startBulkLoad(); }
 				catch (SQLException e) { e.printStackTrace(); }
 			}
 		};
 		loaderThread.setName("loaderThread");
 		loaderThread.start();
-		
+
 	}
 
 
