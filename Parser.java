@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.io.Writer;
 import java.lang.reflect.InvocationTargetException;
 import java.util.regex.Pattern;
@@ -173,31 +174,14 @@ public class Parser extends Struct {
 	
 	
 	public static void splitFile(File file) throws IOException, InterruptedException {
-		
-		File output = new File("/Users/alyssakeimach/Eclipse/DBconnector/output.csv");
-		File splitexe = new File("/Users/alyssakeimach/Eclipse/DBconnector/split.exe");
-		
-		splitexe.setReadable(true, true);
-		splitexe.setExecutable(true, true);
-		splitexe.setWritable(true, true);
-		
-		/*
-		splitexe.append("chmod 775 /Users/alyssakeimach/Eclipse/DBconnector/split.exe \r\n");
-		splitexe.append("source ~/.bashrc \r\n");
-		splitexe.append("gshuf airlines.dat \r\n");
-		splitexe.append("split airlines.dat \r\n");
-		splitexe.append("ls \r\n");
+		PrintWriter splitexe = new PrintWriter("/Users/alyssakeimach/split.exe", "UTF-8");
+		Runtime.getRuntime().exec("chmod a+x /Users/alyssakeimach/split.exe");
+		splitexe.println("split " + file);
 		splitexe.close();
-		
-		
-		ProcessBuilder pb = new ProcessBuilder("/Users/alyssakeimach/Eclipse/DBconnector/split.exe");
-		pb.redirectOutput(output);
+		ProcessBuilder pb = new ProcessBuilder("/Users/alyssakeimach/split.exe");
 		Process p = pb.start();
-		BufferedReader out = new BufferedReader(new InputStreamReader(p.getInputStream()));
-		String line = "";
-		while ((line = out.readLine()) != null) { System.out.print(line + "\n"); }
 		p.waitFor();
-		*/
+		
 	}
 	
 
