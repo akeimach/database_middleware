@@ -136,7 +136,7 @@ public class Parser extends Struct {
 			}
 
 		} 
-
+		
 		int countLines = 0;
 		while (countLines < infer_sample_size) {	
 			String tuple = lines.readLine();
@@ -244,6 +244,10 @@ public class Parser extends Struct {
 			findFields(dataFile);
 			splitFile(dataFile);
 			findTypes(dataFile);
+			Struct.setDBcolumns();
+			Struct.setUserColumns();
+			Struct.curr_table_size = Struct.init_table_size;
+			//Struct.mainStructurer();
 			//dbColumns(dummy_cols_size);
 			//userColumns();
 		} 

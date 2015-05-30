@@ -31,8 +31,8 @@ public class TableForm extends Struct {
 			newRow.addElement(userTypes[i]);
 			rows.addElement(newRow);
 		}
-		
-		for (int i = userFields.length; i < Struct.future_user_table_size; i++) {
+		int size = Math.max(Struct.curr_table_size, Struct.init_table_size);
+		for (int i = userFields.length; i < size; i++) {
 			Vector newRow = new Vector();
 			rows.addElement(newRow);
 		}

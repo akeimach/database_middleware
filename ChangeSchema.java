@@ -42,7 +42,7 @@ public class ChangeSchema extends Connect {
 			}
 			
 			//user added new fields
-			if (!changedTitlesMap.isEmpty() && (Struct.future_user_table_size == Struct.curr_user_table_size)) { //only title changed, no field added
+			if (!changedTitlesMap.isEmpty() && (Struct.curr_table_size == Struct.init_table_size)) { //only title changed, no field added
 				for (Entry<Integer, String> entry : changedTitlesMap.entrySet()) {
 					String renameCols = "ALTER TABLE " + Struct.tableName + " CHANGE " + Struct.userFields[entry.getKey()] + " " + entry.getValue() + " " + Struct.userTypes[entry.getKey()];
 					Struct.userFields[entry.getKey()] = entry.getValue(); //change so don't redo same one again  
@@ -51,7 +51,7 @@ public class ChangeSchema extends Connect {
 			}
 		
 			//user changed data types
-			if (!changedTypesMap.isEmpty() && (Struct.future_user_table_size == Struct.curr_user_table_size)) {
+			if (!changedTypesMap.isEmpty() && (Struct.curr_table_size == Struct.init_table_size)) {
 				boolean noComma = true;
 				String changeType = "ALTER TABLE " + Struct.tableName;
 				for (Entry<Integer, String> entry : changedTypesMap.entrySet()) {
@@ -69,11 +69,11 @@ public class ChangeSchema extends Connect {
 			}
 		
 			//user added a new column
-			if (Struct.future_user_table_size > Struct.curr_user_table_size) {
+			if (Struct.curr_table_size > Struct.init_table_size) {
 				boolean noComma = true;	
 				String changeType = "ALTER TABLE " + Struct.tableName;
-				for (int i = Struct.curr_user_table_size; i < Struct.future_user_table_size; i++) {
-					if (noComma || (Struct.curr_user_table_size - Struct.future_user_table_size == 1)) {
+				for (int i = Struct.init_table_size; i < Struct.curr_table_size; i++) {
+					if (noComma || (Struct.init_table_size - Struct.curr_table_size == 1)) {
 						noComma = false;
 						changeType += " ADD COLUMN " + changedTitles.elementAt(i) + " " + changedTypes.elementAt(i);
 					}
@@ -84,13 +84,13 @@ public class ChangeSchema extends Connect {
 				
 				String[] tempField = Struct.userFields;
 				String[] tempType = Struct.userTypes;
-				Struct.userFields = new String[Struct.future_user_table_size];
-				Struct.userTypes = new String[Struct.future_user_table_size];
+				Struct.userFields = new String[Struct.curr_table_size];
+				Struct.userTypes = new String[Struct.curr_table_size];
 				for (int i = 0; i < tempField.length; i++) {
 					Struct.userFields[i] = tempField[i];
 					Struct.userTypes[i] = tempType[i];
 				}
-				for (int j = Struct.future_user_table_size; j > Struct.curr_user_table_size; j--) {
+				for (int j = Struct.curr_table_size; j > Struct.init_table_size; j--) {
 					Struct.userFields[j-1] = (String)changedTitles.elementAt(j-1);
 					Struct.userTypes[j-1] = (String)changedTypes.elementAt(j-1);
 				}

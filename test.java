@@ -1,111 +1,6 @@
 
-import java.io.*;
-import java.util.*;
-import java.lang.*;
-
 public class test {
-
-	public static void main(String[]args) throws InterruptedException, IOException {
-
 		
-		ProcessBuilder pb = new ProcessBuilder("/Users/alyssakeimach/Eclipse/DBconnector/shuf.exe");
-		/*
-		Map<String, String> env = pb.environment();
-		System.out.println(env.get("PATH"));
-		env.put("PATH", "/Users/alyssakeimach/anaconda/bin/");
-		System.out.println(env.get("PATH"));
-		*/
-		
-		File output = new File("/Users/alyssakeimach/Eclipse/DBconnector/shuf_out.csv");
-		pb.redirectOutput(output);
-		pb.redirectOutput();
-		
-		Process p = pb.start();
-		BufferedReader out = new BufferedReader(new InputStreamReader(p.getInputStream()));
-		String line = "";
-		while ((line = out.readLine()) != null) { System.out.print(line + "\n"); }
-		p.waitFor();
-		
-		/*
-		
-		
-		ProcessBuilder pb = new ProcessBuilder("/Users/alyssakeimach/Eclipse/DBconnector/shuf.exe");  
-		
-		
-		
-		Map<String, String> env = pb.environment();
-		System.out.println(env.get("PATH"));
-		env.put("PATH", "/Users/alyssakeimach/anaconda/bin/");
-		System.out.println(env.get("PATH"));
-		
-		
-		Process process = pb.start();
-		InputStream stream = process.getInputStream();
-
-		
-		BufferedReader output = new BufferedReader(new InputStreamReader(stream));
-		String line = "";
-		while ((line = output.readLine()) != null) { System.out.print(line + "\n"); }
-	
-		process.waitFor();
-		
-		/*
-		ProcessBuilder dirProcess = new ProcessBuilder("/Users/alyssakeimach/Eclipse/DBconnector/shuf.exe");
-		Map<String, String> env = dirProcess.environment();
-		System.out.println(System.getenv());
-	
-		dirProcess.environment().put("PATH", "/Users/alyssakeimach/anaconda/bin/");
-		//env.get("PATH") = "/Users/alyssakeimach/anaconda/bin/";
-		System.out.println(System.getenv());
-		//env.put("", "PATH");
-		File dirOut = new File("/Users/alyssakeimach/Eclipse/DBconnector/shuf_out.csv");
-		dirProcess.redirectOutput(dirOut);
-		dirProcess.start();
-		
-*/
-	}
-}
-		
-		/*
-		ProcessBuilder processBuilder = new ProcessBuilder("/Users/alyssakeimach/Eclipse/DBconnector/shuf.exe");        
-		Process process = processBuilder.start();
-		OutputStream stream = process.getOutputStream();
-		System.out.println(stream);
-		
-		/*
-		BufferedReader output = new BufferedReader(new InputStreamReader(stream));
-		String line = "";
-		while ((line = output.readLine()) != null) { System.out.print(line + "\n"); }
-	
-		process.waitFor();
-		
-		
-		/*
-	
-
-		//String command="ping ‐c 3 www.google.com";
-		//String command = "gshuf AK_wrangler_test.csv";
-		//String command = "ls";
-		//String command = "gshuf airlines.dat > airlines_shuf.csv";
-		String command = "/Users/alyssakeimach/Eclipse/DBconnector/shuf.exe";
-		Process proc = Runtime.getRuntime().exec(command);
-		//Readtheoutput
-		proc.waitFor();
-		
-		//BufferedReader outs = new BufferedReader(OutputStream(proc.getOutputStream()));
-		BufferedReader reader= new BufferedReader(new InputStreamReader(proc.getInputStream()));
-		String line=""; 
-		while((line=reader.readLine())!=null) {
-			System.out.print(line+"\n"); 
-		}
-		
-		*/
-		
-		
-		
-		
-
-
 	/*
 	//PING EXAMPLE
 	private String test(String command) { 
@@ -167,4 +62,4 @@ public class test {
 		catch (IOException e) { System.out.println("FROMCATCH "+ e.toString()); }
 	}
 	*/
-
+}

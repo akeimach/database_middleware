@@ -1,4 +1,6 @@
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,6 +28,7 @@ public class LoadFile extends Connect {
 				createTableString += Struct.dbFields[i] + " " + Struct.dbTypes[i] + ", ";
 			}
 			createTableString += "PRIMARY KEY (" + Struct.dbFields[0] + "))";
+			//System.out.println(createTableString);
 			executeUpdate(createTableString);
 		}
 		catch (SQLException e) {
@@ -80,16 +83,20 @@ public class LoadFile extends Connect {
 
 		try {
 			executeQuery(initLoad);
-			System.out.println("Uploading file: " + Struct.dataFile.getAbsolutePath());	
+			System.out.println("Uploading file: " + rndFile.getAbsolutePath());	
+			//then delete the file once uploaded
+			Files.delete(rndFile.toPath());
+			System.out.println("Deleted " + rndFile.getAbsolutePath() + " after uploading");
 		}
 		catch (SQLException e) {
 			try {
-				String error = "SELECT * INTO OUTFILE '" + Struct.dataFile.getAbsolutePath() + ".out' FIELDS TERMINATED BY '" + Parser.delimiter + "' OPTIONALLY ENCLOSED BY '\"' LINES TERMINATED BY '" + Parser.terminator + "'";
+				String error = "SELECT * INTO OUTFILE '" + rndFile.getAbsolutePath() + ".out' FIELDS TERMINATED BY '" + Parser.delimiter + "' OPTIONALLY ENCLOSED BY '\"' LINES TERMINATED BY '" + Parser.terminator + "'";
 				System.out.println("Error, sent query \"" + error + "\"");
 				executeQuery(error);
 			} 
 			catch (SQLException e2) { e2.printStackTrace(); }
-		}
+		} 
+		catch (IOException e) { e.printStackTrace(); } //could not delete file
 	}
 
 	public static void startBulkLoad() throws SQLException {
@@ -121,15 +128,28 @@ public class LoadFile extends Connect {
 
 	public static void mainLoader() throws SQLException {
 		tableInit();
+		Thread initLoaderThread = new Thread() {
+			public void run() {
+				try { 
+					startInitLoad(); 
+					startInitLoad();
+				}
+				catch (SQLException e) { e.printStackTrace(); }
+			}
+		};
+		initLoaderThread.setName("initLoaderThread");
+		initLoaderThread.start();
+		
+		/*
 		Thread loaderThread = new Thread() {
 			public void run() {
-				try { startInitLoad(); }
-				//try { startBulkLoad(); }
+				try { startBulkLoad(); }
 				catch (SQLException e) { e.printStackTrace(); }
 			}
 		};
 		loaderThread.setName("loaderThread");
 		loaderThread.start();
+		*/
 
 	}
 

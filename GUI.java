@@ -391,7 +391,7 @@ public class GUI extends JPanel {
 		btnAddColumn.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
-				Struct.future_user_table_size++;
+				Struct.curr_table_size++;
 				viewSchema.setModel(TableForm.schemaTable());
 			}
 		});
@@ -456,7 +456,7 @@ public class GUI extends JPanel {
 		catch (InterruptedException e1) { e1.printStackTrace(); } 
 		catch (InvocationTargetException e1) { e1.printStackTrace(); }
 
-		Struct.mainStructurer();
+		//Struct.mainStructurer();
 		
 		try { LoadFile.mainLoader(); } 
 		catch (SQLException e1) { e1.printStackTrace(); }

@@ -15,10 +15,11 @@ public class Struct {
 	
 	//ParseFile
 	public static int init_table_size = 0;
+	public static int curr_table_size = 0;
 
 	//tableForm, struct
-	public static int future_user_table_size = 0;
-	public static int curr_user_table_size = 0;
+	//public static int future_user_table_size = 0;
+	//public static int curr_user_table_size = 0;
 
 
 	//Set in GUI.java
@@ -44,22 +45,22 @@ public class Struct {
 	public static void setDBcolumns() {
 		//set the dummy columns id_0 and version_(num+colnum)
 		db_table_size = init_table_size + num_dummy_cols;
-		dbFields = new String[db_table_size]; 
+		dbFields = new String[init_table_size + num_dummy_cols]; 
 		dbFields[0] = "id_0";
 		for (int col = 1; col < num_dummy_cols; col++) { dbFields[init_table_size + col] =  "version_" + (init_table_size + col); }
 		int title_id = 0;
 		//set the rest of the columns to the standard titles
-		for (int i = 1; i <= curr_user_table_size; i++) {
+		for (int i = 1; i <= init_table_size; i++) {
 			if (GUI.titleRow) { dbFields[i] = initFields[title_id]; }
-			else if (!GUI.titleRow) { dbFields[i] = "col_" + i; }
+			else if (!GUI.titleRow) { dbFields[i] = "col_" + i; System.out.println(dbFields[i]);}
 			title_id++;
 		}
 
-		dbTypes = new String[db_table_size];
+		dbTypes = new String[init_table_size + num_dummy_cols];
 		dbTypes[0] = "INT";
 		for (int col = 1; col < num_dummy_cols; col++) { dbTypes[init_table_size + col] =  "INT NULL"; }
 		int type_id = 0;
-		for (int i = 1; i <= curr_user_table_size; i++) {
+		for (int i = 1; i <= init_table_size; i++) {
 			dbTypes[i] = parseTypes[type_id];
 			type_id++;
 		}
@@ -68,16 +69,49 @@ public class Struct {
 	//parserFields -> userFields (for ChangeSchema, QueryData)
 	public static void setUserColumns() {
 		
-		userFields = new String[curr_user_table_size];
+		userFields = new String[init_table_size];
+
 		if (GUI.titleRow) { userFields = initFields; }
+		
 		else if (!GUI.titleRow) { 
-			for (int i = 0; i < curr_user_table_size; i++) { userFields[i] = "col_" + (i+1); }
+			for (int i = 0; i < init_table_size; i++) { userFields[i] = "col_" + (i+1); System.out.println(userFields[i]);}
 		}
 
-		userTypes = new String[curr_user_table_size];
+		userTypes = new String[init_table_size];
 		userTypes = parseTypes;
 	}
 
+	
+	public static void updateDBstrings() {
+		//curr_user_table_size = init_table_size;
+		db_table_size = curr_table_size + num_dummy_cols;
+		
+		//System.out.println(db_table_size + " " + curr_table_size + " " + init_table_size);
+		dbFields = new String[curr_table_size + num_dummy_cols]; 
+		dbFields[0] = "id_0";
+		for (int col = 1; col < num_dummy_cols; col++) { dbFields[curr_table_size + col] =  "version_" + (curr_table_size + col); }
+		int title_id = 0;
+		//set the rest of the columns to the standard titles
+		for (int i = 1; i <= init_table_size; i++) {
+			if (GUI.titleRow) { dbFields[i] = userFields[title_id]; }
+			else if (!GUI.titleRow) { dbFields[i] = "col_" + i; }
+			title_id++;
+		}
+
+		dbTypes = new String[curr_table_size + num_dummy_cols];
+		dbTypes[0] = "INT";
+		for (int col = 1; col < num_dummy_cols; col++) { dbTypes[curr_table_size + col] =  "INT NULL"; }
+		int type_id = 0;
+		for (int i = 1; i <= init_table_size; i++) {
+			System.out.println(dbTypes[i] + " " + parseTypes[type_id] + " " +i + " " + type_id);
+			dbTypes[i] = parseTypes[type_id];
+			type_id++;
+		}
+		
+		init_table_size = curr_table_size;
+
+	}
+	/*
 	public static void mainStructurer()  {
 
 		setUserColumns();
@@ -86,31 +120,6 @@ public class Struct {
 		setDBcolumns();
 		
 	}
+	*/
 
-	
-	public static void updateDBstrings() {
-		
-		db_table_size = curr_user_table_size + num_dummy_cols;
-		
-		dbFields = new String[db_table_size]; 
-		dbFields[0] = "id_0";
-		for (int col = 1; col < num_dummy_cols; col++) { dbFields[curr_user_table_size + col] =  "version_" + (curr_user_table_size + col); }
-		int title_id = 0;
-		//set the rest of the columns to the standard titles
-		for (int i = 1; i <= curr_user_table_size; i++) {
-			if (GUI.titleRow) { dbFields[i] = userFields[title_id]; }
-			else if (!GUI.titleRow) { dbFields[i] = "col_" + i; }
-			title_id++;
-		}
-
-		dbTypes = new String[db_table_size];
-		dbTypes[0] = "INT";
-		for (int col = 1; col < num_dummy_cols; col++) { dbTypes[curr_user_table_size + col] =  "INT NULL"; }
-		int type_id = 0;
-		for (int i = 1; i <= curr_user_table_size; i++) {
-			dbTypes[i] = parseTypes[type_id];
-			type_id++;
-		}
-
-	}
 }
