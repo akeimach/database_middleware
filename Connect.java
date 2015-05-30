@@ -1,8 +1,8 @@
-import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Connection;
 import java.sql.Statement;
+import java.sql.ResultSet;
 
 
 public class Connect {
@@ -11,16 +11,17 @@ public class Connect {
 	public static String user = "root";
 	public static String password = "root";
 
-
-	public static Connection getConnection() throws SQLException {
+	public static Connection getConnection() {
 		Connection conn = null;
 		try {
 			Class.forName("com.mysql.jdbc.Driver").newInstance();
 			conn = DriverManager.getConnection(server + Struct.dbName, user, password);
 			conn.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
-			//if (!conn.isClosed()) { System.out.println("Connected to MySQL"); }
 		} 
-		catch (Exception e) { System.err.println("ERROR: " + e.getMessage()); }
+		catch (SQLException e) { throw new IllegalStateException("ERROR: " + e.getMessage(), e); } 
+		catch (InstantiationException e) { e.printStackTrace(); } 
+		catch (IllegalAccessException e) { e.printStackTrace(); } 
+		catch (ClassNotFoundException e) { e.printStackTrace(); }
 		return conn;
 	}
 
@@ -41,7 +42,7 @@ public class Connect {
 		System.out.println("Executed: \"" + command + "\"");
 		return stmt.executeQuery(command);
 	}
-/*
+	/*
 	public static ResultSet tableStats() throws SQLException {
 		String orig = Struct.dbName;
 		Struct.dbName = "information_schema";
@@ -53,7 +54,6 @@ public class Connect {
 		Struct.dbName = orig;
 		return stmt.executeQuery(command);
 	}
-	*/
+	 */
 	
 }
-	
