@@ -1,13 +1,10 @@
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.io.Writer;
+import java.lang.ProcessBuilder.Redirect;
 import java.lang.reflect.InvocationTargetException;
 import java.util.regex.Pattern;
 
@@ -28,9 +25,9 @@ public class Parser extends Struct {
 	static String IPADDRESS = "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])";
 	static String EMAIL = "[_A-Za-z0-9-]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})";
 	static String INVALTITLE = "[^\\s^\\d^a-z^A-Z]";
-	
-	
-	
+
+
+
 	public static void findTerminator(File file) throws FileNotFoundException {
 		BufferedReader lines = new BufferedReader(new FileReader(file));
 		int countLines = 0;
@@ -95,7 +92,7 @@ public class Parser extends Struct {
 		System.out.println("Delimiter: '" + delimiters[maxindex] + "'");
 		init_table_size = (max / infer_sample_size) + 1;
 	}
-	
+
 
 	//initFields and initSize set
 	public static void findFields(File file) throws IOException {
@@ -104,10 +101,10 @@ public class Parser extends Struct {
 		initFields = new String[init_table_size];
 		parseFields = new String[init_table_size];
 		initSizes = new int[init_table_size];
-		
-		
+
+
 		BufferedReader lines = new BufferedReader(new FileReader(file));
-		
+
 		//throw away title line for data stuff, parse here
 		if (GUI.titleRow) { 
 			String titles = lines.readLine(); 
@@ -137,9 +134,9 @@ public class Parser extends Struct {
 				}
 				initFields[index] = titleinit;
 			}
-			
+
 		} 
-		
+
 		int countLines = 0;
 		while (countLines < infer_sample_size) {	
 			String tuple = lines.readLine();
@@ -168,22 +165,27 @@ public class Parser extends Struct {
 			countLines++;
 		}
 
-		
+
 	}
-	
-	
-	
+
+
+
 	public static void splitFile(File file) throws IOException, InterruptedException {
+
 		PrintWriter splitexe = new PrintWriter("/Users/alyssakeimach/split.exe", "UTF-8");
 		Runtime.getRuntime().exec("chmod a+x /Users/alyssakeimach/split.exe");
 		splitexe.println("split " + file);
 		splitexe.close();
-		ProcessBuilder pb = new ProcessBuilder("/Users/alyssakeimach/split.exe");
-		Process p = pb.start();
-		p.waitFor();
 		
+		ProcessBuilder pb = new ProcessBuilder("/Users/alyssakeimach/split.exe");
+		pb.directory(new File("/Users/alyssakeimach/Eclipse/DBconnector/splits/"));
+		pb.redirectErrorStream(true);
+		Process p = pb.start();
+		assert pb.redirectInput() == Redirect.PIPE;
+		assert p.getInputStream().read() == -1;
+
 	}
-	
+
 
 	//initTypes set
 	public static void findTypes(File file) throws FileNotFoundException {
