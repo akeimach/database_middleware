@@ -17,11 +17,6 @@ public class Struct {
 	public static int init_table_size = 0;
 	public static int curr_table_size = 0;
 
-	//tableForm, struct
-	//public static int future_user_table_size = 0;
-	//public static int curr_user_table_size = 0;
-
-
 	//Set in GUI.java
 	public static File dataFile;
 
@@ -43,8 +38,10 @@ public class Struct {
 
 	//parserFields -> dbFields (for loadFile)
 	public static void setDBcolumns() {
+		
 		//set the dummy columns id_0 and version_(num+colnum)
 		db_table_size = init_table_size + num_dummy_cols;
+		
 		dbFields = new String[init_table_size + num_dummy_cols]; 
 		dbFields[0] = "id_0";
 		for (int col = 1; col < num_dummy_cols; col++) { dbFields[init_table_size + col] =  "version_" + (init_table_size + col); }
@@ -72,7 +69,6 @@ public class Struct {
 		userFields = new String[init_table_size];
 
 		if (GUI.titleRow) { userFields = initFields; }
-		
 		else if (!GUI.titleRow) { 
 			for (int i = 0; i < init_table_size; i++) { userFields[i] = "col_" + (i+1); System.out.println(userFields[i]);}
 		}
@@ -83,10 +79,9 @@ public class Struct {
 
 	
 	public static void updateDBstrings() {
-		//curr_user_table_size = init_table_size;
+
 		db_table_size = curr_table_size + num_dummy_cols;
 		
-		//System.out.println(db_table_size + " " + curr_table_size + " " + init_table_size);
 		dbFields = new String[curr_table_size + num_dummy_cols]; 
 		dbFields[0] = "id_0";
 		for (int col = 1; col < num_dummy_cols; col++) { dbFields[curr_table_size + col] =  "version_" + (curr_table_size + col); }
@@ -107,19 +102,8 @@ public class Struct {
 			dbTypes[i] = parseTypes[type_id];
 			type_id++;
 		}
-		
 		init_table_size = curr_table_size;
-
 	}
-	/*
-	public static void mainStructurer()  {
-
-		setUserColumns();
-		future_user_table_size = userFields.length;
-		curr_user_table_size = userFields.length;
-		setDBcolumns();
-		
-	}
-	*/
+	
 
 }

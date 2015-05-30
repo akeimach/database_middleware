@@ -164,10 +164,7 @@ public class Parser extends Struct {
 			}
 			countLines++;
 		}
-
-
 	}
-
 
 
 	public static void splitFile(File file) throws IOException, InterruptedException {
@@ -247,9 +244,7 @@ public class Parser extends Struct {
 			Struct.setDBcolumns();
 			Struct.setUserColumns();
 			Struct.curr_table_size = Struct.init_table_size;
-			//Struct.mainStructurer();
-			//dbColumns(dummy_cols_size);
-			//userColumns();
+
 		} 
 		catch (FileNotFoundException e) { e.printStackTrace(); }
 		catch (IOException e) { e.printStackTrace(); }

@@ -456,8 +456,6 @@ public class GUI extends JPanel {
 		catch (InterruptedException e1) { e1.printStackTrace(); } 
 		catch (InvocationTargetException e1) { e1.printStackTrace(); }
 
-		//Struct.mainStructurer();
-		
 		try { LoadFile.mainLoader(); } 
 		catch (SQLException e1) { e1.printStackTrace(); }
 

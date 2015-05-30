@@ -99,10 +99,7 @@ public class ChangeSchema extends Connect {
 		}
 		
 		
-		public static void dummyMethod() {
-			
-		}
-		
+		public static void dummyMethod() { }
 		
 
 		@SuppressWarnings("rawtypes")
@@ -134,24 +131,12 @@ public class ChangeSchema extends Connect {
 
 			//NUM TUPLES > 4500, determine expected workload before finalize
 			else {
-				if (high_read_volume) {
-					
-				}
-				else if (few_reads) {
-					
-				}
+				if (high_read_volume) { }
+				else if (few_reads) { }
 			}
-			
-
 		}
-
 	}
 
-	class AutoChange {
-
-
-	}
-
-
+	class AutoChange { }
 
 }
