@@ -1,4 +1,3 @@
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,6 +12,7 @@ public class ChangeSchema extends Connect {
 		//least common supertype--determine if changes necessary, set new num of cols
 
 		//number of existing tuples
+		/*
 		public long countRows() throws SQLException {
 			System.out.println("Getting table stats...");
 			String orig = Struct.dbName;
@@ -25,6 +25,7 @@ public class ChangeSchema extends Connect {
 			System.out.println("Current table size: " + Struct.table_size);
 			return Struct.table_size;
 		}
+		*/
 	}
 
 	static class UserChange {
@@ -105,9 +106,9 @@ public class ChangeSchema extends Connect {
 		@SuppressWarnings("rawtypes")
 		public static void mainUserChange(final Vector changedTitles, final Vector changedTypes) throws SQLException {
 
-			DecisionTree dec = new DecisionTree();
+			//DecisionTree dec = new DecisionTree();
 			//determine alter method
-			long num_tuples = dec.countRows();
+			long num_tuples = Connect.countRows();
 			//Dummy method
 			boolean high_read_volume = true; //TODO: for testing
 			//ask the user?
@@ -137,6 +138,6 @@ public class ChangeSchema extends Connect {
 		}
 	}
 
-	class AutoChange { }
+	static class AutoChange { }
 
 }

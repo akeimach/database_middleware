@@ -8,7 +8,7 @@ public class Struct {
 	public static String tableName = "table1"; 
 	public static long table_size = 0;
 	public static int infer_sample_size = 15;
-
+	public static int k_subsets = 2;
 	//LoadFile
 	public static int db_table_size = 0;
 	public static int num_dummy_cols = 4;
@@ -49,7 +49,7 @@ public class Struct {
 		//set the rest of the columns to the standard titles
 		for (int i = 1; i <= init_table_size; i++) {
 			if (GUI.titleRow) { dbFields[i] = initFields[title_id]; }
-			else if (!GUI.titleRow) { dbFields[i] = "col_" + i; System.out.println(dbFields[i]);}
+			else if (!GUI.titleRow) { dbFields[i] = "col_" + i; }
 			title_id++;
 		}
 
@@ -70,7 +70,7 @@ public class Struct {
 
 		if (GUI.titleRow) { userFields = initFields; }
 		else if (!GUI.titleRow) { 
-			for (int i = 0; i < init_table_size; i++) { userFields[i] = "col_" + (i+1); System.out.println(userFields[i]);}
+			for (int i = 0; i < init_table_size; i++) { userFields[i] = "col_" + (i+1); }
 		}
 
 		userTypes = new String[init_table_size];
@@ -98,7 +98,6 @@ public class Struct {
 		for (int col = 1; col < num_dummy_cols; col++) { dbTypes[curr_table_size + col] =  "INT NULL"; }
 		int type_id = 0;
 		for (int i = 1; i <= init_table_size; i++) {
-			System.out.println(dbTypes[i] + " " + parseTypes[type_id] + " " +i + " " + type_id);
 			dbTypes[i] = parseTypes[type_id];
 			type_id++;
 		}

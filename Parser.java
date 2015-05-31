@@ -226,7 +226,7 @@ public class Parser extends Struct {
 			else { parseTypes[i] = "VARCHAR(100)"; }
 		}
 		else if (Pattern.matches(FLOAT, value)) { parseTypes[i] = "FLOAT"; }
-		else if (Pattern.matches(INT, value)) { parseTypes[i] = "DOUBLE"; }
+		else if (Pattern.matches(INT, value)) { parseTypes[i] = "LONG"; }
 		else if (Pattern.matches(DDMMYYYY, value) || Pattern.matches(MMDDYYYY, value) || Pattern.matches(MMDDYY, value)) { parseTypes[i] = "DATE"; }
 		else if (Pattern.matches(HOUR24, value) || Pattern.matches(HOUR12, value)) { parseTypes[i] = "TIME"; }
 		//else if (Pattern.matches(TIMESTAMP, value)) { initTypes[i] = "TIMESTAMP"; }

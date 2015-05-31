@@ -83,9 +83,6 @@ public class LoadFile extends Connect {
 		try {
 			executeQuery(initLoad);
 			System.out.println("Uploading file: " + rndFile.getAbsolutePath());	
-			//then delete the file once uploaded
-			Files.delete(rndFile.toPath());
-			System.out.println("Deleted " + rndFile.getAbsolutePath() + " after uploading");
 		}
 		catch (SQLException e) {
 			try {
@@ -95,6 +92,12 @@ public class LoadFile extends Connect {
 			} 
 			catch (SQLException e2) { e2.printStackTrace(); }
 		} 
+		//TODO: comment/uncomment to delete/save files
+		try {
+			//then delete the file once uploaded
+			Files.delete(rndFile.toPath());
+			System.out.println("Deleted " + rndFile.getAbsolutePath() + " after uploading");
+		}
 		catch (IOException e) { e.printStackTrace(); } //could not delete file
 	}
 
@@ -130,8 +133,9 @@ public class LoadFile extends Connect {
 		Thread initLoaderThread = new Thread() {
 			public void run() {
 				try { 
-					startInitLoad(); 
-					startInitLoad();
+					for (int i = 0; i < Struct.k_subsets; i++) {
+						startInitLoad(); 
+					}
 				}
 				catch (SQLException e) { e.printStackTrace(); }
 			}

@@ -42,6 +42,19 @@ public class Connect {
 		System.out.println("Executed: \"" + command + "\"");
 		return stmt.executeQuery(command);
 	}
+	
+	public static long countRows() throws SQLException {
+		System.out.println("Getting table stats...");
+		String orig = Struct.dbName;
+		Struct.dbName = "information_schema";
+		String command = "SELECT TABLE_ROWS FROM TABLES WHERE TABLE_NAME = \'" + Struct.tableName + "\'";
+		
+		ResultSet stats = executeQuery(command);
+		Struct.dbName = orig;
+		while (stats.next()) { Struct.table_size = stats.getLong(1); }
+		System.out.println("Current table size: " + Struct.table_size);
+		return Struct.table_size;
+	}
 	/*
 	public static ResultSet tableStats() throws SQLException {
 		String orig = Struct.dbName;
@@ -54,6 +67,7 @@ public class Connect {
 		Struct.dbName = orig;
 		return stmt.executeQuery(command);
 	}
-	 */
+	*/
+
 	
 }
