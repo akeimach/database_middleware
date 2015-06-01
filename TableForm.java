@@ -80,7 +80,9 @@ public class TableForm extends Struct {
 			return null;
 		}
 	}
-
+	
+	
+	
 	public static TableColumnModel colwidth(JTable table) {
 		TableColumnModel columnModel = table.getColumnModel();
 		for (int i = 0; i < table.getColumnCount(); i++) {

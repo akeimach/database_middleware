@@ -13,6 +13,7 @@ public class Parser extends Struct {
 
 	public static char delimiter = ','; //default
 	public static char terminator = '\n'; //default
+	static String NUMERIC = "-?\\d+(\\.\\d+)?";
 	static String INT = "[\\+\\-]?\\d+";
 	static String FLOAT = "[\\+\\-]?\\d+\\.\\d+(?:[eE][\\+\\-]?\\d+)?";
 	static String CHAR = "([a-z]|[A-Z])+";
@@ -234,6 +235,11 @@ public class Parser extends Struct {
 
 	}
 
+	public static boolean isNumeric(String obj) {
+		//match a number with optional '-' and decimal.
+		return Pattern.matches(NUMERIC, obj);
+	}
+	
 	public static void mainParser() throws FileNotFoundException, InterruptedException, InvocationTargetException {
 		try {
 			findTerminator(dataFile);
