@@ -59,9 +59,10 @@ public class QueryData extends Connect {
 				//Vector columnNums = new Vector();
 				ArrayList contents = new ArrayList<Integer>();
 				for (int i = 1; i <= numberOfColumns; i++) { 		
-					if (Parser.isNumeric((String) rs.getObject(i))) {
-						System.out.println(rs.getObject(i));
-					}
+					//if (Parser.isNumeric(rs.getObject(i))) {
+				
+						System.out.println(rs.getObject(i).getClass());
+					
 				}
 			}
 
