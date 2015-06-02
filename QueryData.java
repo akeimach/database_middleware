@@ -28,11 +28,6 @@ public class QueryData extends Connect {
 
 		}
 
-		public static void createCDF(HashMap numericMap) {
-
-		}
-
-
 
 		public static void statsQueryTable(ResultSet rs) throws SQLException {
 			try {
@@ -82,7 +77,7 @@ public class QueryData extends Connect {
 			public void run() {
 				try {
 					queryStats.collectNumerics(userQuery.trim());
-					queryStats.createCDF(queryStats.rsNums);
+					//queryStats.createCDF(queryStats.rsNums);
 
 					publishQuery(executeQuery(userQuery.trim()));
 
