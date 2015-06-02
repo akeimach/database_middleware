@@ -1,9 +1,9 @@
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Vector;
 
 
 public class QueryData extends Connect {
@@ -21,14 +21,10 @@ public class QueryData extends Connect {
 			System.out.println("Second k: " + (2 * k_size));
 
 			//repeat query on subdivisions for numeric results
-			//System.out.println(query + " AND id_0 < " + k_size);
 			//TODO: fix from hard coding
-			ResultSet k1 = executeQuery(query);
-			//ResultSet k2 = executeQuery(query + " AND id_0 > " + k_size);
-
-			statsQueryTable(k1);
+			statsQueryTable(executeQuery(query));
 			//do shit
-			publishQuery(k1);
+			publishQuery(executeQuery(query));
 
 
 
@@ -36,40 +32,36 @@ public class QueryData extends Connect {
 
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	
 	public static void statsQueryTable(ResultSet rs) throws SQLException {
 		try {
+			
 			ResultSetMetaData metaData = rs.getMetaData();
 			int numberOfColumns = metaData.getColumnCount(); 
-			Vector columnNames = new Vector();
-
-			//ArrayList<Integer> vals = new ArrayList<Integer>();
-			HashMap<String, ArrayList<Integer>> rsNums = new HashMap<String, ArrayList<Integer>>();
-
-			//ArrayList current = dictMap.get(dictCode);
-
+			HashMap<String, ArrayList<Object>> rsNums = new HashMap<String, ArrayList<Object>>();
+			ArrayList<Object> contents = new ArrayList<Object>();
 			// Get the column names, only show RS which matches userFields
 			for (int col = 1; col <= numberOfColumns; col++) {
 				//ArrayList newEmpty = new ArrayList<Integer>();
-				rsNums.put(metaData.getColumnLabel(col), null);
+				int type = metaData.getColumnType(col);
+				if ((type == Types.BIGINT) || (type == Types.DECIMAL) || (type == Types.DOUBLE) || (type == Types.FLOAT) || (type == Types.NUMERIC) || (type == Types.INTEGER) || (type == Types.BOOLEAN)) {
+					contents = new ArrayList<Object>();
+					rsNums.put(metaData.getColumnLabel(col), contents); 
+					System.out.print(metaData.getColumnLabel(col) + " ");
+				}
 			}
 
 			// Get all rows.
 			while (rs.next()) {
-				//Vector columnNums = new Vector();
-				ArrayList contents = new ArrayList<Integer>();
-				for (int i = 1; i <= numberOfColumns; i++) { 		
-					//if (Parser.isNumeric(rs.getObject(i))) {
 				
-						System.out.println(rs.getObject(i).getClass());
-					
+				for (int i = 1; i <= numberOfColumns; i++) { 	
+					if (rsNums.containsKey(metaData.getColumnLabel(i))) {
+						contents = rsNums.get(metaData.getColumnLabel(i));
+						contents.add(rs.getObject(i));
+					}
 				}
 			}
 
-
-
-			//System.out.println(rowsReturned + " rows returned\n");
-			//GUI.dbOutput.append(rowsReturned + " rows returned\n");
 			return;
 		} 
 		catch (Exception e) { e.printStackTrace(); }
