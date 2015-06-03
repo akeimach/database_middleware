@@ -95,7 +95,6 @@ public class LoadFile extends Connect {
 		File folder = new File("/Users/alyssakeimach/Eclipse/DBconnector/splits/");
 		File[] roots = folder.listFiles();
 		File rndFile = getRandFile(roots[r.nextInt(roots.length)]);
-		System.out.println(rndFile);
 
 		String initLoad = loaderStmt(rndFile);
 

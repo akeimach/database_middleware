@@ -235,11 +235,6 @@ public class Parser extends Struct {
 
 	}
 
-	public static boolean isNumeric(Object obj) {
-		System.out.println(obj.getClass());
-		//match a number with optional '-' and decimal.
-		return Pattern.matches(NUMERIC, (CharSequence) obj);
-	}
 	
 	public static void mainParser() throws FileNotFoundException, InterruptedException, InvocationTargetException {
 		try {
