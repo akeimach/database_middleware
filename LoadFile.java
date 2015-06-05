@@ -1,12 +1,15 @@
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import static java.nio.file.StandardCopyOption.*;
 
 //USES DB_TABLE_SIZE, NUM_DUMMY_COLS
 public class LoadFile extends Connect {
@@ -37,30 +40,30 @@ public class LoadFile extends Connect {
 	}
 
 
-	private static Random r = new Random();
+	public static File getRandFile(File roots) {
 
-	public static File getRandFile(File f) {
+		//check if multiple files in directory
+		if (roots.isFile() || roots.list().length == 0) { return roots; }
 
-		File[] subs = f.listFiles();
-		if (f.isFile() || f.list().length == 0) { return f; }
-
-		List<File> subDirs = new ArrayList<File>(Arrays.asList(subs));
-		Iterator<File> files = subDirs.iterator();
+		File[] sub_files = roots.listFiles();
+		List<File> sub_dir = new ArrayList<File>(Arrays.asList(sub_files));
+		Iterator<File> files = sub_dir.iterator();
 		while (files.hasNext()) {
 			if (!files.next().isDirectory()) { files.remove(); }
 		}
 
-		while (!subDirs.isEmpty()) {
-			File rndSubDir = subDirs.get(r.nextInt(subDirs.size()));
+		Random rand = new Random();
+		while (!sub_dir.isEmpty()) {
+			File rndSubDir = sub_dir.get(rand.nextInt(sub_dir.size()));
 			File rndSubFile = getRandFile(rndSubDir);
 			if (rndSubFile != null) {
 				System.out.println(rndSubFile.getAbsolutePath() + 2);
 				return rndSubFile;
 			}
-			subDirs.remove(rndSubDir);
+			sub_dir.remove(rndSubDir);
 		}
 
-		return f;
+		return roots;
 	}
 
 	
@@ -94,7 +97,8 @@ public class LoadFile extends Connect {
 
 		File folder = new File("/Users/alyssakeimach/Eclipse/DBconnector/splits/");
 		File[] roots = folder.listFiles();
-		File rndFile = getRandFile(roots[r.nextInt(roots.length)]);
+		Random rand = new Random();
+		File rndFile = getRandFile(roots[rand.nextInt(roots.length)]);
 
 		String initLoad = loaderStmt(rndFile);
 
@@ -112,11 +116,15 @@ public class LoadFile extends Connect {
 		} 
 		//TODO: comment/uncomment to delete/save files
 		try {
-			//then delete the file once uploaded
-			Files.delete(rndFile.toPath());
-			System.out.println("Deleted " + rndFile.getAbsolutePath() + " after uploading");
+			
+			//then move the file once uploaded
+			Path source = rndFile.toPath();
+			String fileTitle = rndFile.getName() + "_split";
+			Path target = Paths.get("/Users/alyssakeimach/Eclipse/DBconnector/used/", fileTitle);
+			Files.move(source, target, REPLACE_EXISTING);
+			System.out.println("Moved " + rndFile.getName() + " to " + target.toString() + " after uploading");
 		}
-		catch (IOException e) { e.printStackTrace(); } //could not delete file
+		catch (IOException e) { e.printStackTrace(); } //could not move file
 	}
 
 	public static void startBulkLoad() throws SQLException {

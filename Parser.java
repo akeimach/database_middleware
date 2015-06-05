@@ -172,7 +172,7 @@ public class Parser extends Struct {
 
 		PrintWriter splitexe = new PrintWriter("/Users/alyssakeimach/split.exe", "UTF-8");
 		Runtime.getRuntime().exec("chmod a+x /Users/alyssakeimach/split.exe");
-		splitexe.println("split " + file);
+		splitexe.println("split -a5 -l10000 " + file);
 		splitexe.close();
 		
 		ProcessBuilder pb = new ProcessBuilder("/Users/alyssakeimach/split.exe");
