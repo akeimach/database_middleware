@@ -45,11 +45,12 @@ public class LoadFile extends Connect {
 		//check if multiple files in directory
 		if (roots.isFile() || roots.list().length == 0) { return roots; }
 
-		File[] sub_files = roots.listFiles();
-		List<File> sub_dir = new ArrayList<File>(Arrays.asList(sub_files));
-		Iterator<File> files = sub_dir.iterator();
-		while (files.hasNext()) {
-			if (!files.next().isDirectory()) { files.remove(); }
+		File[] files = roots.listFiles();
+		List<File> sub_dir = new ArrayList<File>(Arrays.asList(files));
+		
+		Iterator<File> fit = sub_dir.iterator();
+		while (fit.hasNext()) {
+			if (!fit.next().isDirectory()) { fit.remove(); }
 		}
 
 		Random rand = new Random();
@@ -62,7 +63,6 @@ public class LoadFile extends Connect {
 			}
 			sub_dir.remove(rndSubDir);
 		}
-
 		return roots;
 	}
 
@@ -154,6 +154,7 @@ public class LoadFile extends Connect {
 				try { 
 					for (int i = 0; i < Struct.k_subsets; i++) {
 						startInitLoad(); 
+						KSstats.startKS();
 					}
 				}
 				catch (SQLException e) { e.printStackTrace(); }
