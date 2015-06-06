@@ -12,6 +12,7 @@ public class Struct {
 	//LoadFile
 	public static int db_table_size = 0;
 	public static int num_dummy_cols = 4;
+	public static int ks_num = 1;
 	
 	//ParseFile
 	public static int init_table_size = 0;

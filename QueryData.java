@@ -19,7 +19,7 @@ public class QueryData extends Connect {
 		public static double[] dur1;
 		public static double[] dur2;
 
-		public static void initQueryStats(ResultSet rs) throws SQLException {
+		public static void initKSstats(ResultSet rs) throws SQLException {
 			try {
 
 				ResultSetMetaData metaData = rs.getMetaData();
@@ -88,7 +88,7 @@ public class QueryData extends Connect {
 	}
 
 	public static void mainQuery(final String userQuery) throws SQLException {
-		Thread queryThread = new Thread() {
+		Thread ksThread = new Thread() {
 			public void run() {
 				try {
 
@@ -96,7 +96,7 @@ public class QueryData extends Connect {
 					
 					publishQuery(rs);
 					
-					queryStats.initQueryStats(rs);
+					queryStats.initKSstats(rs);
 					queryStats.splitByK(rs);
 					
 
@@ -104,8 +104,8 @@ public class QueryData extends Connect {
 				catch (SQLException e) { e.printStackTrace(); }	
 			}
 		};
-		queryThread.setName("queryThread");
-		queryThread.start();
+		ksThread.setName("ksThread");
+		ksThread.start();
 
 		return;
 	}

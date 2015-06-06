@@ -14,7 +14,8 @@ import static java.nio.file.StandardCopyOption.*;
 //USES DB_TABLE_SIZE, NUM_DUMMY_COLS
 public class LoadFile extends Connect {
 
-	public static void tableInit() throws SQLException {
+	//****** LOAD FILE BULK ******//
+	public static void BULKtableInit() throws SQLException {
 
 		try {
 			String dropString = "DROP TABLE IF EXISTS " + Struct.tableName;
@@ -38,7 +39,53 @@ public class LoadFile extends Connect {
 			e.printStackTrace();
 		}
 	}
+	
+	public static void startBulkLoad() throws SQLException {
 
+		String bulkLoad = loaderStmt(Struct.dataFile.getAbsoluteFile(), Struct.tableName);
+
+		try {
+			executeQuery(bulkLoad);
+			System.out.println("Uploading file: " + Struct.dataFile.getAbsolutePath());	
+		}
+		catch (SQLException e) {
+			try {
+				String error = unloaderStmt(Struct.dataFile.getAbsolutePath());
+				executeQuery(error);
+				System.out.println("Error, sent query \"" + error + "\"");
+			} 
+			catch (SQLException e2) { e2.printStackTrace(); }
+		}
+	}
+	
+	
+	//****** LOAD FILE KS ******//
+
+	public static void KStableInit(String KStableName) throws SQLException {
+		
+		try {
+			String dropString = "DROP TABLE IF EXISTS " + KStableName;
+			executeUpdate(dropString);
+		}
+		catch (SQLException e) {
+			System.out.println("ERROR: Could not drop the table");
+			e.printStackTrace();
+		}
+
+		try {
+			String createTableString = "CREATE TABLE " + KStableName + " (" + Struct.dbFields[0] + " " + Struct.dbTypes[0] + " UNSIGNED NOT NULL AUTO_INCREMENT, "; //Create new
+			for (int i = 1; i < Struct.dbFields.length; i++) {
+				createTableString += Struct.dbFields[i] + " " + Struct.dbTypes[i] + ", ";
+			}
+			createTableString += "PRIMARY KEY (" + Struct.dbFields[0] + "))";
+			executeUpdate(createTableString);
+		}
+		catch (SQLException e) {
+			System.out.println("ERROR: Could not create the table");
+			e.printStackTrace();
+		}
+		
+	}
 
 	public static File getRandFile(File roots) {
 
@@ -65,12 +112,47 @@ public class LoadFile extends Connect {
 		}
 		return roots;
 	}
-
 	
-	public static String loaderStmt(File loadFile) {
+	public static void startKSload(String KStableName) throws SQLException {
+
+		File folder = new File("/Users/alyssakeimach/Eclipse/DBconnector/splits/");
+		File[] roots = folder.listFiles();
+		Random rand = new Random();
+		File rndFile = getRandFile(roots[rand.nextInt(roots.length)]);
+
+		String initLoad = loaderStmt(rndFile, KStableName);
+
+		try {
+			executeQuery(initLoad);
+			System.out.println("Uploading file: " + rndFile.getAbsolutePath());	
+		}
+		catch (SQLException e) {
+			try {
+				String error = unloaderStmt(rndFile.getAbsolutePath());
+				executeQuery(error);
+				System.out.println("Error, sent query \"" + error + "\"");
+			} 
+			catch (SQLException e2) { e2.printStackTrace(); }
+		} 
+
+		try {
+			
+			//then move the file once uploaded
+			Path source = rndFile.toPath();
+			String fileTitle = rndFile.getName() + "_split";
+			Path target = Paths.get("/Users/alyssakeimach/Eclipse/DBconnector/used/", fileTitle);
+			Files.move(source, target, REPLACE_EXISTING);
+			System.out.println("Moved " + rndFile.getName() + " to " + target.toString() + " after uploading");
+		}
+		catch (IOException e) { e.printStackTrace(); } //could not move file
+	}
+
+
+	//****** LOAD FILE STATEMENTS ******//
+	public static String loaderStmt(File loadFile, String tableName) {
 		
 		//load data concurrent local statement
-		String bulkLoad = "LOAD DATA CONCURRENT LOCAL INFILE '" + loadFile + "' INTO TABLE " + Struct.tableName + " FIELDS TERMINATED BY '" + Parser.delimiter + "' OPTIONALLY ENCLOSED BY '\"' LINES TERMINATED BY '" + Parser.terminator + "' ";
+		String bulkLoad = "LOAD DATA CONCURRENT LOCAL INFILE '" + loadFile + "' INTO TABLE " + tableName + " FIELDS TERMINATED BY '" + Parser.delimiter + "' OPTIONALLY ENCLOSED BY '\"' LINES TERMINATED BY '" + Parser.terminator + "' ";
 		if (GUI.titleRow) { bulkLoad += "IGNORE 1 LINES "; }
 		bulkLoad += "(";
 		
@@ -88,82 +170,34 @@ public class LoadFile extends Connect {
 		return bulkLoad;
 	}
 	
-	public static String unloadFile(String unloadFile) {
+	public static String unloaderStmt(String unloadFile) {
 		String error = "SELECT * INTO OUTFILE '" + unloadFile + ".out' FIELDS TERMINATED BY '" + Parser.delimiter + "' OPTIONALLY ENCLOSED BY '\"' LINES TERMINATED BY '" + Parser.terminator + "'";
 		return error;
-	}
-	
-	public static void startInitLoad() throws SQLException {
-
-		File folder = new File("/Users/alyssakeimach/Eclipse/DBconnector/splits/");
-		File[] roots = folder.listFiles();
-		Random rand = new Random();
-		File rndFile = getRandFile(roots[rand.nextInt(roots.length)]);
-
-		String initLoad = loaderStmt(rndFile);
-
-		try {
-			executeQuery(initLoad);
-			System.out.println("Uploading file: " + rndFile.getAbsolutePath());	
-		}
-		catch (SQLException e) {
-			try {
-				String error = unloadFile(rndFile.getAbsolutePath());
-				executeQuery(error);
-				System.out.println("Error, sent query \"" + error + "\"");
-			} 
-			catch (SQLException e2) { e2.printStackTrace(); }
-		} 
-		//TODO: comment/uncomment to delete/save files
-		try {
-			
-			//then move the file once uploaded
-			Path source = rndFile.toPath();
-			String fileTitle = rndFile.getName() + "_split";
-			Path target = Paths.get("/Users/alyssakeimach/Eclipse/DBconnector/used/", fileTitle);
-			Files.move(source, target, REPLACE_EXISTING);
-			System.out.println("Moved " + rndFile.getName() + " to " + target.toString() + " after uploading");
-		}
-		catch (IOException e) { e.printStackTrace(); } //could not move file
-	}
-
-	public static void startBulkLoad() throws SQLException {
-
-		String bulkLoad = loaderStmt(Struct.dataFile.getAbsoluteFile());
-
-		try {
-			executeQuery(bulkLoad);
-			System.out.println("Uploading file: " + Struct.dataFile.getAbsolutePath());	
-		}
-		catch (SQLException e) {
-			try {
-				String error = unloadFile(Struct.dataFile.getAbsolutePath());
-				executeQuery(error);
-				System.out.println("Error, sent query \"" + error + "\"");
-			} 
-			catch (SQLException e2) { e2.printStackTrace(); }
-		}
 	}
 	
 
 
 	public static void mainLoader() throws SQLException {
-		tableInit();
-		Thread initLoaderThread = new Thread() {
+		
+		Thread KSloaderThread = new Thread() {
 			public void run() {
 				try { 
 					for (int i = 0; i < Struct.k_subsets; i++) {
-						startInitLoad(); 
-						KSstats.startKS();
+						String KStableName = Struct.tableName + "_ks" + Struct.ks_num;
+						Struct.ks_num++; //increment for next ks load
+						KStableInit(KStableName);
+						startKSload(KStableName); 
 					}
+					KSstats.startKS();
 				}
 				catch (SQLException e) { e.printStackTrace(); }
 			}
 		};
-		initLoaderThread.setName("initLoaderThread");
-		initLoaderThread.start();
+		KSloaderThread.setName("KSloaderThread");
+		KSloaderThread.start();
 		
 		/*
+		BULKtableInit();
 		Thread loaderThread = new Thread() {
 			public void run() {
 				try { startBulkLoad(); }
