@@ -183,10 +183,10 @@ public class LoadFile extends Connect {
 			public void run() {
 				try { 
 					for (int i = 0; i < Struct.k_subsets; i++) {
-						String KStableName = Struct.tableName + "_ks" + Struct.ks_num;
-						Struct.ks_num++; //increment for next ks load
+						String KStableName = Struct.tableName + "_ks_" + Struct.ks_num;
 						KStableInit(KStableName);
 						startKSload(KStableName); 
+						Struct.ks_num++; //increment for next ks load
 					}
 					KSstats.startKS();
 				}
