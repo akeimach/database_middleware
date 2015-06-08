@@ -125,7 +125,6 @@ public class KSstats {
 				}
 				row++;
 			} 
-			//System.out.println();
 		}
 		catch (Exception e) { e.printStackTrace(); }
 
@@ -145,11 +144,8 @@ public class KSstats {
 		    double[] values2 = ks2Map.get(key);
 		   
 		    double statistic = kolmogorovSmirnovStatistic(values1, values2);
-		    System.out.println(statistic);
+		    if (statistic != 0) { System.out.println("KS statistic for " + key + ": " + statistic); }
 		}
-
-		//double statistic = kolmogorovSmirnovStatistic(gaussian, gaussian2);
-		//System.out.println(statistic);
 
 		return;
 	}

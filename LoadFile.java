@@ -196,17 +196,16 @@ public class LoadFile extends Connect {
 		KSloaderThread.setName("KSloaderThread");
 		KSloaderThread.start();
 		
-		/*
+		
 		BULKtableInit();
-		Thread loaderThread = new Thread() {
+		Thread BULKloaderThread = new Thread() {
 			public void run() {
 				try { startBulkLoad(); }
 				catch (SQLException e) { e.printStackTrace(); }
 			}
 		};
-		loaderThread.setName("loaderThread");
-		loaderThread.start();
-		*/
+		BULKloaderThread.setName("BULKloaderThread");
+		BULKloaderThread.start();
 
 	}
 
