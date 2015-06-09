@@ -39,27 +39,7 @@ public class Experiment1 {
 	public static HashMap<String, double[]> ksMap1 = new HashMap<String, double[]>();
 	public static HashMap<String, double[]> ksMap2 = new HashMap<String, double[]>();
 
-	////// SPLIT FILE //////
-	public static void splitFile(File file, int S_i, String subDir) {
-		PrintWriter splitexe = null;
-		Process p = null;
-		try { splitexe = new PrintWriter("/Users/alyssakeimach/split.exe", "UTF-8"); } 
-		catch (FileNotFoundException | UnsupportedEncodingException e) { e.printStackTrace(); }
-		try { Runtime.getRuntime().exec("chmod a+x /Users/alyssakeimach/split.exe"); } 
-		catch (IOException e) { e.printStackTrace(); }
-		splitexe.println("split -a3 -l" + S_i + " " + file); //-a3 for three letter file names
-		splitexe.close();
-		ProcessBuilder pb = new ProcessBuilder("/Users/alyssakeimach/split.exe");
-		pb.directory(new File("/Users/alyssakeimach/Eclipse/DBconnector/splits/" + subDir + "/"));
-		pb.redirectErrorStream(true);
-		try { p = pb.start(); } 
-		catch (IOException e) { e.printStackTrace(); }
-		assert pb.redirectInput() == Redirect.PIPE;
-		try { assert p.getInputStream().read() == -1; }
-		catch (IOException e) { e.printStackTrace(); }
-	}
-
-	////// LOAD FILE //////
+	////// CONNECTION //////
 	public static Connection getConnection() {
 		Connection conn = null;
 		try {
@@ -82,7 +62,34 @@ public class Experiment1 {
 		stmt.executeUpdate(command);
 		return;
 	}
-	
+
+	public static ResultSet executeQuery(String command) throws SQLException {
+		Connection conn = null;
+		conn = getConnection();
+		Statement stmt = conn.createStatement();
+		return stmt.executeQuery(command);
+	}
+
+	////// SPLIT/RANDOM FILE //////
+	public static void splitFile(File file, int S_i, String subDir) {
+		PrintWriter splitexe = null;
+		Process p = null;
+		try { splitexe = new PrintWriter("/Users/alyssakeimach/split.exe", "UTF-8"); } 
+		catch (FileNotFoundException | UnsupportedEncodingException e) { e.printStackTrace(); }
+		try { Runtime.getRuntime().exec("chmod a+x /Users/alyssakeimach/split.exe"); } 
+		catch (IOException e) { e.printStackTrace(); }
+		splitexe.println("split -a3 -l" + S_i + " " + file); //-a3 for three letter file names
+		splitexe.close();
+		ProcessBuilder pb = new ProcessBuilder("/Users/alyssakeimach/split.exe");
+		pb.directory(new File("/Users/alyssakeimach/Eclipse/DBconnector/splits/" + subDir + "/"));
+		pb.redirectErrorStream(true);
+		try { p = pb.start(); } 
+		catch (IOException e) { e.printStackTrace(); }
+		assert pb.redirectInput() == Redirect.PIPE;
+		try { assert p.getInputStream().read() == -1; }
+		catch (IOException e) { e.printStackTrace(); }
+	}
+
 	public static File getRandFile(File roots) {
 		//check if multiple files in directory
 		if (roots.isFile() || roots.list().length == 0) { return roots; }
@@ -105,6 +112,7 @@ public class Experiment1 {
 		return roots;
 	}
 
+	//////LOAD FILE //////
 	public static void KStableInit(String KStableName, String filenameTable) {
 		try {
 			String dropString = "DROP TABLE IF EXISTS " + KStableName;
@@ -141,15 +149,7 @@ public class Experiment1 {
 		catch (SQLException e)  { e.printStackTrace(); }
 	}
 
-
-	////// GET RESULT SETS FOR STATS //////
-	public static ResultSet executeQuery(String command) throws SQLException {
-		Connection conn = null;
-		conn = getConnection();
-		Statement stmt = conn.createStatement();
-		return stmt.executeQuery(command);
-	}
-	
+	////// KS RESULT SETS //////
 	public static void getKSnums(ResultSet rs, HashMap<String, double[]> ksMap) {
 		try {
 			ResultSetMetaData metaData = rs.getMetaData();
@@ -179,8 +179,7 @@ public class Experiment1 {
 		catch (Exception e) { e.printStackTrace(); }
 	}
 
-
-	////// DO KS STAT MATH //////
+	////// KS MATH //////
 	private static void checkArray(double[] array) {
 		if (array == null) { throw new NullArgumentException(LocalizedFormats.NULL_NOT_ALLOWED); }
 		if (array.length < 2) { throw new InsufficientDataException(LocalizedFormats.INSUFFICIENT_OBSERVED_POINTS_IN_SAMPLE, array.length, 2); }
@@ -249,30 +248,32 @@ public class Experiment1 {
 		};
 		KSsplitThread.setName("KSsplitThread");
 		KSsplitThread.start();
-		*/
+		 */
 		Thread KSstatsThread = new Thread() {
 			public void run() {
-				for (int i = 1; i <= 2; i++) {
-					String KStableName = tableName + i;
-					KStableInit(KStableName, createFiletable);
-					startKSload(KStableName, loadFiletable, subDir); 
-				}
-				if (invalFile) return;
-				ksMap1 = new HashMap<String, double[]>();
-				ksMap2 = new HashMap<String, double[]>();
-				try { 
-					getKSnums(executeQuery("SELECT * FROM " + tableName + "1"), ksMap1);
-					getKSnums(executeQuery("SELECT * FROM " + tableName + "2"), ksMap2);
-				} 
-				catch (SQLException e) { e.printStackTrace(); }
-				System.out.println();
-				for (Entry<String, double[]> entry : ksMap1.entrySet()) {    
-					String key = entry.getKey();
-					double[] values1 = entry.getValue();
-					double[] values2 = ksMap2.get(key);
-					double statistic = kolmogorovSmirnovStatistic(values1, values2);
-					System.out.print(statistic + "\t");
-					//System.out.println("KS statistic for " + key + ": " + statistic);
+				for (int test = 0; test < 10; test++) {
+					for (int i = 1; i <= 2; i++) {
+						String KStableName = tableName + i;
+						KStableInit(KStableName, createFiletable);
+						startKSload(KStableName, loadFiletable, subDir); 
+					}
+					if (invalFile) return;
+					ksMap1 = new HashMap<String, double[]>();
+					ksMap2 = new HashMap<String, double[]>();
+					try { 
+						getKSnums(executeQuery("SELECT * FROM " + tableName + "1"), ksMap1);
+						getKSnums(executeQuery("SELECT * FROM " + tableName + "2"), ksMap2);
+					} 
+					catch (SQLException e) { e.printStackTrace(); }
+					for (Entry<String, double[]> entry : ksMap1.entrySet()) {    
+						String key = entry.getKey();
+						double[] values1 = entry.getValue();
+						double[] values2 = ksMap2.get(key);
+						double statistic = kolmogorovSmirnovStatistic(values1, values2);
+						System.out.print(statistic + "\t");
+						//System.out.println("KS statistic for " + key + ": " + statistic);
+					}
+					System.out.println();
 				}
 			}
 		};
