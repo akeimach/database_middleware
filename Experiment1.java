@@ -28,6 +28,8 @@ import org.apache.commons.math3.util.MathArrays;
 
 public class Experiment1 extends Connect {
 
+	public static String firstFile = null;
+	public static boolean invalFile = false;
 	public static HashMap<String, double[]> ksMap1 = new HashMap<String, double[]>();
 	public static HashMap<String, double[]> ksMap2 = new HashMap<String, double[]>();
 
@@ -96,7 +98,13 @@ public class Experiment1 extends Connect {
 		File[] roots = folder.listFiles();
 		Random rand = new Random();
 		File rndFile = getRandFile(roots[rand.nextInt(roots.length)]);
-		String loadFile = "LOAD DATA CONCURRENT LOCAL INFILE '" +  rndFile.getAbsolutePath()  + "' INTO TABLE " + KStableName + " FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' IGNORE 1 LINES (_station_id_, _bikes_available_, _docks_available_, _time_) SET id_0 = NULL";
+		if (firstFile == null) { firstFile = rndFile.getAbsolutePath(); }
+		else if ((firstFile == rndFile.getAbsolutePath()) || (rndFile.getName() == ".DS_Store")) {
+			System.out.println("BREAK: INVALID/SAME FILE " + rndFile.getName());
+			invalFile = true;
+			return;
+		}
+		String loadFile = "LOAD DATA CONCURRENT LOCAL INFILE '" +  rndFile.getAbsolutePath()  + "' INTO TABLE " + KStableName + " " + filenameLoad;
 		try {
 			executeQuery(loadFile);
 			System.out.println("Uploading file: " + rndFile.getAbsolutePath());	
@@ -191,18 +199,21 @@ public class Experiment1 extends Connect {
 	public static void main(String args[])  {
 
 		////// REBALANCING DATA //////
-		final File input = new File("/Users/alyssakeimach/rebal5.csv");
-		final String subDir = "rebal5";
-		final String tableName = "rebal5_ks_";
+		final File input = new File("/Users/alyssakeimach/rebal30.csv");
+		final String subDir = "rebal30";
+		final String tableName = "rebal30_ks_";
 		final String createFiletable = "(id_0 INT UNSIGNED NOT NULL AUTO_INCREMENT, _station_id_ BIGINT, _bikes_available_ BIGINT, _docks_available_ BIGINT, _time_ TIMESTAMP, PRIMARY KEY (id_0))";
 		final String loadFiletable =  "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' IGNORE 1 LINES (_station_id_, _bikes_available_, _docks_available_, _time_) SET id_0 = NULL";
-
+		
 		Thread KSsplitThread = new Thread() {
-			public void run() { splitFile(input, 10000, subDir); }
+			public void run() { 
+				splitFile(input, 10000, subDir); 
+				System.out.println("DONE");
+			}
 		};
 		KSsplitThread.setName("KSsplitThread");
 		KSsplitThread.start();
-
+		
 		Thread KSstatsThread = new Thread() {
 			public void run() {
 				for (int i = 1; i <= 2; i++) {
@@ -210,6 +221,7 @@ public class Experiment1 extends Connect {
 					KStableInit(KStableName, createFiletable);
 					startKSload(KStableName, loadFiletable, subDir); 
 				}
+				if (invalFile) return;
 				ksMap1 = new HashMap<String, double[]>();
 				ksMap2 = new HashMap<String, double[]>();
 				try { 
@@ -217,17 +229,20 @@ public class Experiment1 extends Connect {
 					getKSnums(Connect.executeQuery("SELECT * FROM " + tableName + "2"), ksMap2);
 				} 
 				catch (SQLException e) { e.printStackTrace(); }
+				System.out.println();
 				for (Entry<String, double[]> entry : ksMap1.entrySet()) {    
 					String key = entry.getKey();
 					double[] values1 = entry.getValue();
 					double[] values2 = ksMap2.get(key);
 					double statistic = kolmogorovSmirnovStatistic(values1, values2);
-					System.out.println("KS statistic for " + key + ": " + statistic);
+					System.out.print(statistic + "\t");
+					//System.out.println("KS statistic for " + key + ": " + statistic);
 				}
 			}
 		};
 		KSstatsThread.setName("KSstatsThread");
 		KSstatsThread.start();
+
 	}
 
 
