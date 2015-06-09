@@ -8,9 +8,12 @@ import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,8 +29,11 @@ import org.apache.commons.math3.util.FastMath;
 import org.apache.commons.math3.util.MathArrays;
 
 
-public class Experiment1 extends Connect {
+public class Experiment1 {
 
+	public static String server = "jdbc:mysql://localhost:3306/";
+	public static String user = "root";
+	public static String password = "root";
 	public static String firstFile = null;
 	public static boolean invalFile = false;
 	public static HashMap<String, double[]> ksMap1 = new HashMap<String, double[]>();
@@ -54,6 +60,29 @@ public class Experiment1 extends Connect {
 	}
 
 	////// LOAD FILE //////
+	public static Connection getConnection() {
+		Connection conn = null;
+		try {
+			Class.forName("com.mysql.jdbc.Driver").newInstance();
+			conn = DriverManager.getConnection(server + Struct.dbName, user, password);
+			conn.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+		} 
+		catch (SQLException e) { throw new IllegalStateException("ERROR: " + e.getMessage(), e); } 
+		catch (InstantiationException e) { e.printStackTrace(); } 
+		catch (IllegalAccessException e) { e.printStackTrace(); } 
+		catch (ClassNotFoundException e) { e.printStackTrace(); }
+		return conn;
+	}
+
+	public static void executeUpdate(String command) throws SQLException {
+		Connection conn = null;
+		conn = getConnection();
+		conn.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+		Statement stmt = conn.createStatement();
+		stmt.executeUpdate(command);
+		return;
+	}
+	
 	public static File getRandFile(File roots) {
 		//check if multiple files in directory
 		if (roots.isFile() || roots.list().length == 0) { return roots; }
@@ -107,13 +136,20 @@ public class Experiment1 extends Connect {
 		String loadFile = "LOAD DATA CONCURRENT LOCAL INFILE '" +  rndFile.getAbsolutePath()  + "' INTO TABLE " + KStableName + " " + filenameLoad;
 		try {
 			executeQuery(loadFile);
-			System.out.println("Uploading file: " + rndFile.getAbsolutePath());	
+			//System.out.println("Uploading file: " + rndFile.getAbsolutePath());	
 		}
 		catch (SQLException e)  { e.printStackTrace(); }
 	}
 
 
 	////// GET RESULT SETS FOR STATS //////
+	public static ResultSet executeQuery(String command) throws SQLException {
+		Connection conn = null;
+		conn = getConnection();
+		Statement stmt = conn.createStatement();
+		return stmt.executeQuery(command);
+	}
+	
 	public static void getKSnums(ResultSet rs, HashMap<String, double[]> ksMap) {
 		try {
 			ResultSetMetaData metaData = rs.getMetaData();
@@ -204,7 +240,7 @@ public class Experiment1 extends Connect {
 		final String tableName = "rebal30_ks_";
 		final String createFiletable = "(id_0 INT UNSIGNED NOT NULL AUTO_INCREMENT, _station_id_ BIGINT, _bikes_available_ BIGINT, _docks_available_ BIGINT, _time_ TIMESTAMP, PRIMARY KEY (id_0))";
 		final String loadFiletable =  "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' IGNORE 1 LINES (_station_id_, _bikes_available_, _docks_available_, _time_) SET id_0 = NULL";
-		
+		/*
 		Thread KSsplitThread = new Thread() {
 			public void run() { 
 				splitFile(input, 10000, subDir); 
@@ -213,7 +249,7 @@ public class Experiment1 extends Connect {
 		};
 		KSsplitThread.setName("KSsplitThread");
 		KSsplitThread.start();
-		
+		*/
 		Thread KSstatsThread = new Thread() {
 			public void run() {
 				for (int i = 1; i <= 2; i++) {
@@ -225,8 +261,8 @@ public class Experiment1 extends Connect {
 				ksMap1 = new HashMap<String, double[]>();
 				ksMap2 = new HashMap<String, double[]>();
 				try { 
-					getKSnums(Connect.executeQuery("SELECT * FROM " + tableName + "1"), ksMap1);
-					getKSnums(Connect.executeQuery("SELECT * FROM " + tableName + "2"), ksMap2);
+					getKSnums(executeQuery("SELECT * FROM " + tableName + "1"), ksMap1);
+					getKSnums(executeQuery("SELECT * FROM " + tableName + "2"), ksMap2);
 				} 
 				catch (SQLException e) { e.printStackTrace(); }
 				System.out.println();
