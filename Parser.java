@@ -27,6 +27,7 @@ public class Parser extends Struct {
 	static String EMAIL = "[_A-Za-z0-9-]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})";
 	static String INVALTITLE = "[^\\s^\\d^a-z^A-Z]";
 	static String QUOTES = "([\"'])(?:(?=(\\?))\2.)*?\1";
+	static String YYYYMMDDTIME = "(19[0-9]{2}|2[0-9]{3})-(0[1-9]|1[012])-([123]0|[012][1-9]|31) ([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])";
 
 
 	public static void findTerminator(File file) throws FileNotFoundException {
