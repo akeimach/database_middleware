@@ -4,10 +4,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Random;
 import static java.nio.file.StandardCopyOption.*;
 
@@ -87,38 +83,14 @@ public class LoadFile extends Connect {
 		
 	}
 
-	public static File getRandFile(File roots) {
-
-		//check if multiple files in directory
-		if (roots.isFile() || roots.list().length == 0) { return roots; }
-
-		File[] files = roots.listFiles();
-		List<File> sub_dir = new ArrayList<File>(Arrays.asList(files));
-		
-		Iterator<File> fit = sub_dir.iterator();
-		while (fit.hasNext()) {
-			if (!fit.next().isDirectory()) { fit.remove(); }
-		}
-
-		Random rand = new Random();
-		while (!sub_dir.isEmpty()) {
-			File rndSubDir = sub_dir.get(rand.nextInt(sub_dir.size()));
-			File rndSubFile = getRandFile(rndSubDir);
-			if (rndSubFile != null) {
-				System.out.println(rndSubFile.getAbsolutePath() + 2);
-				return rndSubFile;
-			}
-			sub_dir.remove(rndSubDir);
-		}
-		return roots;
-	}
+	
 	
 	public static void startKSload(String KStableName) throws SQLException {
 
 		File folder = new File("/Users/alyssakeimach/Eclipse/DBconnector/splits/");
 		File[] roots = folder.listFiles();
 		Random rand = new Random();
-		File rndFile = getRandFile(roots[rand.nextInt(roots.length)]);
+		File rndFile = Parser.getRandFile(roots[rand.nextInt(roots.length)]);
 
 		String initLoad = loaderStmt(rndFile, KStableName);
 
@@ -197,7 +169,7 @@ public class LoadFile extends Connect {
 		KSloaderThread.setName("KSloaderThread");
 		KSloaderThread.start();
 		
-		
+		/*
 		BULKtableInit();
 		Thread BULKloaderThread = new Thread() {
 			public void run() {
@@ -207,6 +179,7 @@ public class LoadFile extends Connect {
 		};
 		BULKloaderThread.setName("BULKloaderThread");
 		BULKloaderThread.start();
+		*/
 
 	}
 

@@ -6,6 +6,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.ProcessBuilder.Redirect;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Random;
 import java.util.regex.Pattern;
 
 
@@ -27,7 +32,7 @@ public class Parser extends Struct {
 	static String EMAIL = "[_A-Za-z0-9-]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})";
 	static String INVALTITLE = "[^\\s^\\d^a-z^A-Z]";
 	static String QUOTES = "([\"'])(?:(?=(\\?))\2.)*?\1";
-	static String YYYYMMDDTIME = "(19[0-9]{2}|2[0-9]{3})-(0[1-9]|1[012])-([123]0|[012][1-9]|31) ([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])";
+	static String YYYYMMDDHHMMSS = "(19[0-9]{2}|2[0-9]{3})-(0[1-9]|1[012])-([123]0|[012][1-9]|31) ([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])";
 
 
 	public static void findTerminator(File file) throws FileNotFoundException {
@@ -172,7 +177,7 @@ public class Parser extends Struct {
 
 		PrintWriter splitexe = new PrintWriter("/Users/alyssakeimach/split.exe", "UTF-8");
 		Runtime.getRuntime().exec("chmod a+x /Users/alyssakeimach/split.exe");
-		splitexe.println("split -l10000 " + file); //-a3 for three letter file names
+		splitexe.println("split -a1 -l20000 " + file); //-a3 for three letter file names
 		splitexe.close();
 		
 		ProcessBuilder pb = new ProcessBuilder("/Users/alyssakeimach/split.exe");
@@ -184,6 +189,31 @@ public class Parser extends Struct {
 
 	}
 
+	public static File getRandFile(File roots) {
+
+		//check if multiple files in directory
+		if (roots.isFile() || roots.list().length == 0) { return roots; }
+
+		File[] files = roots.listFiles();
+		List<File> sub_dir = new ArrayList<File>(Arrays.asList(files));
+		
+		Iterator<File> fit = sub_dir.iterator();
+		while (fit.hasNext()) {
+			if (!fit.next().isDirectory()) { fit.remove(); }
+		}
+
+		Random rand = new Random();
+		while (!sub_dir.isEmpty()) {
+			File rndSubDir = sub_dir.get(rand.nextInt(sub_dir.size()));
+			File rndSubFile = getRandFile(rndSubDir);
+			if (rndSubFile != null) {
+				System.out.println(rndSubFile.getAbsolutePath() + 2);
+				return rndSubFile;
+			}
+			sub_dir.remove(rndSubDir);
+		}
+		return roots;
+	}
 
 	//initTypes set
 	public static void findTypes(File file) throws FileNotFoundException {
@@ -235,6 +265,7 @@ public class Parser extends Struct {
 		else if (Pattern.matches(DDMMYYYY, value) || Pattern.matches(MMDDYYYY, value) || Pattern.matches(MMDDYY, value)) { parseTypes[i] = "DATE"; }
 		else if (Pattern.matches(HOUR24, value) || Pattern.matches(HOUR12, value)) { parseTypes[i] = "TIME"; }
 		//else if (Pattern.matches(TIMESTAMP, value)) { initTypes[i] = "TIMESTAMP"; }
+		else if (Pattern.matches(YYYYMMDDHHMMSS, value)) { parseTypes[i] = "TIMESTAMP"; }
 		else { parseTypes[i] = "VARCHAR(100)"; }
 
 	}
@@ -246,6 +277,13 @@ public class Parser extends Struct {
 			findDelimiter(dataFile);
 			findFields(dataFile);
 			splitFile(dataFile);
+			
+			/*
+			File folder = new File("/Users/alyssakeimach/Eclipse/DBconnector/splits/");
+			File[] roots = folder.listFiles();
+			Random rand = new Random();
+			randomFile = Parser.getRandFile(roots[rand.nextInt(roots.length)]);
+			*/
 			findTypes(dataFile);
 			Struct.setDBcolumns();
 			Struct.setUserColumns();
