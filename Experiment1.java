@@ -1,13 +1,9 @@
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.lang.ProcessBuilder.Redirect;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -234,12 +230,11 @@ public class Experiment1 {
 	public static void main(String args[])  {
 
 		////// REBALANCING DATA //////
-		final File input = new File("/Users/alyssakeimach/rebal30.csv");
-		final String subDir = "rebal30";
-		final String tableName = "rebal30_ks_";
-		final String createFiletable = "(id_0 INT UNSIGNED NOT NULL AUTO_INCREMENT, _station_id_ BIGINT, _bikes_available_ BIGINT, _docks_available_ BIGINT, _time_ TIMESTAMP, PRIMARY KEY (id_0))";
-		final String loadFiletable =  "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' IGNORE 1 LINES (_station_id_, _bikes_available_, _docks_available_, _time_) SET id_0 = NULL";
-		/*
+		int percent = 50;
+		final String subDir = "rebal" + percent;
+		
+		
+		final File input = new File("/Users/alyssakeimach/rebal" + percent + ".csv");
 		Thread KSsplitThread = new Thread() {
 			public void run() { 
 				splitFile(input, 10000, subDir); 
@@ -248,7 +243,11 @@ public class Experiment1 {
 		};
 		KSsplitThread.setName("KSsplitThread");
 		KSsplitThread.start();
-		 */
+		
+		
+		final String tableName = "rebal" + percent + "_ks_";
+		final String createFiletable = "(id_0 INT UNSIGNED NOT NULL AUTO_INCREMENT, _station_id_ BIGINT, _bikes_available_ BIGINT, _docks_available_ BIGINT, _time_ TIMESTAMP, PRIMARY KEY (id_0))";
+		final String loadFiletable =  "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' IGNORE 1 LINES (_station_id_, _bikes_available_, _docks_available_, _time_) SET id_0 = NULL";
 		Thread KSstatsThread = new Thread() {
 			public void run() {
 				for (int test = 0; test < 10; test++) {
@@ -279,7 +278,7 @@ public class Experiment1 {
 		};
 		KSstatsThread.setName("KSstatsThread");
 		KSstatsThread.start();
-
+		
 	}
 
 
