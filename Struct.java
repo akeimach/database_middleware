@@ -8,7 +8,7 @@ public class Struct {
 	public static String tableName = "table1"; 
 	public static long table_size = 0;
 	public static int infer_sample_size = 15;
-	public static int k_subsets = 3;
+	public static int k_subsets = 2;
 	//LoadFile
 	public static int db_table_size = 0;
 	public static int num_dummy_cols = 4;

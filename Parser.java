@@ -26,7 +26,7 @@ public class Parser extends Struct {
 	static String IPADDRESS = "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])";
 	static String EMAIL = "[_A-Za-z0-9-]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})";
 	static String INVALTITLE = "[^\\s^\\d^a-z^A-Z]";
-
+	static String QUOTES = "([\"'])(?:(?=(\\?))\2.)*?\1";
 
 
 	public static void findTerminator(File file) throws FileNotFoundException {
@@ -102,7 +102,6 @@ public class Parser extends Struct {
 		initFields = new String[init_table_size];
 		parseFields = new String[init_table_size];
 		initSizes = new int[init_table_size];
-
 
 		BufferedReader lines = new BufferedReader(new FileReader(file));
 
@@ -221,7 +220,11 @@ public class Parser extends Struct {
 
 	//redo init types with regex
 	public static void patternMatcher(String value, int i) {
-
+		
+		value = value.replaceAll("^\"|\"$", "");
+		value = value.replaceAll(QUOTES, "");
+		//System.out.print(value);
+		
 		if (Pattern.matches(CHAR, value)) { 
 			if (initSizes[i] < 10) { parseTypes[i] = "CHAR(" + initSizes[i] + 5 + ")"; }
 			else { parseTypes[i] = "VARCHAR(100)"; }
