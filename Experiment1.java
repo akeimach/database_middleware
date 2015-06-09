@@ -30,9 +30,6 @@ public class Experiment1 extends Connect {
 
 	public static HashMap<String, double[]> ksMap1 = new HashMap<String, double[]>();
 	public static HashMap<String, double[]> ksMap2 = new HashMap<String, double[]>();
-	public static String createRebalancing = "(id_0 INT UNSIGNED NOT NULL AUTO_INCREMENT, _station_id_ BIGINT, _bikes_available_ BIGINT, _docks_available_ BIGINT, _time_ TIMESTAMP, PRIMARY KEY (id_0))";
-	public static String loadRebalancing =  "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' IGNORE 1 LINES (_station_id_, _bikes_available_, _docks_available_, _time_) SET id_0 = NULL";
-
 
 	////// SPLIT FILE //////
 	public static void splitFile(File file, int S_i, String subDir) {
@@ -54,6 +51,7 @@ public class Experiment1 extends Connect {
 		catch (IOException e) { e.printStackTrace(); }
 	}
 
+	////// LOAD FILE //////
 	public static File getRandFile(File roots) {
 		//check if multiple files in directory
 		if (roots.isFile() || roots.list().length == 0) { return roots; }
@@ -76,8 +74,6 @@ public class Experiment1 extends Connect {
 		return roots;
 	}
 
-
-	////// LOAD FILE //////
 	public static void KStableInit(String KStableName, String filenameTable) {
 		try {
 			String dropString = "DROP TABLE IF EXISTS " + KStableName;
@@ -100,7 +96,7 @@ public class Experiment1 extends Connect {
 		File[] roots = folder.listFiles();
 		Random rand = new Random();
 		File rndFile = getRandFile(roots[rand.nextInt(roots.length)]);
-		String loadFile = "LOAD DATA CONCURRENT LOCAL INFILE '" +  rndFile.getAbsolutePath()  + "' INTO TABLE " + KStableName + " ";
+		String loadFile = "LOAD DATA CONCURRENT LOCAL INFILE '" +  rndFile.getAbsolutePath()  + "' INTO TABLE " + KStableName + " FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' IGNORE 1 LINES (_station_id_, _bikes_available_, _docks_available_, _time_) SET id_0 = NULL";
 		try {
 			executeQuery(loadFile);
 			System.out.println("Uploading file: " + rndFile.getAbsolutePath());	
@@ -108,7 +104,7 @@ public class Experiment1 extends Connect {
 		catch (SQLException e)  { e.printStackTrace(); }
 	}
 
-	
+
 	////// GET RESULT SETS FOR STATS //////
 	public static void getKSnums(ResultSet rs, HashMap<String, double[]> ksMap) {
 		try {
@@ -190,57 +186,48 @@ public class Experiment1 extends Connect {
 		return supD;
 	}
 
-	
+
 	////// MAIN //////
 	public static void main(String args[])  {
 
-		final File input = new File("/Users/alyssakeimach/rebalancing_data.csv");
-		final String subDir = "rebal1";
-		
+		////// REBALANCING DATA //////
+		final File input = new File("/Users/alyssakeimach/rebal5.csv");
+		final String subDir = "rebal5";
+		final String tableName = "rebal5_ks_";
+		final String createFiletable = "(id_0 INT UNSIGNED NOT NULL AUTO_INCREMENT, _station_id_ BIGINT, _bikes_available_ BIGINT, _docks_available_ BIGINT, _time_ TIMESTAMP, PRIMARY KEY (id_0))";
+		final String loadFiletable =  "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' IGNORE 1 LINES (_station_id_, _bikes_available_, _docks_available_, _time_) SET id_0 = NULL";
+
 		Thread KSsplitThread = new Thread() {
 			public void run() { splitFile(input, 10000, subDir); }
 		};
 		KSsplitThread.setName("KSsplitThread");
 		KSsplitThread.start();
-		KSsplitThread.notifyAll();
 
-
-		/*
-		Thread KSloaderThread = new Thread() {
+		Thread KSstatsThread = new Thread() {
 			public void run() {
-				try { 
-					for (int i = 0; i < Struct.k_subsets; i++) {
-						String KStableName = Struct.tableName + "_ks_" + Struct.ks_num;
-						KStableInit(KStableName);
-						startKSload(KStableName); 
-						Struct.ks_num++; //increment for next ks load
-					}
-					KSstats.startKS();
+				for (int i = 1; i <= 2; i++) {
+					String KStableName = tableName + i;
+					KStableInit(KStableName, createFiletable);
+					startKSload(KStableName, loadFiletable, subDir); 
 				}
+				ksMap1 = new HashMap<String, double[]>();
+				ksMap2 = new HashMap<String, double[]>();
+				try { 
+					getKSnums(Connect.executeQuery("SELECT * FROM " + tableName + "1"), ksMap1);
+					getKSnums(Connect.executeQuery("SELECT * FROM " + tableName + "2"), ksMap2);
+				} 
 				catch (SQLException e) { e.printStackTrace(); }
+				for (Entry<String, double[]> entry : ksMap1.entrySet()) {    
+					String key = entry.getKey();
+					double[] values1 = entry.getValue();
+					double[] values2 = ksMap2.get(key);
+					double statistic = kolmogorovSmirnovStatistic(values1, values2);
+					System.out.println("KS statistic for " + key + ": " + statistic);
+				}
 			}
 		};
-		KSloaderThread.setName("KSloaderThread");
-		KSloaderThread.wait();
-		KSloaderThread.start();
-
-
-		ksMap1 = new HashMap<String, double[]>();
-		ksMap2 = new HashMap<String, double[]>();
-
-		getKSnums(Connect.executeQuery("SELECT * FROM table1_ks_1"), ksMap1);
-		getKSnums(Connect.executeQuery("SELECT * FROM table1_ks_2"), ksMap2);
-
-		for (Entry<String, double[]> entry : ksMap1.entrySet()) {    
-			String key = entry.getKey();
-			double[] values1 = entry.getValue();
-			double[] values2 = ksMap2.get(key);
-			double statistic = kolmogorovSmirnovStatistic(values1, values2);
-
-			if (statistic != 0) { System.out.println("KS statistic for " + key + ": " + statistic); }
-		}
-		
-		*/
+		KSstatsThread.setName("KSstatsThread");
+		KSstatsThread.start();
 	}
 
 
