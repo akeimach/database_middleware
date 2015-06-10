@@ -232,7 +232,7 @@ public class Experiment1 {
 		////// REBALANCING DATA //////
 		int percent = 55;
 		final String subDir = "rebal" + percent;
-		final int tuples = 30000;
+		final int tuples = 20000;
 		
 		/*
 		final File input = new File("/Users/alyssakeimach/rebal" + percent + ".csv");
@@ -251,7 +251,7 @@ public class Experiment1 {
 		final String loadFiletable =  "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' IGNORE 1 LINES (_station_id_, _bikes_available_, _docks_available_, _time_) SET id_0 = NULL";
 		Thread KSstatsThread = new Thread() {
 			public void run() {
-				for (int test = 0; test < 10; test++) {
+				for (int test = 0; test < 20; test++) {
 					for (int i = 1; i <= 2; i++) {
 						String KStableName = tableName + i;
 						KStableInit(KStableName, createFiletable);
