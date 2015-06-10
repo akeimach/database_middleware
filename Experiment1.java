@@ -146,7 +146,7 @@ public class Experiment1 {
 	}
 
 	////// KS RESULT SETS //////
-	public static void getKSnums(ResultSet rs, HashMap<String, double[]> ksMap) {
+	public static void getKSnums(ResultSet rs, HashMap<String, double[]> ksMap, int tuples) {
 		try {
 			ResultSetMetaData metaData = rs.getMetaData();
 			int numberOfColumns = metaData.getColumnCount(); 
@@ -155,7 +155,7 @@ public class Experiment1 {
 				int type = metaData.getColumnType(col);
 				if ((type == Types.BIGINT) || (type == Types.DECIMAL) || (type == Types.DOUBLE) || 
 						(type == Types.FLOAT) || (type == Types.NUMERIC) || (type == Types.INTEGER) || (type == Types.BOOLEAN)) {
-					double[] statNums = new double[(int)10000];
+					double[] statNums = new double[tuples];
 					ksMap.put(metaData.getColumnLabel(col), statNums); 
 				}
 			}
@@ -230,14 +230,14 @@ public class Experiment1 {
 	public static void main(String args[])  {
 
 		////// REBALANCING DATA //////
-		int percent = 50;
+		int percent = 5;
 		final String subDir = "rebal" + percent;
-		
+		final int tuples = 3000;
 		
 		final File input = new File("/Users/alyssakeimach/rebal" + percent + ".csv");
 		Thread KSsplitThread = new Thread() {
 			public void run() { 
-				splitFile(input, 10000, subDir); 
+				splitFile(input, tuples, subDir); 
 				System.out.println("DONE");
 			}
 		};
@@ -260,8 +260,8 @@ public class Experiment1 {
 					ksMap1 = new HashMap<String, double[]>();
 					ksMap2 = new HashMap<String, double[]>();
 					try { 
-						getKSnums(executeQuery("SELECT * FROM " + tableName + "1"), ksMap1);
-						getKSnums(executeQuery("SELECT * FROM " + tableName + "2"), ksMap2);
+						getKSnums(executeQuery("SELECT * FROM " + tableName + "1"), ksMap1, tuples);
+						getKSnums(executeQuery("SELECT * FROM " + tableName + "2"), ksMap2, tuples);
 					} 
 					catch (SQLException e) { e.printStackTrace(); }
 					for (Entry<String, double[]> entry : ksMap1.entrySet()) {    
