@@ -226,9 +226,10 @@ public class Experiment2 {
 	public static void main(String args[])  {
 
 		////// TRIP DATA //////
-		int percent = 15;
+		int percent = 5;
 		final String subDir = "trip" + percent;
-		final int tuples = 5000;
+		final int tuples = 1500;
+		
 		/*
 		final File file = new File("/Users/alyssakeimach/" + subDir + ".csv");
 		Thread KSsplitThread = new Thread() {
@@ -239,9 +240,9 @@ public class Experiment2 {
 		};
 		KSsplitThread.setName("KSsplitThread");
 		KSsplitThread.start();
+	*/
 		
 		
-		*/
 		final String tableName = subDir + "_ks_";
 		final String createFiletable = "(id_0 INT UNSIGNED NOT NULL AUTO_INCREMENT, Trip_ID BIGINT, Duration BIGINT, Start_Date VARCHAR(100), Start_Station VARCHAR(100), Start_Terminal BIGINT, End_Date VARCHAR(100), End_Station VARCHAR(100), End_Terminal BIGINT, Bike_ BIGINT, Subscription_Type VARCHAR(100), Zip_Code BIGINT, PRIMARY KEY (id_0))";
 		final String loadFiletable =  "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' IGNORE 1 LINES (Trip_ID, Duration, Start_Date, Start_Station, Start_Terminal, End_Date, End_Station, End_Terminal, Bike_, Subscription_Type, Zip_Code) SET id_0 = NULL";

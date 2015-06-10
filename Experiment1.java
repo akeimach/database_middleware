@@ -230,10 +230,11 @@ public class Experiment1 {
 	public static void main(String args[])  {
 
 		////// REBALANCING DATA //////
-		int percent = 5;
+		int percent = 55;
 		final String subDir = "rebal" + percent;
-		final int tuples = 3000;
+		final int tuples = 30000;
 		
+		/*
 		final File input = new File("/Users/alyssakeimach/rebal" + percent + ".csv");
 		Thread KSsplitThread = new Thread() {
 			public void run() { 
@@ -243,7 +244,7 @@ public class Experiment1 {
 		};
 		KSsplitThread.setName("KSsplitThread");
 		KSsplitThread.start();
-		
+		*/
 		
 		final String tableName = "rebal" + percent + "_ks_";
 		final String createFiletable = "(id_0 INT UNSIGNED NOT NULL AUTO_INCREMENT, _station_id_ BIGINT, _bikes_available_ BIGINT, _docks_available_ BIGINT, _time_ TIMESTAMP, PRIMARY KEY (id_0))";
