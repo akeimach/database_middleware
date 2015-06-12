@@ -20,6 +20,7 @@ public class Struct {
 
 	//Set in GUI.java
 	public static File dataFile;
+	public static File randomFile;
 
 	//Parser view
 	public static String[] parseFields;

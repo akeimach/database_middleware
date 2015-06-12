@@ -151,7 +151,7 @@ public class LoadFile extends Connect {
 
 
 	public static void mainLoader() throws SQLException {
-		
+		/*
 		Thread KSloaderThread = new Thread() {
 			public void run() {
 				try { 
@@ -169,7 +169,7 @@ public class LoadFile extends Connect {
 		KSloaderThread.setName("KSloaderThread");
 		KSloaderThread.start();
 		
-		/*
+		*/
 		BULKtableInit();
 		Thread BULKloaderThread = new Thread() {
 			public void run() {
@@ -179,7 +179,7 @@ public class LoadFile extends Connect {
 		};
 		BULKloaderThread.setName("BULKloaderThread");
 		BULKloaderThread.start();
-		*/
+		
 
 	}
 
