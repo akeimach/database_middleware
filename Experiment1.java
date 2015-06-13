@@ -66,8 +66,17 @@ public class Experiment1 {
 		return stmt.executeQuery(command);
 	}
 
+	public static long executeCountQuery(String command) throws SQLException {
+		Connection conn = null;
+		conn = getConnection();
+		Statement stmt = conn.createStatement();
+		return stmt.executeUpdate(command);
+		//return stmt.getUpdateCount();
+	}
+
+
 	////// SPLIT/RANDOM FILE //////
-	public static void splitFile(File file, int S_i, String subDir) {
+	public static void splitFile(File file, String directory, int S_i) {
 		PrintWriter splitexe = null;
 		Process p = null;
 		try { splitexe = new PrintWriter("/Users/alyssakeimach/split.exe", "UTF-8"); } 
@@ -77,7 +86,7 @@ public class Experiment1 {
 		splitexe.println("split -a3 -l" + S_i + " " + file); //-a3 for three letter file names
 		splitexe.close();
 		ProcessBuilder pb = new ProcessBuilder("/Users/alyssakeimach/split.exe");
-		pb.directory(new File("/Users/alyssakeimach/Eclipse/DBconnector/splits/" + subDir + "/"));
+		pb.directory(new File("/Users/alyssakeimach/Eclipse/DBconnector/splits/" + directory + "/"));
 		pb.redirectErrorStream(true);
 		try { p = pb.start(); } 
 		catch (IOException e) { e.printStackTrace(); }
@@ -109,16 +118,16 @@ public class Experiment1 {
 	}
 
 	//////LOAD FILE //////
-	public static void KStableInit(String KStableName, String filenameTable) {
+	public static void tableInit(String tableName, String tableStmt) {
 		try {
-			String dropString = "DROP TABLE IF EXISTS " + KStableName;
+			String dropString = "DROP TABLE IF EXISTS " + tableName;
 			executeUpdate(dropString);
 		}
 		catch (SQLException e) {
 			System.out.println("ERROR: Could not drop the table");
 			e.printStackTrace();
 		}
-		String createTableString = "CREATE TABLE " + KStableName + " " + filenameTable;
+		String createTableString = "CREATE TABLE " + tableName + " " + tableStmt;
 		try { executeUpdate(createTableString); }
 		catch (SQLException e) {
 			System.out.println("ERROR: Could not create the table");
@@ -126,23 +135,32 @@ public class Experiment1 {
 		}
 	}
 
-	public static void startKSload(String KStableName, String filenameLoad, String subDir) {
-		File folder = new File("/Users/alyssakeimach/Eclipse/DBconnector/splits/" + subDir + "/");
+	public static void loadRandom(String tableName, String loadStmt, String directory) {
+		File folder = new File("/Users/alyssakeimach/Eclipse/DBconnector/splits/" + directory + "/");
 		File[] roots = folder.listFiles();
 		Random rand = new Random();
 		File rndFile = getRandFile(roots[rand.nextInt(roots.length)]);
-		if (firstFile == null) { firstFile = rndFile.getAbsolutePath(); }
-		else if ((firstFile == rndFile.getAbsolutePath()) || (rndFile.getName() == ".DS_Store")) {
-			System.out.println("BREAK: INVALID/SAME FILE " + rndFile.getName());
-			invalFile = true;
-			return;
-		}
-		String loadFile = "LOAD DATA CONCURRENT LOCAL INFILE '" +  rndFile.getAbsolutePath()  + "' INTO TABLE " + KStableName + " " + filenameLoad;
-		try {
-			executeQuery(loadFile);
-			//System.out.println("Uploading file: " + rndFile.getAbsolutePath());	
-		}
+		String loadFile = "LOAD DATA CONCURRENT LOCAL INFILE '" +  rndFile.getAbsolutePath()  + "' INTO TABLE " + tableName + " " + loadStmt;
+		try { executeQuery(loadFile); }
 		catch (SQLException e)  { e.printStackTrace(); }
+	}
+
+	public static void mainSplit(final String fileName, String directory, final int S_i) {
+		final File file = new File("/Users/alyssakeimach/" + fileName);
+		splitFile(file, directory, S_i); 
+		System.out.println("DONE");
+	}
+
+	public static void mainLoad(String directory, String tableName, String tableStmt, String loadStmt) {
+		for (int i = 1; i <= 2; i++) {
+			tableName += i;
+			tableInit(tableName, tableStmt);
+			loadRandom(tableName, loadStmt, directory); 
+		}
+	}
+
+	public static void print(Object in) {
+		System.out.println(in);
 	}
 
 	////// KS RESULT SETS //////
@@ -225,44 +243,35 @@ public class Experiment1 {
 		return supD;
 	}
 
+	public static void main(String args[]) throws SQLException  {
 
-	////// MAIN //////
-	public static void main(String args[])  {
+		////// TRIP DATA //////
+		int N = 144015;
+		int A = 15; //percentage of N tuples
+		double tuples_A = Math.floor(((double)A/100)*N);
+		System.out.println(tuples_A);
+		int P = 100; //number of partitions in A, vary between 2 and 10
+		final int S_i = (int) (tuples_A/P) ; //number of sequential tuples per K
+		System.out.println(S_i);
 
-		////// REBALANCING DATA //////
-		int percent = 55;
-		final String subDir = "rebal" + percent;
-		final int tuples = 20000;
-		
-		/*
-		final File input = new File("/Users/alyssakeimach/rebal" + percent + ".csv");
-		Thread KSsplitThread = new Thread() {
-			public void run() { 
-				splitFile(input, tuples, subDir); 
-				System.out.println("DONE");
-			}
-		};
-		KSsplitThread.setName("KSsplitThread");
-		KSsplitThread.start();
-		*/
-		
-		final String tableName = "rebal" + percent + "_ks_";
-		final String createFiletable = "(id_0 INT UNSIGNED NOT NULL AUTO_INCREMENT, _station_id_ BIGINT, _bikes_available_ BIGINT, _docks_available_ BIGINT, _time_ TIMESTAMP, PRIMARY KEY (id_0))";
-		final String loadFiletable =  "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' IGNORE 1 LINES (_station_id_, _bikes_available_, _docks_available_, _time_) SET id_0 = NULL";
+		final String fileName = "trip" + A + ".csv";
+		final String directory = "trip" + A;
+		final String tableName = "KS_" + directory;
+		String tableStmt = "(id_0 INT UNSIGNED NOT NULL AUTO_INCREMENT, Trip_ID BIGINT, Duration BIGINT, Start_Date VARCHAR(100), Start_Station VARCHAR(100), Start_Terminal BIGINT, End_Date VARCHAR(100), End_Station VARCHAR(100), End_Terminal BIGINT, Bike_ BIGINT, Subscription_Type VARCHAR(100), Zip_Code BIGINT, PRIMARY KEY (id_0))";
+		String loadStmt = "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' (Trip_ID, Duration, Start_Date, Start_Station, Start_Terminal, End_Date, End_Station, End_Terminal, Bike_, Subscription_Type, Zip_Code) SET id_0 = NULL";
+
+		//mainSplit(fileName, directory, S_i);
+		mainLoad(directory, tableName, tableStmt, loadStmt);
+/*
 		Thread KSstatsThread = new Thread() {
 			public void run() {
 				for (int test = 0; test < 20; test++) {
-					for (int i = 1; i <= 2; i++) {
-						String KStableName = tableName + i;
-						KStableInit(KStableName, createFiletable);
-						startKSload(KStableName, loadFiletable, subDir); 
-					}
 					if (invalFile) return;
 					ksMap1 = new HashMap<String, double[]>();
 					ksMap2 = new HashMap<String, double[]>();
 					try { 
-						getKSnums(executeQuery("SELECT * FROM " + tableName + "1"), ksMap1, tuples);
-						getKSnums(executeQuery("SELECT * FROM " + tableName + "2"), ksMap2, tuples);
+						getKSnums(executeQuery("SELECT * FROM " + tableName + "1"), ksMap1, S_i);
+						getKSnums(executeQuery("SELECT * FROM " + tableName + "2"), ksMap2, S_i);
 					} 
 					catch (SQLException e) { e.printStackTrace(); }
 					for (Entry<String, double[]> entry : ksMap1.entrySet()) {    
@@ -271,7 +280,6 @@ public class Experiment1 {
 						double[] values2 = ksMap2.get(key);
 						double statistic = kolmogorovSmirnovStatistic(values1, values2);
 						System.out.print(statistic + "\t");
-						//System.out.println("KS statistic for " + key + ": " + statistic);
 					}
 					System.out.println();
 				}
@@ -279,8 +287,11 @@ public class Experiment1 {
 		};
 		KSstatsThread.setName("KSstatsThread");
 		KSstatsThread.start();
-		
+	*/
 	}
 
 
 }
+
+
+
