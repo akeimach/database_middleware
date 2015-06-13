@@ -1,3 +1,4 @@
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -67,14 +68,14 @@ public class Experiment2 {
 	}
 
 	////// SPLIT/RANDOM FILE //////
-	public static void splitFile(File file, int tuples, String subDir) {
+	public static void splitFile(File file, int S_i, String subDir) {
 		PrintWriter splitexe = null;
 		Process p = null;
 		try { splitexe = new PrintWriter("/Users/alyssakeimach/split.exe", "UTF-8"); } 
 		catch (FileNotFoundException | UnsupportedEncodingException e) { e.printStackTrace(); }
 		try { Runtime.getRuntime().exec("chmod a+x /Users/alyssakeimach/split.exe"); } 
 		catch (IOException e) { e.printStackTrace(); }
-		splitexe.println("split -a3 -l" + tuples + " " + file); //-a3 for three letter file names
+		splitexe.println("split -a3 -l" + S_i + " " + file); //-a3 for three letter file names
 		splitexe.close();
 		ProcessBuilder pb = new ProcessBuilder("/Users/alyssakeimach/split.exe");
 		pb.directory(new File("/Users/alyssakeimach/Eclipse/DBconnector/splits/" + subDir + "/"));
@@ -138,7 +139,10 @@ public class Experiment2 {
 			return;
 		}
 		String loadFile = "LOAD DATA CONCURRENT LOCAL INFILE '" +  rndFile.getAbsolutePath()  + "' INTO TABLE " + KStableName + " " + filenameLoad;
-		try { executeQuery(loadFile); }
+		try {
+			executeQuery(loadFile);
+			//System.out.println("Uploading file: " + rndFile.getAbsolutePath());	
+		}
 		catch (SQLException e)  { e.printStackTrace(); }
 	}
 
@@ -222,30 +226,30 @@ public class Experiment2 {
 		return supD;
 	}
 
+
 	////// MAIN //////
 	public static void main(String args[])  {
 
-		////// TRIP DATA //////
-		int percent = 5;
-		final String subDir = "trip" + percent;
-		final int tuples = 1500;
+		////// REBALANCING DATA //////
+		int percent = 55;
+		final String subDir = "rebal" + percent;
+		final int tuples = 20000;
 		
 		/*
-		final File file = new File("/Users/alyssakeimach/" + subDir + ".csv");
+		final File input = new File("/Users/alyssakeimach/rebal" + percent + ".csv");
 		Thread KSsplitThread = new Thread() {
 			public void run() { 
-				splitFile(file, tuples, subDir); 
+				splitFile(input, tuples, subDir); 
 				System.out.println("DONE");
 			}
 		};
 		KSsplitThread.setName("KSsplitThread");
 		KSsplitThread.start();
-	*/
+		*/
 		
-		
-		final String tableName = subDir + "_ks_";
-		final String createFiletable = "(id_0 INT UNSIGNED NOT NULL AUTO_INCREMENT, Trip_ID BIGINT, Duration BIGINT, Start_Date VARCHAR(100), Start_Station VARCHAR(100), Start_Terminal BIGINT, End_Date VARCHAR(100), End_Station VARCHAR(100), End_Terminal BIGINT, Bike_ BIGINT, Subscription_Type VARCHAR(100), Zip_Code BIGINT, PRIMARY KEY (id_0))";
-		final String loadFiletable =  "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' IGNORE 1 LINES (Trip_ID, Duration, Start_Date, Start_Station, Start_Terminal, End_Date, End_Station, End_Terminal, Bike_, Subscription_Type, Zip_Code) SET id_0 = NULL";
+		final String tableName = "rebal" + percent + "_ks_";
+		final String createFiletable = "(id_0 INT UNSIGNED NOT NULL AUTO_INCREMENT, _station_id_ BIGINT, _bikes_available_ BIGINT, _docks_available_ BIGINT, _time_ TIMESTAMP, PRIMARY KEY (id_0))";
+		final String loadFiletable =  "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' (_station_id_, _bikes_available_, _docks_available_, _time_) SET id_0 = NULL";
 		Thread KSstatsThread = new Thread() {
 			public void run() {
 				for (int test = 0; test < 20; test++) {
@@ -281,3 +285,4 @@ public class Experiment2 {
 
 
 }
+
