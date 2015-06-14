@@ -1,6 +1,8 @@
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.lang.ProcessBuilder.Redirect;
@@ -35,7 +37,7 @@ public class Experiment1 {
 	public static HashMap<String, double[]> ksMap1 = new HashMap<String, double[]>();
 	public static HashMap<String, double[]> ksMap2 = new HashMap<String, double[]>();
 
-	////// CONNECTION //////
+		////// CONNECTION //////
 	public static Connection getConnection() {
 		Connection conn = null;
 		try {
@@ -63,7 +65,7 @@ public class Experiment1 {
 		return stmt.executeQuery(command);
 	}
 
-	////// SPLIT/RANDOM FILE //////
+	////// SPLIT FILE //////
 	public static void splitFile(File file, String directory, int S_i) {
 		PrintWriter splitexe = null;
 		Process p = null;
@@ -83,6 +85,25 @@ public class Experiment1 {
 		catch (IOException e) { e.printStackTrace(); }
 	}
 
+	////// MAKE TABLE //////
+	public static void tableInit(String tableName, String tableStmt) {
+		try {
+			String dropString = "DROP TABLE IF EXISTS " + tableName;
+			executeUpdate(dropString);
+		}
+		catch (SQLException e) {
+			System.out.println("ERROR: Could not drop the table");
+			e.printStackTrace();
+		}
+		String createTableString = "CREATE TABLE " + tableName + " " + tableStmt;
+		try { executeUpdate(createTableString); }
+		catch (SQLException e) {
+			System.out.println("ERROR: Could not create the table");
+			e.printStackTrace();
+		}
+	}
+	
+	//////LOAD RANDOM FILE //////
 	public static File getRandFile(File roots) {
 		//check if multiple files in directory
 		if (roots.isFile() || roots.list().length == 0) { return roots; }
@@ -103,24 +124,6 @@ public class Experiment1 {
 			sub_dir.remove(rndSubDir);
 		}
 		return roots;
-	}
-
-	//////LOAD FILE //////
-	public static void tableInit(String tableName, String tableStmt) {
-		try {
-			String dropString = "DROP TABLE IF EXISTS " + tableName;
-			executeUpdate(dropString);
-		}
-		catch (SQLException e) {
-			System.out.println("ERROR: Could not drop the table");
-			e.printStackTrace();
-		}
-		String createTableString = "CREATE TABLE " + tableName + " " + tableStmt;
-		try { executeUpdate(createTableString); }
-		catch (SQLException e) {
-			System.out.println("ERROR: Could not create the table");
-			e.printStackTrace();
-		}
 	}
 
 	public static void loadRandom(String tableName, String loadStmt, String directory) {
@@ -213,8 +216,8 @@ public class Experiment1 {
 		splitFile(file, directory, S_i); 
 	}
 
-	public static void mainStats(String directory, String tableName, String tableStmt, String loadStmt, int S_i) throws SQLException {
-		for (int test = 0; test < 15; test++) {
+	public static void mainStats(String directory, String tableName, String tableStmt, String loadStmt, int S_i) throws SQLException, FileNotFoundException {
+		for (int test = 0; test < 10; test++) {
 			for (int i = 1; i <= 2; i++) {
 				String ks_tableName = tableName + i;
 				tableInit(ks_tableName, tableStmt);
@@ -249,31 +252,35 @@ public class Experiment1 {
 		for(File file: folder.listFiles()) file.delete();
 	}
 
-	public static void main(String args[]) throws SQLException, InterruptedException  {
+	public static void main(String args[]) throws SQLException, InterruptedException, FileNotFoundException  {
 
 		////// TRIP DATA //////
-		/*
 		int A = 15; //percentage of N tuples
 		final String directory = "trip" + A;
 		final String fileName = directory + ".csv";
 		final String tableName = "KS_" + directory + "_";
 		final String tableStmt = "(id_0 INT UNSIGNED NOT NULL AUTO_INCREMENT, Trip_ID BIGINT, Duration BIGINT, Start_Date VARCHAR(100), Start_Station VARCHAR(100), Start_Terminal BIGINT, End_Date VARCHAR(100), End_Station VARCHAR(100), End_Terminal BIGINT, Bike_ BIGINT, Subscription_Type VARCHAR(100), Zip_Code BIGINT, PRIMARY KEY (id_0))";
 		final String loadStmt = "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' (Trip_ID, Duration, Start_Date, Start_Station, Start_Terminal, End_Date, End_Station, End_Terminal, Bike_, Subscription_Type, Zip_Code) SET id_0 = NULL";
-		*/
+
 		
 		////// REBALANCING DATA //////
+		/*
 		int A = 15; //percentage of N tuples
 		final String directory = "rebal" + A;
 		final String fileName = directory + ".csv";
 		final String tableName = "KS_" + directory + "_";
 		final String tableStmt = "(id_0 INT UNSIGNED NOT NULL AUTO_INCREMENT, _station_id_ BIGINT, _bikes_available_ BIGINT, _docks_available_ BIGINT, _time_ TIMESTAMP, PRIMARY KEY (id_0))";
 		final String loadStmt = "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' (_station_id_, _bikes_available_, _docks_available_, _time_) SET id_0 = NULL";
+		*/
 		
-		for (int S_i = 1000; S_i <= 10000; S_i += 500) {
+		PrintStream out = new PrintStream(new FileOutputStream(directory + "_output.txt"));
+		System.setOut(out);
+		
+		for (int S_i = 10; S_i <= 3000; S_i += 10) {
 			restart(directory);
 			Thread.sleep(1000);
 			mainSplit(fileName, directory, S_i);
-			Thread.sleep(5000);
+			Thread.sleep(3000);
 			mainStats(directory, tableName, tableStmt, loadStmt, S_i);
 		}
 	}
