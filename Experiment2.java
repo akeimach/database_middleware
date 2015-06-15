@@ -63,8 +63,6 @@ public class Experiment2 extends OrdinalStatisticalTest {
 	public static String password = "root";
 	public static String firstFile = null;
 	public static boolean invalFile = false;
-	//public static HashMap<String, double[]> ksMap1 = new HashMap<String, double[]>();
-	//public static HashMap<String, double[]> ksMap2 = new HashMap<String, double[]>();
 
 	////// CONNECTION //////
 	public static Connection getConnection() {
@@ -340,6 +338,7 @@ public class Experiment2 extends OrdinalStatisticalTest {
 
 		//PrintStream out = new PrintStream(new FileOutputStream(directory + "_exp2_output.txt"));
 		//System.setOut(out);
+		
 		int S_i = 50;
 		for (int k = 2; k < 10; k++) {
 			restart(directory);
