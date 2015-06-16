@@ -276,7 +276,7 @@ public class Experiment1 {
 		PrintStream out = new PrintStream(new FileOutputStream(directory + "_exp1_output.txt"));
 		System.setOut(out);
 		
-		for (int S_i = 500; S_i <= 180000; S_i += 500) {
+		for (int S_i = 180500; S_i <= 200000; S_i += 500) {
 			restart(directory);
 			Thread.sleep(2000);
 			mainSplit(fileName, directory, S_i);

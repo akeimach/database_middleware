@@ -30,7 +30,7 @@ statistical test determining if (at least) two out of K >= 2 populations have
 differing medians.
 	Null Hypothesis: All populations have equal medians.
 	Alternative Hypothesis: Not all populations have equal medians.
-	
+
 	Assumptions:
 
 Samples are randomly selected from their corresponding populations
@@ -268,9 +268,9 @@ public class Experiment2 extends OrdinalStatisticalTest {
 
 		//load k tables to db
 		for (int i = 0; i < k; i++) {
-			String ks_tableName = tableName + i;
-			tableInit(ks_tableName, tableStmt);
-			loadRandom(ks_tableName, loadStmt, directory); 
+			String kw_tableName = tableName + i;
+			tableInit(kw_tableName, tableStmt);
+			loadRandom(kw_tableName, loadStmt, directory); 
 		}
 		if (invalFile) return;
 
@@ -336,17 +336,19 @@ public class Experiment2 extends OrdinalStatisticalTest {
 		final String loadStmt = "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' (_station_id_, _bikes_available_, _docks_available_, _time_) SET id_0 = NULL";
 		 */
 
-		//PrintStream out = new PrintStream(new FileOutputStream(directory + "_exp2_output.txt"));
-		//System.setOut(out);
-		
-		int S_i = 50;
-		for (int k = 2; k < 10; k++) {
-			restart(directory);
-			Thread.sleep(1000);
-			mainSplit(fileName, directory, S_i);
-			Thread.sleep(3000);
-			System.out.print(k);
-			mainStats(directory, tableName, tableStmt, loadStmt, S_i, k);
+		PrintStream out = new PrintStream(new FileOutputStream(directory + "_exp2_output.txt"));
+		System.setOut(out);
+
+		int S_i = 800;
+		for (int k = 2; k < 20; k++) {
+			for (int repeat_k = 0; repeat_k < 10; repeat_k++) {
+				restart(directory);
+				Thread.sleep(1000);
+				mainSplit(fileName, directory, S_i);
+				Thread.sleep(3000);
+				System.out.print(k);
+				mainStats(directory, tableName, tableStmt, loadStmt, S_i, k);
+			}
 		}
 	}
 
