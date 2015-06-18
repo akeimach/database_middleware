@@ -243,26 +243,59 @@ public class Experiment3 {
 			}	
 			conn.close();
 
-			System.out.println(k_index);
 			k_bootstrap_variance = bootstrapVariance(k_means, k, k_index);
 		}
+		
+		
+		
+		///PRINT TRIP DATA///
+		double[] zip = new double[k];
+		double[] start = new double[k];
+		double[] trip = new double[k];
+		double[] dur = new double[k];
+		double[] id = new double[k];
+		double[] bike = new double[k];
+		double[] end = new double[k];
+		//, start, trip, dur, id, bike, end;
+		System.out.print("k" + "\t");
 		for (Entry<String, double[]> entry : k_bootstrap_variance.entrySet()) {  
-			System.out.println(entry.getKey());
-			double[] variances = entry.getValue();
-			for (int i = 0; i < variances.length; i++) {
-				System.out.print(variances[i] + " ");
+			
+			if (entry.getKey().equals("Zip_Code")) {
+				zip = entry.getValue();
 			}
-			System.out.println();
+			else if (entry.getKey().equals("Start_Terminal")) {
+				start = entry.getValue();
+			}
+			else if (entry.getKey().equals("Trip_ID")) {
+				trip = entry.getValue();
+			}
+			else if (entry.getKey().equals("Duration")) {
+				dur = entry.getValue();
+			}
+			else if (entry.getKey().equals("id_0")) {
+				id = entry.getValue();
+			}
+			else if (entry.getKey().equals("Bike_")) {
+				bike = entry.getValue();
+			}
+			else if (entry.getKey().equals("End_Terminal")) {
+				end = entry.getValue();
+			}
+			System.out.print(entry.getKey() + "\t");
 		}
+		for (int i = 0; i < k; i++) {
+			System.out.println();
+			System.out.print(i+1 + "\t" + zip[i] + "\t" + start[i] + "\t" + trip[i] + "\t" + dur[i] + "\t" + id[i] + "\t" + bike[i] + "\t" + end[i] );
+		}
+		
 	}
 
 
 
 	public static void main(String args[]) throws SQLException, InterruptedException, FileNotFoundException  {
 
-		int S_i = 100;
-		int k = 20;
-
+		int S_i = 800;
+		int k = 100;
 
 		////// TRIP DATA //////
 		int A = 15; //percentage of N tuples
@@ -286,13 +319,12 @@ public class Experiment3 {
 		//System.setOut(out);
 
 
-		/*
-		for (int k = 2; k < 20; k++) {
+		
+		//for (int k = 2; k < 20; k++) {
 		mainRestart(directory);
 		Thread.sleep(1000);
 		mainSplit(fileName, directory, S_i);
 		Thread.sleep(3000);
-		 */
 		mainStats(directory, tableName, tableStmt, loadStmt, S_i, k);
 		//}
 	}
