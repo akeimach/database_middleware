@@ -317,7 +317,7 @@ public class Experiment2 extends OrdinalStatisticalTest {
 	}
 
 	public static void main(String args[]) throws SQLException, InterruptedException, FileNotFoundException  {
-
+		/*
 		////// TRIP DATA //////
 		int A = 15; //percentage of N tuples
 		final String directory = "trip" + A;
@@ -326,7 +326,7 @@ public class Experiment2 extends OrdinalStatisticalTest {
 		final String tableStmt = "(id_0 INT UNSIGNED NOT NULL AUTO_INCREMENT, Trip_ID BIGINT, Duration BIGINT, Start_Date VARCHAR(100), Start_Station VARCHAR(100), Start_Terminal BIGINT, End_Date VARCHAR(100), End_Station VARCHAR(100), End_Terminal BIGINT, Bike_ BIGINT, Subscription_Type VARCHAR(100), Zip_Code BIGINT, PRIMARY KEY (id_0))";
 		final String loadStmt = "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' (Trip_ID, Duration, Start_Date, Start_Station, Start_Terminal, End_Date, End_Station, End_Terminal, Bike_, Subscription_Type, Zip_Code) SET id_0 = NULL";
 
-		/*
+		*/
 		////// REBALANCING DATA //////
 		int A = 15; //percentage of N tuples
 		final String directory = "rebal" + A;
@@ -334,12 +334,12 @@ public class Experiment2 extends OrdinalStatisticalTest {
 		final String tableName = "KW_" + directory + "_";
 		final String tableStmt = "(id_0 INT UNSIGNED NOT NULL AUTO_INCREMENT, _station_id_ BIGINT, _bikes_available_ BIGINT, _docks_available_ BIGINT, _time_ TIMESTAMP, PRIMARY KEY (id_0))";
 		final String loadStmt = "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' (_station_id_, _bikes_available_, _docks_available_, _time_) SET id_0 = NULL";
-		 */
+		 
 
 		PrintStream out = new PrintStream(new FileOutputStream(directory + "_exp2_output.txt"));
 		System.setOut(out);
 
-		int S_i = 800;
+		int S_i = 4000;
 		for (int k = 2; k < 20; k++) {
 			for (int repeat_k = 0; repeat_k < 10; repeat_k++) {
 				restart(directory);
