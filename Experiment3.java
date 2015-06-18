@@ -28,9 +28,11 @@ public class Experiment3 {
 	public static String server = "jdbc:mysql://localhost:3306/";
 	public static String user = "root";
 	public static String password = "root";
-	public static HashMap<String, double[]> meanMap = new HashMap<String, double[]>();
+	public static HashMap<String, double[]> k_means = new HashMap<String, double[]>();
 	//public static HashMap<String, double[]> medianMap = new HashMap<String, double[]>();
-	//public static HashMap<String, double[]> statsisticMap = new HashMap<String, double[]>();
+	public static HashMap<String, double[]> k_bootstrap_confidence = new HashMap<String, double[]>();
+	public static HashMap<String, double[]> k_bootstrap_variance = new HashMap<String, double[]>();
+
 
 	////// CONNECTION //////
 	public static Connection getConnection() {
@@ -167,36 +169,43 @@ public class Experiment3 {
 		return bsMap;
 	}
 
-	public static void meanStat(HashMap<String, double[]> meanMap, String k_tableName, int S_i, int k, int k_index) {
+	public static double mean(double[] nums) {
+		double mean = 0.0;
+		for (int i = 0; i < nums.length; i++) { mean += nums[i]; }
+		return (mean / nums.length);
+	}
 
-		Connection conn = getConnection();
-		HashMap<String, double[]> rs = new HashMap<String, double[]>();
-		
-		try { rs = getRS(executeQuery(conn, "SELECT * FROM " + k_tableName), S_i); } 
-		catch (SQLException e) { e.printStackTrace(); }
-
-		for (Entry<String, double[]> entry : rs.entrySet()) {   
-
-			String field = entry.getKey();
-			double[] nums = entry.getValue();
-			double[] means = new double[k];
-			double mean = 0.0;
-
-			for (int i = 0; i < nums.length; i++) { mean += nums[i]; }
-			if (meanMap.containsKey(field)) { means.equals(meanMap.get(field)); }
-
-			mean = mean/S_i;
-			means[k_index] = mean;
-			meanMap.put(field, means);	
+	public static void addValue(HashMap<String, double[]> map, String field, int k, int k_index, double add_value) {
+		if (!map.containsKey(field)) { 
+			double[] values = new double[k];
+			values[k_index] = add_value;
+			map.put(field, values);	
 		}
-
-		try { conn.close(); } 
-		catch (SQLException e) { e.printStackTrace(); }
-		
-		for (Entry<String, double[]> entry : meanMap.entrySet()) {
-			System.out.println(entry.getKey() + " " + entry.getValue());
+		else {
+			double[] values = map.get(field);
+			values[k_index] = add_value;
+			map.put(field, values);
 		}
 	}
+
+	public static HashMap<String, double[]> bootstrapVariance(HashMap<String, double[]> k_means, int k, int k_index) {
+
+		double var2 = 0.0;
+		for (Entry<String, double[]> entry : k_means.entrySet()) {  
+
+			double[] field_means = entry.getValue();
+			double k_field_mean = mean(field_means);
+
+			for (int i = 0; i < field_means.length; i++) {
+				var2 += Math.pow((field_means[i] - k_field_mean), 2.0);
+				addValue(k_bootstrap_variance, entry.getKey(), k, k_index, var2);
+			}
+			var2 = (var2 / (k - 1));
+		}		
+
+		return k_bootstrap_variance;
+	}
+
 
 	////// MAINS //////
 	public static void mainRestart(String directory) {
@@ -209,27 +218,42 @@ public class Experiment3 {
 		splitFile(file, directory, S_i); 
 	}
 
-	public static void mainStats(String directory, String tableName, String tableStmt, String loadStmt, int S_i, int k) throws SQLException, FileNotFoundException {
+	public static void mainStats(String directory, String k_tableName, String tableStmt, String loadStmt, int S_i, int k) throws SQLException, FileNotFoundException {
 
-		meanMap = new HashMap<String, double[]>();
-		
-		//load and measure k bootstrap tables
+		k_means = new HashMap<String, double[]>();
+		k_bootstrap_variance = new HashMap<String, double[]>();
+		//k_bootstrap_confidence = new HashMap<String, double[]>();
+
+		//load and measure k tables
 		for (int k_index = 0; k_index < k; k_index++) {
-			//String k_tableName = tableName + k;
-			tableInit(tableName, tableStmt);
-			loadRandom(tableName, loadStmt, directory);
-			meanStat(meanMap, tableName, S_i, k, k_index);
+
+			tableInit(k_tableName, tableStmt);
+			loadRandom(k_tableName, loadStmt, directory);
+
+			HashMap<String, double[]> rs = new HashMap<String, double[]>();
+			Connection conn = getConnection();
+			rs = getRS(executeQuery(conn, "SELECT * FROM " + k_tableName), S_i);
+
+			for (Entry<String, double[]> entry : rs.entrySet()) {  
+
+				String field = entry.getKey();
+				double[] nums = entry.getValue();
+				double mean = mean(nums);
+				addValue(k_means, field, k, k_index, mean);
+			}	
+			conn.close();
+
+			System.out.println(k_index);
+			k_bootstrap_variance = bootstrapVariance(k_means, k, k_index);
 		}
-
-		for (Entry<String, double[]> entry : meanMap.entrySet()) {  
-			String key = entry.getKey();
-			double[] k_means = entry.getValue();
-			double variance = 0.0;
-			for (int i = 0; i < k_means.length; i++) {
-
+		for (Entry<String, double[]> entry : k_bootstrap_variance.entrySet()) {  
+			System.out.println(entry.getKey());
+			double[] variances = entry.getValue();
+			for (int i = 0; i < variances.length; i++) {
+				System.out.print(variances[i] + " ");
 			}
+			System.out.println();
 		}
-		System.out.println(meanMap.size());
 	}
 
 
@@ -262,11 +286,13 @@ public class Experiment3 {
 		//System.setOut(out);
 
 
-		//for (int k = 2; k < 20; k++) {
+		/*
+		for (int k = 2; k < 20; k++) {
 		mainRestart(directory);
 		Thread.sleep(1000);
 		mainSplit(fileName, directory, S_i);
 		Thread.sleep(3000);
+		 */
 		mainStats(directory, tableName, tableStmt, loadStmt, S_i, k);
 		//}
 	}
