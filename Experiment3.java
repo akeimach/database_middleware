@@ -22,17 +22,17 @@ import java.util.List;
 import java.util.Random;
 import java.util.Map.Entry;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
-//import org.eclipse.core.runtime.Path;
-//import java.io.FileOutputStream;
-//import java.io.PrintStream;
+
 
 public class Experiment3 {
 
 	public static String server = "jdbc:mysql://localhost:3306/";
 	public static String user = "root";
 	public static String password = "root";
-	public static HashMap<String, double[]> k_avgs = new HashMap<String, double[]>();
-	public static HashMap<String, double[]> k_bootstrap_variance = new HashMap<String, double[]>();
+	public static HashMap<String, double[]> s_avgs = new HashMap<String, double[]>();
+	public static HashMap<String, double[]> s_stdev = new HashMap<String, double[]>();
+	public static HashMap<String, double[]> s_stderr = new HashMap<String, double[]>();
+	public static boolean first = true;
 
 
 	////// CONNECTION //////
@@ -101,7 +101,7 @@ public class Experiment3 {
 		}
 	}
 
-	//////LOAD RANDOM FILE //////
+	////// LOAD RANDOM FILE //////
 	public static File getRandFile(File roots) {
 		//check if multiple files in directory
 		if (roots.isFile() || roots.list().length == 0) { return roots; }
@@ -138,7 +138,7 @@ public class Experiment3 {
 		catch (SQLException e)  { e.printStackTrace(); }
 		return rndFile;
 	}
-	
+
 	public static void removeRandom(File rndFile, String directory) {
 		try {
 			Path source = (Path) rndFile.toPath();
@@ -148,9 +148,8 @@ public class Experiment3 {
 		catch (IOException e) { e.printStackTrace(); } //could not move file
 	}
 
-	/*
-	////// BOOTSTRAP MATH //////
-	public static HashMap<String, double[]> getRS(ResultSet rs, int S_i) {
+	////// QUERY TABLE //////
+	public static HashMap<String, double[]> getRS(ResultSet rs, int b) {
 		HashMap<String, double[]> bsMap = new HashMap<String, double[]>();
 		try {
 			ResultSetMetaData metaData = rs.getMetaData();
@@ -160,11 +159,10 @@ public class Experiment3 {
 				int type = metaData.getColumnType(col);
 				if ((type == Types.BIGINT) || (type == Types.DECIMAL) || (type == Types.DOUBLE) || 
 						(type == Types.FLOAT) || (type == Types.NUMERIC) || (type == Types.INTEGER) || (type == Types.BOOLEAN)) {
-					double[] statNums = new double[S_i];
+					double[] statNums = new double[b];
 					bsMap.put(metaData.getColumnLabel(col), statNums); 
 				}
 			}
-			// Get all rows
 			int row = 0;
 			while (rs.next()) {
 				for (int i = 1; i <= numberOfColumns; i++) { 	
@@ -181,178 +179,118 @@ public class Experiment3 {
 		return bsMap;
 	}
 
-	public static double mean(double[] nums) {
+	////// MATH //////
+	public static double mean(double[] nums, int dataPoints) {
 		double mean = 0.0;
-		for (int i = 0; i < nums.length; i++) { mean += nums[i]; }
-		return (mean / nums.length);
+		for (int i = 0; i < dataPoints; i++) { mean += nums[i]; }
+		return (mean / dataPoints);
 	}
 
-	public static void addValue(HashMap<String, double[]> map, String field, int k, int k_index, double add_value) {
+	public static void addValue(HashMap<String, double[]> map, String field, int s, int s_index, double add_value) {
 		if (!map.containsKey(field)) { 
-			double[] values = new double[k];
-			values[k_index] = add_value;
+			double[] values = new double[s];
+			values[s_index] = add_value;
 			map.put(field, values);	
 		}
 		else {
 			double[] values = map.get(field);
-			values[k_index] = add_value;
+			values[s_index] = add_value;
 			map.put(field, values);
 		}
 	}
 
-	public static HashMap<String, double[]> bootstrapVariance(HashMap<String, double[]> k_avgs, int k, int k_index) {
+	public static HashMap<String, double[]> standardDeviation(HashMap<String, double[]> s_avgs, int s, int s_index) {
 
+		if (first) {
+			System.out.println("Standard Deviation and mean for each s");
+			System.out.print("s\t");
+			for (Entry<String, double[]> entry : s_avgs.entrySet()) { System.out.print(entry.getKey() + " standard dev\tMean\t\t\t"); }
+			System.out.println();
+			first = false;
+		}
+		
 		double var2 = 0.0;
-		for (Entry<String, double[]> entry : k_avgs.entrySet()) {  
+		System.out.print(s_index+1 + "\t");
+		for (Entry<String, double[]> entry : s_avgs.entrySet()) {  
 
 			double[] field_means = entry.getValue();
-			double k_field_mean = mean(field_means);
+			double s_field_mean = mean(field_means, s_index+1);
 
 			for (int i = 0; i < field_means.length; i++) {
-				var2 += Math.pow((field_means[i] - k_field_mean), 2.0);
-				addValue(k_bootstrap_variance, entry.getKey(), k, k_index, var2);
+				var2 += Math.pow((field_means[i] - s_field_mean), 2.0);
 			}
-			var2 = (var2 / (k - 1));
-		}		
-		System.out.println(var2 + "\t" + Math.sqrt(var2) + "\t" + mean(k_avgs.get("Duration")));
-		return k_bootstrap_variance;
+			var2 = (var2 / (s - 1)); //unbiased sample variance
+			double std_dev = Math.sqrt(var2);
+			System.out.print(std_dev + "\t" + s_field_mean + "\t\t\t");
+			addValue(s_stdev, entry.getKey(), s, s_index, std_dev);
+		}
+		System.out.println();
+		return s_stdev;
 	}
 
-*/
 	////// MAINS //////
-	public static void mainRestart(String directory) {
+	public static void mainRestart(String directory, final String fileName, final int b) throws InterruptedException {
 		File folder = new File("/Users/alyssakeimach/Eclipse/DBconnector/splits/" + directory + "/");
 		for(File file: folder.listFiles()) file.delete();
-	}
-
-	public static void mainSplit(final String fileName, String directory, final int S_i) {
+		Thread.sleep(1000);
 		final File file = new File("/Users/alyssakeimach/" + fileName);
-		splitFile(file, directory, S_i); 
+		splitFile(file, directory, b); 
+		Thread.sleep(3000);
 	}
 
-	public static void mainStats(String directory, String k_tableName, String tableStmt, String loadStmt, int n, int s, int b) throws SQLException, FileNotFoundException {
+	
+	public static void mainStats(String directory, String s_tableName, String tableStmt, String loadStmt, int n, int s, int b) throws SQLException, FileNotFoundException {
+		
+		s_avgs = new HashMap<String, double[]>();
+		s_stdev = new HashMap<String, double[]>();
+		s_stderr = new HashMap<String, double[]>();
 
-		k_avgs = new HashMap<String, double[]>();
-		k_bootstrap_variance = new HashMap<String, double[]>();
-
-		//load and measure k tables
-		//System.out.println("SUM(Trip_ID)\tSUM(Duration)\tSUM(Start_Terminal)\tSUM(End_Terminal)\tSUM(Bike_)\tSUM(Zip_Code)");
 		for (int s_index = 0; s_index < s; s_index++) {
+			//take random sample size b from dataset
+			tableInit(s_tableName, tableStmt);
+			File rnd = loadRandom(s_tableName, loadStmt, directory);
+			//without replacement
+			removeRandom(rnd, directory);
 
-			tableInit(k_tableName, tableStmt);
-			loadRandom(k_tableName, loadStmt, directory); //removes used file to other folder after
-
+			//for each s make a bootstrapped sample size n
 			HashMap<String, double[]> rs = new HashMap<String, double[]>();
 			Connection conn = getConnection();
-			rs = getRS(executeQuery(conn, "SELECT Duration FROM " + k_tableName), b);
-			//rs = getRS(executeQuery(conn, "SELECT AVG(Trip_ID), AVG(Duration), AVG(Start_Terminal), AVG(End_Terminal), AVG(Bike_), AVG(Zip_Code) FROM " + k_tableName), b);
-			//rs = getRS(executeQuery(conn, "SELECT SUM(Trip_ID), SUM(Duration), SUM(Start_Terminal), SUM(End_Terminal), SUM(Bike_), SUM(Zip_Code) FROM " + k_tableName), S_i);
-			//for (Entry<String, double[]> entry : rs.entrySet()) {  
+			rs = getRS(executeQuery(conn, "SELECT * FROM " + s_tableName), b);
+			for (Entry<String, double[]> entry : rs.entrySet()) {  
 
-			double[] b_durations = rs.get("Duration");
-			//String field = entry.getKey();
-			//double[] b_durations = entry.getValue();
+				double[] n_durations = new double[n];
+				double[] b_durations = entry.getValue();
 
-			//select n random durations and find the average over all n
-			double[] n_durations = new double[n];
-			for (int i = 0; i < n; i++) {
-				Random rand = new Random();
-				int randomNum = rand.nextInt(b);
-				//System.out.println(i + " " + randomNum);
-				n_durations[i] = b_durations[randomNum];
-			}
+				//select n random durations and find the average over all n
+				for (int i = 0; i < n; i++) {
+					Random rand = new Random();
+					int randomNum = rand.nextInt(b);
+					n_durations[i] = b_durations[randomNum];
+				}
 
-			double mean = mean(n_durations);
-			addValue(k_avgs, "Duration", s, s_index, mean);
-			
-		conn.close();
-		//System.out.println();
-		k_bootstrap_variance = bootstrapVariance(k_avgs, s, s_index);
+				double mean = mean(n_durations, n);
+				addValue(s_avgs, entry.getKey(), s, s_index, mean);
+			}	
+			s_stdev = standardDeviation(s_avgs, s, s_index);
+			conn.close();
+		}
 	}
 
-	/*
-		System.out.println();
-		///PRINT TRIP DATA///
-		double[] zip = new double[k];
-		double[] start = new double[k];
-		double[] trip = new double[k];
-		double[] dur = new double[k];
-		//double[] id = new double[k];
-		double[] bike = new double[k];
-		double[] end = new double[k];
-		//, start, trip, dur, id, bike, end;
-		System.out.print("k" + "\t");
+	public static void main(String args[]) throws SQLException, InterruptedException, FileNotFoundException  {
+
+		int n = 21000; //tuples in 15% of original dataset
+		int s = 30; //number of subsamples taken from n
+		int b = 500; //size of s in tuples
+
+		////// TRIP DATA //////
+		int A = 15; //percentage of original dataset
+		final String directory = "trip" + A;
+		final String fileName = directory + ".csv";
+		final String tableName = "Bootstrap_" + directory + "_" + s;
+		final String tableStmt = "(id_0 INT UNSIGNED NOT NULL AUTO_INCREMENT, Trip_ID BIGINT, Duration BIGINT, Start_Date VARCHAR(100), Start_Station VARCHAR(100), Start_Terminal BIGINT, End_Date VARCHAR(100), End_Station VARCHAR(100), End_Terminal BIGINT, Bike_ BIGINT, Subscription_Type VARCHAR(100), Zip_Code BIGINT, PRIMARY KEY (id_0))";
+		final String loadStmt = "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' (Trip_ID, Duration, Start_Date, Start_Station, Start_Terminal, End_Date, End_Station, End_Terminal, Bike_, Subscription_Type, Zip_Code) SET id_0 = NULL";
+
 		/*
-		for (Entry<String, double[]> entry : k_bootstrap_variance.entrySet()) {  
-
-			if (entry.getKey().equals("AVG(Zip_Code)")) {
-				zip = entry.getValue();
-			}
-			else if (entry.getKey().equals("AVG(Start_Terminal)")) {
-				start = entry.getValue();
-			}
-			else if (entry.getKey().equals("AVG(Trip_ID)")) {
-				trip = entry.getValue();
-			}
-			else if (entry.getKey().equals("AVG(Duration)")) {
-				dur = entry.getValue();
-			}
-			else if (entry.getKey().equals("AVG(Bike_)")) {
-				bike = entry.getValue();
-			}
-			else if (entry.getKey().equals("AVG(End_Terminal)")) {
-				end = entry.getValue();
-			}
-			System.out.print(entry.getKey() + "\t");
-		}
-
-		for (Entry<String, double[]> entry : k_bootstrap_variance.entrySet()) {  
-
-			if (entry.getKey().equals("SUM(Zip_Code)")) {
-				zip = entry.getValue();
-			}
-			else if (entry.getKey().equals("SUM(Start_Terminal)")) {
-				start = entry.getValue();
-			}
-			else if (entry.getKey().equals("SUM(Trip_ID)")) {
-				trip = entry.getValue();
-			}
-			else if (entry.getKey().equals("SUM(Duration)")) {
-				dur = entry.getValue();
-			}
-			else if (entry.getKey().equals("SUM(Bike_)")) {
-				bike = entry.getValue();
-			}
-			else if (entry.getKey().equals("SUM(End_Terminal)")) {
-				end = entry.getValue();
-			}
-			System.out.print(entry.getKey() + "\t");
-		}
-		for (int i = 0; i < k; i++) {
-			System.out.println();
-			System.out.print(i+1 + "\t" + zip[i] + "\t" + start[i] + "\t" + trip[i] + "\t" + dur[i] + "\t" + bike[i] + "\t" + end[i] );
-		}
-	 */
-}
-
-
-
-public static void main(String args[]) throws SQLException, InterruptedException, FileNotFoundException  {
-
-
-	int n = 21000;
-	int s = 30;
-	int b = 500;
-
-	////// TRIP DATA //////
-	int A = 15; //percentage of N tuples
-	final String directory = "trip" + A;
-	final String fileName = directory + ".csv";
-	final String tableName = "Bootstrap_" + directory + "_" + s;
-	final String tableStmt = "(id_0 INT UNSIGNED NOT NULL AUTO_INCREMENT, Trip_ID BIGINT, Duration BIGINT, Start_Date VARCHAR(100), Start_Station VARCHAR(100), Start_Terminal BIGINT, End_Date VARCHAR(100), End_Station VARCHAR(100), End_Terminal BIGINT, Bike_ BIGINT, Subscription_Type VARCHAR(100), Zip_Code BIGINT, PRIMARY KEY (id_0))";
-	final String loadStmt = "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' (Trip_ID, Duration, Start_Date, Start_Station, Start_Terminal, End_Date, End_Station, End_Terminal, Bike_, Subscription_Type, Zip_Code) SET id_0 = NULL";
-
-	/*
 		////// REBALANCING DATA //////
 		int A = 15; //percentage of N tuples
 		final String directory = "rebal" + A;
@@ -360,21 +298,11 @@ public static void main(String args[]) throws SQLException, InterruptedException
 		final String tableName = "Bootstrap_" + directory + "_" + k;
 		final String tableStmt = "(id_0 INT UNSIGNED NOT NULL AUTO_INCREMENT, _station_id_ BIGINT, _bikes_available_ BIGINT, _docks_available_ BIGINT, _time_ TIMESTAMP, PRIMARY KEY (id_0))";
 		final String loadStmt = "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' (_station_id_, _bikes_available_, _docks_available_, _time_) SET id_0 = NULL";
-	 */
+		 */
 
-	//PrintStream out = new PrintStream(new FileOutputStream(directory + "_exp2_output.txt"));
-	//System.setOut(out);
-
-
-
-	//for (int k = 2; k < 20; k++) {
-	mainRestart(directory);
-	Thread.sleep(1000);
-	mainSplit(fileName, directory, b);
-	Thread.sleep(3000);
-	mainStats(directory, tableName, tableStmt, loadStmt, n, s, b);
-	//}
-}
+		mainRestart(directory, fileName, b);
+		mainStats(directory, tableName, tableStmt, loadStmt, n, s, b);
+	}
 
 }
 
