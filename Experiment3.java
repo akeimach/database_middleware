@@ -158,6 +158,25 @@ public class Experiment3 {
 	}
 
 	////// BLB //////
+	public static double mean(double[] nums, int dataPoints) {
+		double mean = 0.0;
+		for (int i = 0; i < dataPoints; i++) { mean += nums[i]; }
+		return (mean / dataPoints);
+	}
+
+	public static void addValue(HashMap<String, double[]> map, String field, int s, int s_index, double add_value) {
+		if (!map.containsKey(field)) { 
+			double[] values = new double[s];
+			values[s_index] = add_value;
+			map.put(field, values);	
+		}
+		else {
+			double[] values = map.get(field);
+			values[s_index] = add_value;
+			map.put(field, values);
+		}
+	}
+
 	public static HashMap<String, double[]> getRS(ResultSet rs, int b) {
 		HashMap<String, double[]> bsMap = new HashMap<String, double[]>();
 		try {
@@ -188,34 +207,40 @@ public class Experiment3 {
 		return bsMap;
 	}
 
-	public static double mean(double[] nums, int dataPoints) {
-		double mean = 0.0;
-		for (int i = 0; i < dataPoints; i++) { mean += nums[i]; }
-		return (mean / dataPoints);
+	public static HashMap<String, double[]> mean_n_samples(String tableName, int n, int b, int s, int s_index) {
+
+		HashMap<String, double[]> rs = new HashMap<String, double[]>();
+		Connection conn = getConnection();
+		try { rs = getRS(executeQuery(conn, "SELECT * FROM " + tableName), b); } 
+		catch (SQLException e) { e.printStackTrace(); }
+
+		for (Entry<String, double[]> entry : rs.entrySet()) {  
+			double[] b_durations = entry.getValue(); //size b
+			//select n random durations and find the average over all n
+			double[] n_durations = new double[n];
+			for (int i = 0; i < n; i++) {
+				Random rand = new Random();
+				int randomNum = rand.nextInt(b);
+				n_durations[i] = b_durations[randomNum];
+			}
+			double mean = mean(n_durations, n);
+			addValue(s_avgs, entry.getKey(), s, s_index, mean);
+		}
+		
+		try { conn.close(); } 
+		catch (SQLException e) { e.printStackTrace(); }
+		return s_avgs;
 	}
 
-	public static void addValue(HashMap<String, double[]> map, String field, int s, int s_index, double add_value) {
-		if (!map.containsKey(field)) { 
-			double[] values = new double[s];
-			values[s_index] = add_value;
-			map.put(field, values);	
-		}
-		else {
-			double[] values = map.get(field);
-			values[s_index] = add_value;
-			map.put(field, values);
-		}
-	}
-
-	public static HashMap<String, double[]> standardDeviation(HashMap<String, double[]> s_avgs, int s, int s_index) {
+	public static HashMap<String, double[]> stdev_n_samples(HashMap<String, double[]> s_avgs, int n, int s, int s_index) {
 		double var2 = 0.0;
 		for (Entry<String, double[]> entry : s_avgs.entrySet()) {  
 			double[] field_means = entry.getValue();
-			double s_field_mean = mean(field_means, s_index + 1);
+			double s_mean = mean(field_means, s_index + 1);
 			for (int i = 0; i < field_means.length; i++) {
-				var2 += Math.pow((field_means[i] - s_field_mean), 2.0);
+				var2 += Math.pow((field_means[i] - s_mean), 2.0);
 			}
-			var2 = (var2 / (s - 1)); //unbiased sample variance
+			var2 = (var2 / (n - 1)); //unbiased sample variance
 			double std_dev = Math.sqrt(var2);
 			addValue(s_stdev, entry.getKey(), s, s_index, std_dev);
 		}
@@ -239,61 +264,41 @@ public class Experiment3 {
 		//take random sample size b from dataset
 		tableInit(tableName, tableStmt);
 		File rnd = loadRandom(tableName, loadStmt, directory);
-		removeRandom(rnd); //without replacement)
+		removeRandom(rnd); //without replacement
 	}
 
 	public static void mainBLB(String tableName, int n, int b, int s, int s_index, long startTime) {
 		
-		//for each s make a bootstrapped sample size n
-		HashMap<String, double[]> rs = new HashMap<String, double[]>();
-		Connection conn = getConnection();
-		try { rs = getRS(executeQuery(conn, "SELECT * FROM " + tableName), b); } 
-		catch (SQLException e) { e.printStackTrace(); }
-		
-		//get the averages
-		s_avgs = new HashMap<String, double[]>();
-		for (Entry<String, double[]> entry : rs.entrySet()) {  
-			double[] n_durations = new double[n];
-			double[] b_durations = entry.getValue();
-			//select n random durations and find the average over all n
-			for (int i = 0; i < n; i++) {
-				Random rand = new Random();
-				int randomNum = rand.nextInt(b);
-				n_durations[i] = b_durations[randomNum];
-			}
-			double mean = mean(n_durations, n);
-			addValue(s_avgs, entry.getKey(), s, s_index, mean);
-		}
-		try { conn.close(); } 
-		catch (SQLException e) { e.printStackTrace(); }
-		
-		s_stdev = standardDeviation(s_avgs, s, s_index); 
+		//get s size b (without replacement taken care of in mainLoad), make a bootstrapped sample size n
+		s_avgs = mean_n_samples(tableName, n, b, s, s_index);
+		s_stdev = stdev_n_samples(s_avgs, n, s, s_index); 
+
 		//print out stuff
 		if (first) {
 			for (Entry<String, double[]> headers : s_stdev.entrySet()) { 
-				System.out.print(headers.getKey() + "\tn\tb\ts\ttime\tmean\tstdev\t\t\t\t"); 
+				System.out.print(headers.getKey() + "\tn\tb\ts\ttime\tmean of n samples from s\tstdev of n samples\t\t\t\t"); 
 			}
 			first = false;
 		}
 		System.out.println();
 
-		long manualMili = 4500;
-		//for (int i = 0; i < s; i++) {
-			for (Entry<String, double[]> entry2 : s_stdev.entrySet()) { 
-				double[] stdev = entry2.getValue();
-				System.out.print("\t\t" + n + "\t" + b + "\t" + (s_index + 1) + "\t" + (((System.nanoTime() - startTime)/1000000) - manualMili) + "\t\t" + stdev[s_index] + "\t\t\t\t"); 
+		long manualMili = 4500; //i added wait time for loading random samples
+		for (Entry<String, double[]> dev : s_stdev.entrySet()) { 
+			double[] stdev = dev.getValue();
+			for (Entry<String, double[]> avg : s_avgs.entrySet()) {
+				if (dev.getKey().equals(avg.getKey())) {
+					double[] curr_avg = avg.getValue();
+					System.out.print("\t" + n + "\t" + b + "\t" + (s_index + 1) + "\t" + (((System.nanoTime() - startTime)/1000000) - manualMili) + "\t" + curr_avg[s_index] + "\t" + stdev[s_index] + "\t\t\t\t"); 
+				}
 			}
-		
-		
-		
+		}
 	}
 
 	public static void main(String args[]) throws SQLException, InterruptedException, FileNotFoundException  {
 
 		int n = 21000; //tuples in 15% of original dataset
-		int b = 600; //size of s in tuples
-		int s = 10; //number of subsamples taken from n
-
+		int b = 400; //size of s in tuples
+		int s = 50; //number of subsamples taken from n
 
 		////// TRIP DATA //////
 		int A = 15; //percentage of original dataset
@@ -312,7 +317,6 @@ public class Experiment3 {
 		final String tableStmt = "(id_0 INT UNSIGNED NOT NULL AUTO_INCREMENT, _station_id_ BIGINT, _bikes_available_ BIGINT, _docks_available_ BIGINT, _time_ TIMESTAMP, PRIMARY KEY (id_0))";
 		final String loadStmt = "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' (_station_id_, _bikes_available_, _docks_available_, _time_) SET id_0 = NULL";
 		 */
-
 
 		long startTime = System.nanoTime();
 		mainSplit(directory, fileName, b); //deletes old shit
