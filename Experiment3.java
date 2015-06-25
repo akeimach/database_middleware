@@ -31,8 +31,7 @@ public class Experiment3 {
 	public static String password = "root";
 	public static HashMap<String, double[]> s_avgs = new HashMap<String, double[]>();
 	public static HashMap<String, double[]> s_stdev = new HashMap<String, double[]>();
-	public static HashMap<String, double[]> s_stderr = new HashMap<String, double[]>();
-	public static boolean first = true;
+	public static boolean first = true; //for printing headers
 
 
 	////// CONNECTION //////
@@ -209,31 +208,17 @@ public class Experiment3 {
 	}
 
 	public static HashMap<String, double[]> standardDeviation(HashMap<String, double[]> s_avgs, int s, int s_index) {
-
-		if (first) {
-			System.out.println("Standard Deviation and mean for each s");
-			System.out.print("s\t");
-			for (Entry<String, double[]> entry : s_avgs.entrySet()) { System.out.print(entry.getKey() + " standard dev\tMean\t\t\t\t"); }
-			System.out.println();
-			first = false;
-		}
-
 		double var2 = 0.0;
-		System.out.print(s_index+1 + "\t");
 		for (Entry<String, double[]> entry : s_avgs.entrySet()) {  
-
 			double[] field_means = entry.getValue();
-			double s_field_mean = mean(field_means, s_index+1);
-
+			double s_field_mean = mean(field_means, s_index + 1);
 			for (int i = 0; i < field_means.length; i++) {
 				var2 += Math.pow((field_means[i] - s_field_mean), 2.0);
 			}
 			var2 = (var2 / (s - 1)); //unbiased sample variance
 			double std_dev = Math.sqrt(var2);
-			System.out.print(std_dev + "\t" + s_field_mean + "\t\t\t\t");
 			addValue(s_stdev, entry.getKey(), s, s_index, std_dev);
 		}
-		System.out.println();
 		return s_stdev;
 	}
 
@@ -257,38 +242,58 @@ public class Experiment3 {
 		removeRandom(rnd); //without replacement)
 	}
 
-	public static void mainBLB(String tableName, int n, int s, int b, int s_index) {
+	public static void mainBLB(String tableName, int n, int b, int s, int s_index, long startTime) {
+		
 		//for each s make a bootstrapped sample size n
 		HashMap<String, double[]> rs = new HashMap<String, double[]>();
 		Connection conn = getConnection();
 		try { rs = getRS(executeQuery(conn, "SELECT * FROM " + tableName), b); } 
 		catch (SQLException e) { e.printStackTrace(); }
+		
+		//get the averages
+		s_avgs = new HashMap<String, double[]>();
 		for (Entry<String, double[]> entry : rs.entrySet()) {  
-
 			double[] n_durations = new double[n];
 			double[] b_durations = entry.getValue();
-
 			//select n random durations and find the average over all n
 			for (int i = 0; i < n; i++) {
 				Random rand = new Random();
 				int randomNum = rand.nextInt(b);
 				n_durations[i] = b_durations[randomNum];
 			}
-
 			double mean = mean(n_durations, n);
 			addValue(s_avgs, entry.getKey(), s, s_index, mean);
-		}	
-		s_stdev = standardDeviation(s_avgs, s, s_index);
+		}
 		try { conn.close(); } 
 		catch (SQLException e) { e.printStackTrace(); }
-	}
+		
+		s_stdev = standardDeviation(s_avgs, s, s_index); 
+		//print out stuff
+		if (first) {
+			for (Entry<String, double[]> headers : s_stdev.entrySet()) { 
+				System.out.print(headers.getKey() + "\tn\tb\ts\ttime\tmean\tstdev\t\t\t\t"); 
+			}
+			first = false;
+		}
+		System.out.println();
 
+		long manualMili = 4500;
+		//for (int i = 0; i < s; i++) {
+			for (Entry<String, double[]> entry2 : s_stdev.entrySet()) { 
+				double[] stdev = entry2.getValue();
+				System.out.print("\t\t" + n + "\t" + b + "\t" + (s_index + 1) + "\t" + (((System.nanoTime() - startTime)/1000000) - manualMili) + "\t\t" + stdev[s_index] + "\t\t\t\t"); 
+			}
+		
+		
+		
+	}
 
 	public static void main(String args[]) throws SQLException, InterruptedException, FileNotFoundException  {
 
 		int n = 21000; //tuples in 15% of original dataset
-		int s = 10; //number of subsamples taken from n
 		int b = 600; //size of s in tuples
+		int s = 10; //number of subsamples taken from n
+
 
 		////// TRIP DATA //////
 		int A = 15; //percentage of original dataset
@@ -308,14 +313,13 @@ public class Experiment3 {
 		final String loadStmt = "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' (_station_id_, _bikes_available_, _docks_available_, _time_) SET id_0 = NULL";
 		 */
 
+
+		long startTime = System.nanoTime();
 		mainSplit(directory, fileName, b); //deletes old shit
-		s_avgs = new HashMap<String, double[]>();
-		s_stdev = new HashMap<String, double[]>();
-		s_stderr = new HashMap<String, double[]>();
 
 		for (int s_index = 0; s_index < s; s_index++) {
 			mainLoad(directory,tableName, tableStmt, loadStmt);
-			mainBLB(tableName, n, s, b, s_index);
+			mainBLB(tableName, n, b, s, s_index, startTime);
 		}
 	}
 
