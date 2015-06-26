@@ -1,6 +1,8 @@
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.lang.ProcessBuilder.Redirect;
@@ -226,7 +228,7 @@ public class Experiment3 {
 			double mean = mean(n_durations, n);
 			addValue(s_avgs, entry.getKey(), s, s_index, mean);
 		}
-		
+
 		try { conn.close(); } 
 		catch (SQLException e) { e.printStackTrace(); }
 		return s_avgs;
@@ -268,7 +270,7 @@ public class Experiment3 {
 	}
 
 	public static void mainBLB(String tableName, int n, int b, int s, int s_index, long startTime) {
-		
+
 		//get s size b (without replacement taken care of in mainLoad), make a bootstrapped sample size n
 		s_avgs = mean_n_samples(tableName, n, b, s, s_index);
 		s_stdev = stdev_n_samples(s_avgs, n, s, s_index); 
@@ -296,18 +298,6 @@ public class Experiment3 {
 
 	public static void main(String args[]) throws SQLException, InterruptedException, FileNotFoundException  {
 
-		int n = 21000; //tuples in 15% of original dataset
-		int b = 400; //size of s in tuples
-		int s = 50; //number of subsamples taken from n
-
-		////// TRIP DATA //////
-		int A = 15; //percentage of original dataset
-		final String directory = "trip" + A;
-		final String fileName = directory + ".csv";
-		final String tableName = "Bootstrap_" + directory + "_" + s;
-		final String tableStmt = "(id_0 INT UNSIGNED NOT NULL AUTO_INCREMENT, Trip_ID BIGINT, Duration BIGINT, Start_Date VARCHAR(100), Start_Station VARCHAR(100), Start_Terminal BIGINT, End_Date VARCHAR(100), End_Station VARCHAR(100), End_Terminal BIGINT, Bike_ BIGINT, Subscription_Type VARCHAR(100), Zip_Code BIGINT, PRIMARY KEY (id_0))";
-		final String loadStmt = "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' (Trip_ID, Duration, Start_Date, Start_Station, Start_Terminal, End_Date, End_Station, End_Terminal, Bike_, Subscription_Type, Zip_Code) SET id_0 = NULL";
-
 		/*
 		////// REBALANCING DATA //////
 		int A = 15; //percentage of N tuples
@@ -318,12 +308,48 @@ public class Experiment3 {
 		final String loadStmt = "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' (_station_id_, _bikes_available_, _docks_available_, _time_) SET id_0 = NULL";
 		 */
 
-		long startTime = System.nanoTime();
-		mainSplit(directory, fileName, b); //deletes old shit
+		PrintStream out = new PrintStream(new FileOutputStream("BLB_bsRel_output.txt"));
+		System.setOut(out);
+		
+		int A = 15;
+		int n = 21000; //tupes in A% of file
+		for (int s = 2; s < (n/10); s += 10) {
 
-		for (int s_index = 0; s_index < s; s_index++) {
-			mainLoad(directory,tableName, tableStmt, loadStmt);
-			mainBLB(tableName, n, b, s, s_index, startTime);
+			//b is size of s in tuples
+			//double s_max = (n / b); //max number of subsamples taken from n
+			int b = (int) Math.floor(n/s);
+
+			////// TRIP DATA //////
+			final String directory = "trip" + A;
+			final String fileName = directory + ".csv";
+			final String tableName = "BLB_" + directory;
+			final String tableStmt = "(id_0 INT UNSIGNED NOT NULL AUTO_INCREMENT, Trip_ID BIGINT, Duration BIGINT, Start_Date VARCHAR(100), Start_Station VARCHAR(100), Start_Terminal BIGINT, End_Date VARCHAR(100), End_Station VARCHAR(100), End_Terminal BIGINT, Bike_ BIGINT, Subscription_Type VARCHAR(100), Zip_Code BIGINT, PRIMARY KEY (id_0))";
+			final String loadStmt = "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' (Trip_ID, Duration, Start_Date, Start_Station, Start_Terminal, End_Date, End_Station, End_Terminal, Bike_, Subscription_Type, Zip_Code) SET id_0 = NULL";
+
+			long startTime = System.nanoTime();
+			mainSplit(directory, fileName, b); //deletes old shit
+			mainLoad(directory, tableName, tableStmt, loadStmt);
+			mainBLB(tableName, n, b, b, s-1, startTime);
+
+		}
+		for (int b = 10; b < (n/2); b += 10) {
+
+			//b is size of s in tuples
+			//double s_max = (n / b); //max number of subsamples taken from n
+			int s = (int) Math.floor(n/b);
+
+			////// TRIP DATA //////
+			final String directory = "trip" + A;
+			final String fileName = directory + ".csv";
+			final String tableName = "BLB_" + directory;
+			final String tableStmt = "(id_0 INT UNSIGNED NOT NULL AUTO_INCREMENT, Trip_ID BIGINT, Duration BIGINT, Start_Date VARCHAR(100), Start_Station VARCHAR(100), Start_Terminal BIGINT, End_Date VARCHAR(100), End_Station VARCHAR(100), End_Terminal BIGINT, Bike_ BIGINT, Subscription_Type VARCHAR(100), Zip_Code BIGINT, PRIMARY KEY (id_0))";
+			final String loadStmt = "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' (Trip_ID, Duration, Start_Date, Start_Station, Start_Terminal, End_Date, End_Station, End_Terminal, Bike_, Subscription_Type, Zip_Code) SET id_0 = NULL";
+
+			long startTime = System.nanoTime();
+			mainSplit(directory, fileName, b); //deletes old shit
+			mainLoad(directory, tableName, tableStmt, loadStmt);
+			mainBLB(tableName, n, b, b, s-1, startTime);
+
 		}
 	}
 
