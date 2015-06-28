@@ -7,3 +7,4 @@ Load file to local db
 	->program checks for invalid input
 
 Currently working on statistics for queries
+Randomness and accuracy
