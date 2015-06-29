@@ -175,13 +175,13 @@ public class Parser extends Struct {
 
 	public static void splitFile(File file) throws IOException, InterruptedException {
 
-		PrintWriter splitexe = new PrintWriter("/Users/alyssakeimach/split.exe", "UTF-8");
-		Runtime.getRuntime().exec("chmod a+x /Users/alyssakeimach/split.exe");
+		PrintWriter splitexe = new PrintWriter("/Users/alyssakeimach/Eclipse/DBconnector/data/split.exe", "UTF-8");
+		Runtime.getRuntime().exec("chmod a+x /Users/alyssakeimach/Eclipse/DBconnector/data/split.exe");
 		splitexe.println("split -a1 -l20000 " + file); //-a3 for three letter file names
 		splitexe.close();
 		
-		ProcessBuilder pb = new ProcessBuilder("/Users/alyssakeimach/split.exe");
-		pb.directory(new File("/Users/alyssakeimach/Eclipse/DBconnector/splits/"));
+		ProcessBuilder pb = new ProcessBuilder("/Users/alyssakeimach/Eclipse/DBconnector/data/split.exe");
+		pb.directory(new File("/Users/alyssakeimach/Eclipse/DBconnector/data/splits/"));
 		pb.redirectErrorStream(true);
 		Process p = pb.start();
 		assert pb.redirectInput() == Redirect.PIPE;
@@ -279,7 +279,7 @@ public class Parser extends Struct {
 			splitFile(dataFile);
 			
 			/*
-			File folder = new File("/Users/alyssakeimach/Eclipse/DBconnector/splits/");
+			File folder = new File("/Users/alyssakeimach/Eclipse/DBconnector/data/splits/");
 			File[] roots = folder.listFiles();
 			Random rand = new Random();
 			randomFile = Parser.getRandFile(roots[rand.nextInt(roots.length)]);

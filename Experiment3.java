@@ -68,14 +68,14 @@ public class Experiment3 {
 	public static void splitFile(File file, String directory, int b) {
 		PrintWriter splitexe = null;
 		Process p = null;
-		try { splitexe = new PrintWriter("/Users/alyssakeimach/split.exe", "UTF-8"); } 
+		try { splitexe = new PrintWriter("/Users/alyssakeimach/Eclipse/DBconnector/data/split.exe", "UTF-8"); } 
 		catch (FileNotFoundException | UnsupportedEncodingException e) { e.printStackTrace(); }
-		try { Runtime.getRuntime().exec("chmod a+x /Users/alyssakeimach/split.exe"); } 
+		try { Runtime.getRuntime().exec("chmod a+x /Users/alyssakeimach/Eclipse/DBconnector/data/split.exe"); } 
 		catch (IOException e) { e.printStackTrace(); }
 		splitexe.println("split -a3 -l" + b + " " + file); //-a3 for three letter file names
 		splitexe.close();
-		ProcessBuilder pb = new ProcessBuilder("/Users/alyssakeimach/split.exe");
-		pb.directory(new File("/Users/alyssakeimach/Eclipse/DBconnector/splits/" + directory + "/"));
+		ProcessBuilder pb = new ProcessBuilder("/Users/alyssakeimach/Eclipse/DBconnector/data/split.exe");
+		pb.directory(new File("/Users/alyssakeimach/Eclipse/DBconnector/data/splits/" + directory + "/"));
 		pb.redirectErrorStream(true);
 		try { p = pb.start(); } 
 		catch (IOException e) { e.printStackTrace(); }
@@ -86,7 +86,7 @@ public class Experiment3 {
 
 	public static void deleteShortFile(String directory) {
 		//delete the last file in directory because likely it isnt the same length of tuples
-		File folder = new File("/Users/alyssakeimach/Eclipse/DBconnector/splits/" + directory + "/");
+		File folder = new File("/Users/alyssakeimach/Eclipse/DBconnector/data/splits/" + directory + "/");
 		File[] roots = folder.listFiles();
 		Arrays.sort(roots);
 		int last = roots.length - 1;
@@ -136,7 +136,7 @@ public class Experiment3 {
 	}
 
 	public static File loadRandom(String tableName, String loadStmt, String directory) {
-		File folder = new File("/Users/alyssakeimach/Eclipse/DBconnector/splits/" + directory + "/");
+		File folder = new File("/Users/alyssakeimach/Eclipse/DBconnector/data/splits/" + directory + "/");
 		File[] roots = folder.listFiles();
 		Random rand = new Random();
 		File rndFile = getRandom(roots[rand.nextInt(roots.length)]);
@@ -153,7 +153,7 @@ public class Experiment3 {
 	public static void removeRandom(File rndFile) {
 		try {
 			Path source = (Path) rndFile.toPath();
-			Path target = (Path) Paths.get("/Users/alyssakeimach/Eclipse/DBconnector/splits/replacement/", rndFile.getName());
+			Path target = (Path) Paths.get("/Users/alyssakeimach/Eclipse/DBconnector/data/splits/replacement/", rndFile.getName());
 			Files.move(source, target, REPLACE_EXISTING);
 		}
 		catch (IOException e) { e.printStackTrace(); } //could not move file
@@ -252,10 +252,10 @@ public class Experiment3 {
 	////// MAINS //////
 	public static void mainSplit(String directory, final String fileName, final int b) throws InterruptedException {
 		//splitFile, deleteShortFile
-		File folder = new File("/Users/alyssakeimach/Eclipse/DBconnector/splits/" + directory + "/");
+		File folder = new File("/Users/alyssakeimach/Eclipse/DBconnector/data/splits/" + directory + "/");
 		for(File file: folder.listFiles()) file.delete();
 		Thread.sleep(1000);
-		final File file = new File("/Users/alyssakeimach/" + fileName);
+		final File file = new File("/Users/alyssakeimach/Eclipse/DBconnector/data/" + fileName);
 		splitFile(file, directory, b); 
 		Thread.sleep(3000);
 		deleteShortFile(directory);
@@ -298,19 +298,49 @@ public class Experiment3 {
 
 	public static void main(String args[]) throws SQLException, InterruptedException, FileNotFoundException  {
 
-		/*
-		////// REBALANCING DATA //////
-		int A = 15; //percentage of N tuples
-		final String directory = "rebal" + A;
-		final String fileName = directory + ".csv";
-		final String tableName = "Bootstrap_" + directory + "_" + k;
-		final String tableStmt = "(id_0 INT UNSIGNED NOT NULL AUTO_INCREMENT, _station_id_ BIGINT, _bikes_available_ BIGINT, _docks_available_ BIGINT, _time_ TIMESTAMP, PRIMARY KEY (id_0))";
-		final String loadStmt = "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' (_station_id_, _bikes_available_, _docks_available_, _time_) SET id_0 = NULL";
-		 */
-
 		PrintStream out = new PrintStream(new FileOutputStream("BLB_bsRel_output.txt"));
 		System.setOut(out);
-		
+
+		int A = 5;
+		int n = 424000; //tupes in A% of file
+		for (int s = 2; s < (n/10); s += 50) {
+
+			//b is size of s in tuples
+			//double s_max = (n / b); //max number of subsamples taken from n
+			int b = (int) Math.floor(n/s);
+
+			////// REBALANCING DATA //////
+			final String directory = "rebal" + A;
+			final String fileName = directory + ".csv";
+			final String tableName = "BLB_rebal_" + directory;
+			final String tableStmt = "(id_0 INT UNSIGNED NOT NULL AUTO_INCREMENT, _station_id_ BIGINT, _bikes_available_ BIGINT, _docks_available_ BIGINT, _time_ TIMESTAMP, PRIMARY KEY (id_0))";
+			final String loadStmt = "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' (_station_id_, _bikes_available_, _docks_available_, _time_) SET id_0 = NULL";
+
+			long startTime = System.nanoTime();
+			mainSplit(directory, fileName, b); //deletes old shit
+			mainLoad(directory, tableName, tableStmt, loadStmt);
+			mainBLB(tableName, n, b, b, s-1, startTime);
+
+		}
+		for (int b = 10; b < (n/2); b += 50) {
+
+			int s = (int) Math.floor(n/b);
+
+			////// REBALANCING DATA //////
+			final String directory = "rebal" + A;
+			final String fileName = directory + ".csv";
+			final String tableName = "BLB_rebal_" + directory;
+			final String tableStmt = "(id_0 INT UNSIGNED NOT NULL AUTO_INCREMENT, _station_id_ BIGINT, _bikes_available_ BIGINT, _docks_available_ BIGINT, _time_ TIMESTAMP, PRIMARY KEY (id_0))";
+			final String loadStmt = "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' (_station_id_, _bikes_available_, _docks_available_, _time_) SET id_0 = NULL";
+
+			long startTime = System.nanoTime();
+			mainSplit(directory, fileName, b); //deletes old shit
+			mainLoad(directory, tableName, tableStmt, loadStmt);
+			mainBLB(tableName, n, b, b, s-1, startTime);
+
+		}
+
+		/*
 		int A = 15;
 		int n = 21000; //tupes in A% of file
 		for (int s = 2; s < (n/10); s += 10) {
@@ -351,6 +381,7 @@ public class Experiment3 {
 			mainBLB(tableName, n, b, b, s-1, startTime);
 
 		}
+		 */
 	}
 
 }

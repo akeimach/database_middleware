@@ -87,7 +87,7 @@ public class LoadFile extends Connect {
 	
 	public static void startKSload(String KStableName) throws SQLException {
 
-		File folder = new File("/Users/alyssakeimach/Eclipse/DBconnector/splits/");
+		File folder = new File("/Users/alyssakeimach/Eclipse/DBconnector/data/splits/");
 		File[] roots = folder.listFiles();
 		Random rand = new Random();
 		File rndFile = Parser.getRandFile(roots[rand.nextInt(roots.length)]);
@@ -112,7 +112,7 @@ public class LoadFile extends Connect {
 			//then move the file once uploaded
 			Path source = rndFile.toPath();
 			String fileTitle = rndFile.getName() + "_split";
-			Path target = Paths.get("/Users/alyssakeimach/Eclipse/DBconnector/used/", fileTitle);
+			Path target = Paths.get("/Users/alyssakeimach/Eclipse/DBconnector/data/splits/replacement/", fileTitle);
 			Files.move(source, target, REPLACE_EXISTING);
 			System.out.println("Moved " + rndFile.getName() + " to " + target.toString() + " after uploading");
 		}

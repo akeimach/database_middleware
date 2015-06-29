@@ -96,14 +96,14 @@ public class Experiment2 extends OrdinalStatisticalTest {
 	public static void splitFile(File file, String directory, int S_i) {
 		PrintWriter splitexe = null;
 		Process p = null;
-		try { splitexe = new PrintWriter("/Users/alyssakeimach/split.exe", "UTF-8"); } 
+		try { splitexe = new PrintWriter("/Users/alyssakeimach/Eclipse/DBconnector/data/split.exe", "UTF-8"); } 
 		catch (FileNotFoundException | UnsupportedEncodingException e) { e.printStackTrace(); }
-		try { Runtime.getRuntime().exec("chmod a+x /Users/alyssakeimach/split.exe"); } 
+		try { Runtime.getRuntime().exec("chmod a+x /Users/alyssakeimach/Eclipse/DBconnector/data/split.exe"); } 
 		catch (IOException e) { e.printStackTrace(); }
 		splitexe.println("split -a3 -l" + S_i + " " + file); //-a3 for three letter file names
 		splitexe.close();
-		ProcessBuilder pb = new ProcessBuilder("/Users/alyssakeimach/split.exe");
-		pb.directory(new File("/Users/alyssakeimach/Eclipse/DBconnector/splits/" + directory + "/"));
+		ProcessBuilder pb = new ProcessBuilder("/Users/alyssakeimach/Eclipse/DBconnector/data/split.exe");
+		pb.directory(new File("/Users/alyssakeimach/Eclipse/DBconnector/data/splits/" + directory + "/"));
 		pb.redirectErrorStream(true);
 		try { p = pb.start(); } 
 		catch (IOException e) { e.printStackTrace(); }
@@ -154,7 +154,7 @@ public class Experiment2 extends OrdinalStatisticalTest {
 	}
 
 	public static void loadRandom(String tableName, String loadStmt, String directory) {
-		File folder = new File("/Users/alyssakeimach/Eclipse/DBconnector/splits/" + directory + "/");
+		File folder = new File("/Users/alyssakeimach/Eclipse/DBconnector/data/splits/" + directory + "/");
 		File[] roots = folder.listFiles();
 		Random rand = new Random();
 		File rndFile = getRandFile(roots[rand.nextInt(roots.length)]);
@@ -251,7 +251,7 @@ public class Experiment2 extends OrdinalStatisticalTest {
 
 	////// MAINS //////
 	public static void mainSplit(final String fileName, String directory, final int S_i) {
-		final File file = new File("/Users/alyssakeimach/" + fileName);
+		final File file = new File("/Users/alyssakeimach/Eclipse/DBconnector/data/" + fileName);
 		splitFile(file, directory, S_i); 
 	}
 
@@ -312,7 +312,7 @@ public class Experiment2 extends OrdinalStatisticalTest {
 	}
 
 	public static void restart(String directory) {
-		File folder = new File("/Users/alyssakeimach/Eclipse/DBconnector/splits/" + directory + "/");
+		File folder = new File("/Users/alyssakeimach/Eclipse/DBconnector/data/splits/" + directory + "/");
 		for(File file: folder.listFiles()) file.delete();
 	}
 
