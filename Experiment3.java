@@ -298,24 +298,26 @@ public class Experiment3 {
 
 	public static void main(String args[]) throws SQLException, InterruptedException, FileNotFoundException  {
 
-		PrintStream out = new PrintStream(new FileOutputStream("BLB_bsRel_output.txt"));
-		System.setOut(out);
-
 		int A = 5;
 		int n = 424000; //tupes in A% of file
+
+		////// REBALANCING DATA //////
+		final String directory = "rebal" + A;
+		final String fileName = directory + ".csv";
+		final String tableName = "BLB_rebal_" + directory;
+		final String tableStmt = "(id_0 INT UNSIGNED NOT NULL AUTO_INCREMENT, _station_id_ BIGINT, _bikes_available_ BIGINT, _docks_available_ BIGINT, _time_ TIMESTAMP, PRIMARY KEY (id_0))";
+		final String loadStmt = "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' (_station_id_, _bikes_available_, _docks_available_, _time_) SET id_0 = NULL";
+
+
+		PrintStream out = new PrintStream(new FileOutputStream(directory + "_exp3_output.txt"));
+		System.setOut(out);
+
+
 		for (int s = 2; s < (n/10); s += 50) {
 
 			//b is size of s in tuples
 			//double s_max = (n / b); //max number of subsamples taken from n
 			int b = (int) Math.floor(n/s);
-
-			////// REBALANCING DATA //////
-			final String directory = "rebal" + A;
-			final String fileName = directory + ".csv";
-			final String tableName = "BLB_rebal_" + directory;
-			final String tableStmt = "(id_0 INT UNSIGNED NOT NULL AUTO_INCREMENT, _station_id_ BIGINT, _bikes_available_ BIGINT, _docks_available_ BIGINT, _time_ TIMESTAMP, PRIMARY KEY (id_0))";
-			final String loadStmt = "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' (_station_id_, _bikes_available_, _docks_available_, _time_) SET id_0 = NULL";
-
 			long startTime = System.nanoTime();
 			mainSplit(directory, fileName, b); //deletes old shit
 			mainLoad(directory, tableName, tableStmt, loadStmt);
@@ -325,14 +327,6 @@ public class Experiment3 {
 		for (int b = 10; b < (n/2); b += 50) {
 
 			int s = (int) Math.floor(n/b);
-
-			////// REBALANCING DATA //////
-			final String directory = "rebal" + A;
-			final String fileName = directory + ".csv";
-			final String tableName = "BLB_rebal_" + directory;
-			final String tableStmt = "(id_0 INT UNSIGNED NOT NULL AUTO_INCREMENT, _station_id_ BIGINT, _bikes_available_ BIGINT, _docks_available_ BIGINT, _time_ TIMESTAMP, PRIMARY KEY (id_0))";
-			final String loadStmt = "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' (_station_id_, _bikes_available_, _docks_available_, _time_) SET id_0 = NULL";
-
 			long startTime = System.nanoTime();
 			mainSplit(directory, fileName, b); //deletes old shit
 			mainLoad(directory, tableName, tableStmt, loadStmt);
@@ -341,21 +335,24 @@ public class Experiment3 {
 		}
 
 		/*
+
+
 		int A = 15;
 		int n = 21000; //tupes in A% of file
+
+		////// TRIP DATA //////
+		final String directory = "trip" + A;
+		final String fileName = directory + ".csv";
+		final String tableName = "BLB_" + directory;
+		final String tableStmt = "(id_0 INT UNSIGNED NOT NULL AUTO_INCREMENT, Trip_ID BIGINT, Duration BIGINT, Start_Date VARCHAR(100), Start_Station VARCHAR(100), Start_Terminal BIGINT, End_Date VARCHAR(100), End_Station VARCHAR(100), End_Terminal BIGINT, Bike_ BIGINT, Subscription_Type VARCHAR(100), Zip_Code BIGINT, PRIMARY KEY (id_0))";
+		final String loadStmt = "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' (Trip_ID, Duration, Start_Date, Start_Station, Start_Terminal, End_Date, End_Station, End_Terminal, Bike_, Subscription_Type, Zip_Code) SET id_0 = NULL";
+
+		PrintStream out = new PrintStream(new FileOutputStream(directory + "_exp3_output.txt"));
+		System.setOut(out);
+
 		for (int s = 2; s < (n/10); s += 10) {
 
-			//b is size of s in tuples
-			//double s_max = (n / b); //max number of subsamples taken from n
-			int b = (int) Math.floor(n/s);
-
-			////// TRIP DATA //////
-			final String directory = "trip" + A;
-			final String fileName = directory + ".csv";
-			final String tableName = "BLB_" + directory;
-			final String tableStmt = "(id_0 INT UNSIGNED NOT NULL AUTO_INCREMENT, Trip_ID BIGINT, Duration BIGINT, Start_Date VARCHAR(100), Start_Station VARCHAR(100), Start_Terminal BIGINT, End_Date VARCHAR(100), End_Station VARCHAR(100), End_Terminal BIGINT, Bike_ BIGINT, Subscription_Type VARCHAR(100), Zip_Code BIGINT, PRIMARY KEY (id_0))";
-			final String loadStmt = "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' (Trip_ID, Duration, Start_Date, Start_Station, Start_Terminal, End_Date, End_Station, End_Terminal, Bike_, Subscription_Type, Zip_Code) SET id_0 = NULL";
-
+			int b = (int) Math.floor(n/s);			
 			long startTime = System.nanoTime();
 			mainSplit(directory, fileName, b); //deletes old shit
 			mainLoad(directory, tableName, tableStmt, loadStmt);
@@ -364,17 +361,7 @@ public class Experiment3 {
 		}
 		for (int b = 10; b < (n/2); b += 10) {
 
-			//b is size of s in tuples
-			//double s_max = (n / b); //max number of subsamples taken from n
 			int s = (int) Math.floor(n/b);
-
-			////// TRIP DATA //////
-			final String directory = "trip" + A;
-			final String fileName = directory + ".csv";
-			final String tableName = "BLB_" + directory;
-			final String tableStmt = "(id_0 INT UNSIGNED NOT NULL AUTO_INCREMENT, Trip_ID BIGINT, Duration BIGINT, Start_Date VARCHAR(100), Start_Station VARCHAR(100), Start_Terminal BIGINT, End_Date VARCHAR(100), End_Station VARCHAR(100), End_Terminal BIGINT, Bike_ BIGINT, Subscription_Type VARCHAR(100), Zip_Code BIGINT, PRIMARY KEY (id_0))";
-			final String loadStmt = "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' (Trip_ID, Duration, Start_Date, Start_Station, Start_Terminal, End_Date, End_Station, End_Terminal, Bike_, Subscription_Type, Zip_Code) SET id_0 = NULL";
-
 			long startTime = System.nanoTime();
 			mainSplit(directory, fileName, b); //deletes old shit
 			mainLoad(directory, tableName, tableStmt, loadStmt);
