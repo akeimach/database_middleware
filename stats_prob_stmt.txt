@@ -1,13 +1,5 @@
-I'm building the middleware between a user and a database. The user chooses any data file they have (for example, cost data, consumer reports, airline flights) and the program starts loading data into a table in the database. While the data is loading the user can immediately start querying the available data. Since it takes a long time to load the dataset completely, submitted queries will be approximate.
+We have a sequence x_1,...,x_n where x_i \in \mathbb{R}^k.
+We would like to see if x_1,...,x_s where 0< s << N is a representative sample of x_1,...,x_n  or not. 
+Our goal is to use x_1,...,x_s to estimate the average value of x_1,...,x_n. If the original x_1,...,x_n values were shuffled randomly, then we could use (x_1+...+x_s)/s as an unbiased estimator of (x_1+...+x_n)/n and use central limit theorem to estimate its variance too.
 
-Say a 5% subset of the total data is available. The program will approximate the output based on the available subset, as well as calculate an accuracy guarantee of the approximated output. In order to calculate this accuracy guarantee, the program would use bootstrapping techniques or something like the central limit theorem. The problem is that these accuracy measurements rely on the assumption that the available subset is i.i.d. of the original data. In other words, I need a way to determine if an error estimation on a ~not necessarily random~ subset is reliable.
-
-It would be too expensive to pre-shuffle or randomly select from the original data to ensure a subset is i.i.d., so I need to find a way to determine if the available subset is i.i.d. without knowing the mean and variance of the total data. 
-
-I've implemented the two-sample Kolmogorov-Smirnov test where two distributions are randomly selected from the available subset, which seems to be a good test to see if the available subset is identically distributed. Now I'm looking for effective techniques to check for randomness of the available subset.
-
-I've read about the Diehard Battery of Tests of Randomness, where multiple randomness tests are run against random number generators to check if the generators are truly random. If I were to use a similar method, how would I scale it from testing on a sequence of numbers to testing on a sequence of tuples?
-
-I've also looked into serial correlation and autocorrelation, but it seems that is works best with a time series. Is there a way to use this method without a time series component? Or could I create a pseudo-time-series based on the position of the tuple in the subset?
-
-Another question, how many randomness tests is too many? If I combine multiple tests will I need to implement the Sidak correction?
+However, the problem is that we do not know if x_1,...,x_n were in a random order or not. So my question is how can we measure how random was the order of the original  x_1,...,x_n  sequence? Ideally, we would like a statistical test that does not need to look at x_{s+1},...,x_n but only at x_1,...,x_s to make this call.
