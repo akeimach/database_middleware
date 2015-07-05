@@ -1,5 +1,0 @@
-We have a sequence x_1,...,x_n where x_i \in \mathbb{R}^k.
-We would like to see if x_1,...,x_s where 0< s << N is a representative sample of x_1,...,x_n  or not. 
-Our goal is to use x_1,...,x_s to estimate the average value of x_1,...,x_n. If the original x_1,...,x_n values were shuffled randomly, then we could use (x_1+...+x_s)/s as an unbiased estimator of (x_1+...+x_n)/n and use central limit theorem to estimate its variance too.
-
-However, the problem is that we do not know if x_1,...,x_n were in a random order or not. So my question is how can we measure how random was the order of the original  x_1,...,x_n  sequence? Ideally, we would like a statistical test that does not need to look at x_{s+1},...,x_n but only at x_1,...,x_s to make this call.
