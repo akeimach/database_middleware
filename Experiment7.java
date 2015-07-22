@@ -27,10 +27,9 @@ public class Experiment7 {
 	public static String password = "root";
 
 	////// MAKE CLUSTER SAMPLE //////
-	public static void systematicSample(String dataSet, String clusterSet, String directory, int spacing) throws IOException {
-		BufferedReader br = new BufferedReader(new FileReader(new File(directory + dataSet + ".csv")));
-		BufferedWriter bw = new BufferedWriter(new FileWriter(new File(directory + clusterSet + ".csv")));
-		LineNumberReader lnr = new LineNumberReader(br);
+	public static void systematicSample(File N, File S2, Integer spacing) throws IOException {
+		LineNumberReader lnr = new LineNumberReader(new BufferedReader(new FileReader(N)));
+		BufferedWriter bw = new BufferedWriter(new FileWriter(S2));
 		while (lnr.readLine() != null) {
 			if (((lnr.getLineNumber()) % spacing) == 0) { 
 				String line = lnr.readLine() + '\n';
@@ -55,45 +54,32 @@ public class Experiment7 {
 		return conn;
 	}
 
-	public static void executeUpdate(String command) throws SQLException {
-		Connection conn = getConnection();
+	public static void SQLupdate(Connection conn, String command) throws SQLException {
 		conn.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
 		Statement stmt = conn.createStatement();
 		stmt.executeUpdate(command);
-		conn.close();
 	}
 
-	public static ResultSet executeQuery(Connection conn, String command) throws SQLException {
+	public static ResultSet SQLresultSet(Connection conn, String command) throws SQLException {
 		Statement stmt = conn.createStatement();
 		return stmt.executeQuery(command);
 	}
 
-	////// LOAD DATA TO TABLE //////
-	public static void initTable(String tableName, String tableStmt) {
-		try {
-			String dropString = "DROP TABLE IF EXISTS " + tableName;
-			executeUpdate(dropString);
-		}
-		catch (SQLException e) {
-			System.out.println("ERROR: Could not drop the table");
-			e.printStackTrace();
-		}
-		String createTableString = "CREATE TABLE " + tableName + " " + tableStmt;
-		try { executeUpdate(createTableString); }
-		catch (SQLException e) {
-			System.out.println("ERROR: Could not create the table");
-			e.printStackTrace();
-		}
-	}
-
-	public static void loadFile(File fileName, String tableName, String loadStmt) {
-		String loadFile = "LOAD DATA CONCURRENT LOCAL INFILE '" +  fileName.getAbsolutePath()  + "' INTO TABLE " + tableName + " " + loadStmt;
-		try { 
-			Connection conn = getConnection();
-			executeQuery(conn, loadFile); 
-			conn.close();
-		}
-		catch (SQLException e)  { e.printStackTrace(); }
+	
+	public static void initTable(File fileName, String tableName, String createTableStmt, String loadDataStmt) throws SQLException {
+		// GET CONNECTION
+		Connection conn = getConnection();
+		// DROP OLD TABLE
+		String dropTableString = "DROP TABLE IF EXISTS " + tableName;
+		SQLupdate(conn, dropTableString);
+		// CREATE NEW TABLE
+		String createTableString = "CREATE TABLE " + tableName + " " + createTableStmt;
+		SQLupdate(conn, createTableString);
+		// LOAD FILE TO TABLE
+		String loadFile = "LOAD DATA CONCURRENT LOCAL INFILE '" +  fileName.getAbsolutePath()  + "' INTO TABLE " + tableName + " " + loadDataStmt;
+		SQLupdate(conn, loadFile);
+		// CLOSE CONNECTION
+		conn.close();
 	}
 
 	////// GET RESULT SET TABLES //////
@@ -124,28 +110,34 @@ public class Experiment7 {
 	////// MAIN //////
 	public static void main(String args[]) throws IOException  {
 
-		String dataSet = "trip5";
-		String clusterSet = "clustered_trip_data";
+		//String dataSubSet = "trip5";
+		//String dataSet = "trip_data";
+		//String clusterSet = "clustered_trip_data";
 		String directory = "/Users/alyssakeimach/Eclipse/DBconnector/data/";
-		int spacing = 100;
-		final String tableStmt = "(id_0 INT UNSIGNED NOT NULL AUTO_INCREMENT, Trip_ID BIGINT, Duration BIGINT, Start_Date VARCHAR(100), Start_Station VARCHAR(100), Start_Terminal BIGINT, End_Date VARCHAR(100), End_Station VARCHAR(100), End_Terminal BIGINT, Bike_ BIGINT, Subscription_Type VARCHAR(100), Zip_Code BIGINT, PRIMARY KEY (id_0))";
-		final String loadStmt = "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' (Trip_ID, Duration, Start_Date, Start_Station, Start_Terminal, End_Date, End_Station, End_Terminal, Bike_, Subscription_Type, Zip_Code) SET id_0 = NULL";
+		File N = new File(directory + "trip_data.csv");
+		File S1 = new File(directory + "trip_five.csv");
+		File S2 = new File(directory + "trip_cluster.csv");
+		Integer spacing = 100;
+		String S1_tableName = "S1_trip";
+		String S2_tableName = "S2_trip";
+		String createTableStmt = "(id_0 INT UNSIGNED NOT NULL AUTO_INCREMENT, Trip_ID BIGINT, Duration BIGINT, Start_Date VARCHAR(100), Start_Station VARCHAR(100), Start_Terminal BIGINT, End_Date VARCHAR(100), End_Station VARCHAR(100), End_Terminal BIGINT, Bike_ BIGINT, Subscription_Type VARCHAR(100), Zip_Code BIGINT, PRIMARY KEY (id_0))";
+		String loadDataStmt = "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' (Trip_ID, Duration, Start_Date, Start_Station, Start_Terminal, End_Date, End_Station, End_Terminal, Bike_, Subscription_Type, Zip_Code) SET id_0 = NULL";
 
 
-		systematicSample(dataSet, clusterSet, directory, spacing);
+		systematicSample(N, S2, spacing);
 
-		initTable(dataSet, tableStmt);
-		loadFile(new File(directory + dataSet + ".csv"), dataSet, loadStmt);
+		initTable(dataSubSet, createTableStmt);
+		loadFile(new File(directory + dataSubSet + ".csv"), dataSubSet, loadDataStmt);
 		
-		initTable(clusterSet, tableStmt);
-		loadFile(new File(directory + clusterSet + ".csv"), clusterSet, loadStmt);
+		initTable(clusterSet, createTableStmt);
+		loadFile(new File(directory + clusterSet + ".csv"), clusterSet, loadDataStmt);
 
 		PrintStream out1 = new PrintStream(new FileOutputStream(directory + "trip5_output.txt"));
 		System.setOut(out1);
 
 		try {
 			Connection conn = getConnection();
-			getRS(executeQuery(conn, "SELECT * FROM " + dataSet)); 
+			getRS(executeQuery(conn, "SELECT * FROM " + dataSubSet)); 
 			conn.close();
 		} 
 		catch (SQLException e) { e.printStackTrace(); }
