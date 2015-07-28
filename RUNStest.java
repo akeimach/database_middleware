@@ -3,8 +3,8 @@ import java.sql.ResultSetMetaData;
 import java.sql.Types;
 import java.util.HashMap;
 
-
-public class Experiment4 {
+//EXPERIMENT 4
+public class RUNStest {
 
 	public static String server = "jdbc:mysql://localhost:3306/";
 	public static String user = "root";

@@ -25,8 +25,8 @@ import java.util.Random;
 import java.util.Map.Entry;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
-
-public class Experiment3 {
+//EXPERIMENT 3
+public class BLBmean {
 
 	public static String server = "jdbc:mysql://localhost:3306/";
 	public static String user = "root";
@@ -298,6 +298,7 @@ public class Experiment3 {
 
 	public static void main(String args[]) throws SQLException, InterruptedException, FileNotFoundException  {
 
+		/*
 		int A = 5;
 		int n = 424000; //tupes in A% of file
 
@@ -334,11 +335,11 @@ public class Experiment3 {
 
 		}
 
-		/*
+		*/
 
 
-		int A = 15;
-		int n = 21000; //tupes in A% of file
+		int A = 5;
+		int n = 7000; //tupes in A% of file
 
 		////// TRIP DATA //////
 		final String directory = "trip" + A;
@@ -347,10 +348,10 @@ public class Experiment3 {
 		final String tableStmt = "(id_0 INT UNSIGNED NOT NULL AUTO_INCREMENT, Trip_ID BIGINT, Duration BIGINT, Start_Date VARCHAR(100), Start_Station VARCHAR(100), Start_Terminal BIGINT, End_Date VARCHAR(100), End_Station VARCHAR(100), End_Terminal BIGINT, Bike_ BIGINT, Subscription_Type VARCHAR(100), Zip_Code BIGINT, PRIMARY KEY (id_0))";
 		final String loadStmt = "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' (Trip_ID, Duration, Start_Date, Start_Station, Start_Terminal, End_Date, End_Station, End_Terminal, Bike_, Subscription_Type, Zip_Code) SET id_0 = NULL";
 
-		PrintStream out = new PrintStream(new FileOutputStream(directory + "_exp3_output.txt"));
-		System.setOut(out);
+		//PrintStream out = new PrintStream(new FileOutputStream(directory + "_exp3_output.txt"));
+		//System.setOut(out);
 
-		for (int s = 2; s < (n/10); s += 10) {
+		for (int s = 2; s < (n/100); s += 100) {
 
 			int b = (int) Math.floor(n/s);			
 			long startTime = System.nanoTime();
@@ -359,7 +360,7 @@ public class Experiment3 {
 			mainBLB(tableName, n, b, b, s-1, startTime);
 
 		}
-		for (int b = 10; b < (n/2); b += 10) {
+		for (int b = 10; b < (n/20); b += 100) {
 
 			int s = (int) Math.floor(n/b);
 			long startTime = System.nanoTime();
@@ -368,7 +369,7 @@ public class Experiment3 {
 			mainBLB(tableName, n, b, b, s-1, startTime);
 
 		}
-		 */
+	
 	}
 
 }

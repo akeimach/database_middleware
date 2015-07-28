@@ -24,6 +24,7 @@ import org.moeaframework.util.statistics.OrdinalStatisticalTest;
 import org.moeaframework.util.statistics.RankedObservation;
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 
+//EXPERIMENT 2
 /*
 The Kruskal-Wallis One-Way Analysis of Variance by Ranks is a non-parametric
 statistical test determining if (at least) two out of K >= 2 populations have
@@ -56,7 +57,7 @@ Assumption #3: You should have independence of observations, which means that th
 		Some tests may only support specific values for alpha.
  */
 
-public class Experiment2 extends OrdinalStatisticalTest {
+public class KWtest extends OrdinalStatisticalTest {
 
 	public static String server = "jdbc:mysql://localhost:3306/";
 	public static String user = "root";
@@ -200,7 +201,7 @@ public class Experiment2 extends OrdinalStatisticalTest {
 	////// KW MATH //////
 	//Constructs a Kruskal-Wallis test with the specified number of groups.
 	//numberOfGroups the number of groups being tested
-	public Experiment2(int numberOfGroups) {
+	public KWtest(int numberOfGroups) {
 		super(numberOfGroups);
 		if (numberOfGroups <= 1) { throw new IllegalArgumentException("requires two or more groups"); }
 	}
@@ -286,7 +287,7 @@ public class Experiment2 extends OrdinalStatisticalTest {
 		}
 
 		//compute k times, then iterate to next field
-		Experiment2 kw = new Experiment2(k);
+		KWtest kw = new KWtest(k);
 		MapsAndConnections m0 = mapList.get(0); //get init/base/first map of k
 		for (Entry<String, double[]> entry0 : m0.kwMap.entrySet()) { 
 			String key0 = entry0.getKey();

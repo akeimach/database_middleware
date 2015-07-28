@@ -15,11 +15,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
-
-
-//Experiment to get cluster sample from text file--looking for efficient way to jump to lines in file
-
-public class Experiment7 {
+//EXPERIMENT 5
+// Experiment to analyze clustered data to top % of data in file
+public class ClusterSampleTest {
 
 	////// MAKE CLUSTER SAMPLE S2 //////
 	public static void createClusterSample(File N, File S2, Integer spacing) throws IOException {
@@ -114,6 +112,7 @@ public class Experiment7 {
 		String loadDataStmt = "FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' (Trip_ID, Duration, Start_Date, Start_Station, Start_Terminal, End_Date, End_Station, End_Terminal, Bike_, Subscription_Type, Zip_Code) SET id_0 = NULL";
 
 		createClusterSample(N, S2, 100);
+		
 		SQLload(S2, S2_tableName, createTableStmt, loadDataStmt);
 		PrintStream S2_out = new PrintStream(new FileOutputStream(directory + "trip_cluster_out.csv"));
 		System.setOut(S2_out);
