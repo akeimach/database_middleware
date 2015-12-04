@@ -8,3 +8,4 @@ Load file to local db
 
 Currently working on statistics for queries
 Randomness and accuracy
+UNFINISHED
